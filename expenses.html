@@ -114,7 +114,7 @@
         const account = row["Account Number"];
         const deptCode = account.slice(3, 6);
         const funcName = functionMap[deptCode] || "Unknown";
-        const value = parseFloat(row["2025 BUDGET"] || 0);
+        const value = parseFloat(row["2025 BUDGET"].replace(/,/g, '')) || 0;
         if (!chartData[funcName]) chartData[funcName] = 0;
         chartData[funcName] += value;
       });
@@ -154,6 +154,99 @@
           }
         }
       });
+    }
+
+    function populateTable(data) {
+      const table = document.getElementById("expenseTable");
+      const footer = document.getElementById("expenseTotal");
+      table.innerHTML = '';
+      footer.innerHTML = '';
+
+      const grouped = {};
+      let grandTotals = { fy23: 0, fy24: 0, fy25: 0, fy26: 0 };
+
+      data.forEach(row => {
+        const account = row["Account Number"];
+        const desc = row["Description"] || "";
+        const deptCode = account.slice(3, 6);
+        const funcName = functionMap[deptCode] || "Unknown";
+        const deptName = departmentMap[deptCode] || "";
+
+        const fy23 = parseFloat(row["2023 ACTUAL"].replace(/,/g, '')) || 0;
+        const fy24 = parseFloat(row["2024 ACTUAL"].replace(/,/g, '')) || 0;
+        const fy25 = parseFloat(row["2025 BUDGET"].replace(/,/g, '')) || 0;
+        const fy26 = parseFloat(row["2026 BUDGET"].replace(/,/g, '')) || 0;
+
+        if (!grouped[funcName]) grouped[funcName] = {};
+        if (!grouped[funcName][deptName]) grouped[funcName][deptName] = [];
+        grouped[funcName][deptName].push({ account, desc, fy23, fy24, fy25, fy26 });
+
+        grandTotals.fy23 += fy23;
+        grandTotals.fy24 += fy24;
+        grandTotals.fy25 += fy25;
+        grandTotals.fy26 += fy26;
+      });
+
+      for (const func in grouped) {
+        let funcTotals = { fy23: 0, fy24: 0, fy25: 0, fy26: 0 };
+        for (const dept in grouped[func]) {
+          let deptTotals = { fy23: 0, fy24: 0, fy25: 0, fy26: 0 };
+          grouped[func][dept].forEach(item => {
+            const [diff, percent] = calculateChange(item.fy25, item.fy26);
+            const rowHTML = `
+              <tr class="border-b">
+                <td class="p-3">${item.account}</td>
+                <td class="p-3">${item.desc}</td>
+                <td class="p-3">${formatCurrency(item.fy23)}</td>
+                <td class="p-3">${formatCurrency(item.fy24)}</td>
+                <td class="p-3">${formatCurrency(item.fy25)}</td>
+                <td class="p-3">${formatCurrency(item.fy26)}</td>
+                <td class="p-3">${formatCurrency(diff)}</td>
+                <td class="p-3">${percent.toFixed(1)}%</td>
+              </tr>`;
+            table.insertAdjacentHTML("beforeend", rowHTML);
+            deptTotals.fy23 += item.fy23;
+            deptTotals.fy24 += item.fy24;
+            deptTotals.fy25 += item.fy25;
+            deptTotals.fy26 += item.fy26;
+          });
+
+          table.insertAdjacentHTML("beforeend", `
+            <tr class="bg-gray-100 font-semibold">
+              <td colspan="2" class="p-3 text-right">Subtotal - ${dept}</td>
+              <td class="p-3">${formatCurrency(deptTotals.fy23)}</td>
+              <td class="p-3">${formatCurrency(deptTotals.fy24)}</td>
+              <td class="p-3">${formatCurrency(deptTotals.fy25)}</td>
+              <td class="p-3">${formatCurrency(deptTotals.fy26)}</td>
+              <td colspan="2"></td>
+            </tr>`);
+
+          funcTotals.fy23 += deptTotals.fy23;
+          funcTotals.fy24 += deptTotals.fy24;
+          funcTotals.fy25 += deptTotals.fy25;
+          funcTotals.fy26 += deptTotals.fy26;
+        }
+
+        table.insertAdjacentHTML("beforeend", `
+          <tr class="bg-gray-200 font-bold">
+            <td colspan="2" class="p-3 text-right">Subtotal - ${func}</td>
+            <td class="p-3">${formatCurrency(funcTotals.fy23)}</td>
+            <td class="p-3">${formatCurrency(funcTotals.fy24)}</td>
+            <td class="p-3">${formatCurrency(funcTotals.fy25)}</td>
+            <td class="p-3">${formatCurrency(funcTotals.fy26)}</td>
+            <td colspan="2"></td>
+          </tr>`);
+      }
+
+      footer.insertAdjacentHTML("beforeend", `
+        <tr class="bg-gray-300 font-extrabold">
+          <td colspan="2" class="p-3 text-right">Grand Total</td>
+          <td class="p-3">${formatCurrency(grandTotals.fy23)}</td>
+          <td class="p-3">${formatCurrency(grandTotals.fy24)}</td>
+          <td class="p-3">${formatCurrency(grandTotals.fy25)}</td>
+          <td class="p-3">${formatCurrency(grandTotals.fy26)}</td>
+          <td colspan="2"></td>
+        </tr>`);
     }
 
     function startApp() {
