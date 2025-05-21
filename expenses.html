@@ -15,7 +15,7 @@
       <a href="index.html" class="text-blue-600 underline">Back to Home</a>
     </div>
 
-    <canvas id="expenseChart" class="mb-8 mx-auto max-w-4xl"></canvas>
+    <canvas id="expenseChart" class="mb-8 mx-auto w-full max-w-6xl h-[500px]"></canvas>
     <div class="overflow-x-auto">
       <table class="table-auto w-full max-w-7xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
         <thead>
@@ -75,32 +75,22 @@
       if (chartInstance) chartInstance.destroy();
 
       chartInstance = new Chart(ctx, {
-        type: 'bar',
+        type: 'pie',
         data: {
           labels: Object.keys(chartData),
           datasets: [{
             label: `2025 Budget by Function`,
             data: Object.values(chartData),
-            backgroundColor: 'rgba(59, 130, 246, 0.5)',
-            borderColor: 'rgba(59, 130, 246, 1)',
-            borderWidth: 1
+            backgroundColor: Object.keys(chartData).map(() => `hsl(${Math.random() * 360}, 70%, 60%)`)
           }]
         },
         options: {
           responsive: true,
           plugins: {
-            legend: { display: false },
+            legend: { position: 'bottom' },
             tooltip: {
               callbacks: {
-                label: context => formatCurrency(context.parsed.y)
-              }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                callback: value => formatCurrency(value)
+                label: context => formatCurrency(context.parsed)
               }
             }
           }
@@ -120,7 +110,7 @@
       data.forEach(row => {
         const account = row["Account Number"];
         const desc = row["Description"] || "";
-        const deptCode = account.slice(3, 6);
+        const deptCode = account.split("-")[1];
         const funcName = functionMap[deptCode] || "Unknown";
         const deptName = departmentMap[deptCode] || "";
 
@@ -145,7 +135,7 @@
           let deptTotals = { fy23: 0, fy24: 0, fy25: 0, fy26: 0 };
           grouped[func][dept].forEach(item => {
             const [diff, percent] = calculateChange(item.fy25, item.fy26);
-            const rowHTML = `
+            table.insertAdjacentHTML("beforeend", `
               <tr class="border-b">
                 <td class="p-3">${item.account}</td>
                 <td class="p-3">${item.desc}</td>
@@ -155,8 +145,7 @@
                 <td class="p-3">${formatCurrency(item.fy26)}</td>
                 <td class="p-3">${formatCurrency(diff)}</td>
                 <td class="p-3">${percent.toFixed(1)}%</td>
-              </tr>`;
-            table.insertAdjacentHTML("beforeend", rowHTML);
+              </tr>`);
             deptTotals.fy23 += item.fy23;
             deptTotals.fy24 += item.fy24;
             deptTotals.fy25 += item.fy25;
