@@ -15,15 +15,6 @@
       <a href="index.html" class="text-blue-600 underline">Back to Home</a>
     </div>
 
-    <div class="flex justify-center gap-4 mb-6">
-      <select id="functionFilter" class="px-4 py-2 rounded border" onchange="applyFilters()">
-        <option value="">All Functions</option>
-      </select>
-      <select id="departmentFilter" class="px-4 py-2 rounded border" onchange="applyFilters()">
-        <option value="">All Departments</option>
-      </select>
-    </div>
-
     <canvas id="expenseChart" class="mb-8 mx-auto max-w-4xl"></canvas>
     <div class="overflow-x-auto">
       <table class="table-auto w-full max-w-7xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
@@ -67,45 +58,6 @@
       const diff = curr - prev;
       const percent = prev !== 0 ? (diff / prev) * 100 : 0;
       return [diff, percent];
-    }
-
-    function populateFilters() {
-      const deptSet = new Set();
-      const funcSet = new Set();
-
-      Object.keys(departmentMap).forEach(dept => deptSet.add(departmentMap[dept]));
-      Object.values(functionMap).forEach(func => funcSet.add(func));
-
-      const deptSelect = document.getElementById('departmentFilter');
-      const funcSelect = document.getElementById('functionFilter');
-
-      deptSet.forEach(dept => {
-        deptSelect.insertAdjacentHTML('beforeend', `<option value="${dept}">${dept}</option>`);
-      });
-
-      funcSet.forEach(func => {
-        funcSelect.insertAdjacentHTML('beforeend', `<option value="${func}">${func}</option>`);
-      });
-    }
-
-    function applyFilters() {
-      const deptFilter = document.getElementById('departmentFilter').value;
-      const funcFilter = document.getElementById('functionFilter').value;
-
-      const filtered = expenseData.filter(row => {
-        const account = row["Account Number"];
-        if (!account || !account.startsWith(fundCode)) return false;
-        const deptCode = account.slice(3, 6);
-        const deptName = departmentMap[deptCode];
-        const funcName = functionMap[deptCode];
-
-        if (deptFilter && deptName !== deptFilter) return false;
-        if (funcFilter && funcName !== funcFilter) return false;
-        return true;
-      });
-
-      populateTable(filtered);
-      renderChart(filtered);
     }
 
     function renderChart(data) {
@@ -264,14 +216,14 @@
             departmentMap[row["DEPT CODE"]] = row["DEPARTMENT"];
             functionMap[row["DEPT CODE"]] = row["FUNCTION_1"] || row["FUNCTION_2"] || "Unknown";
           });
-          populateFilters();
 
           Papa.parse(expenseSheetUrl, {
             header: true,
             download: true,
             complete: results => {
               expenseData = results.data;
-              applyFilters();
+              populateTable(expenseData);
+              renderChart(expenseData);
             }
           });
         }
