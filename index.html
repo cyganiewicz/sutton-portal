@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Town of Sutton Budget Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+  <div class="min-h-screen p-6">
+    <h1 class="text-4xl font-bold mb-4 text-center">Town of Sutton Budget Portal</h1>
+    <p class="text-lg text-center mb-8">
+      Explore detailed budget data for fiscal years 2023 to 2026 by fund and department.
+    </p>
+
+    <div class="flex justify-center gap-4 mb-10">
+      <button onclick="selectFund('010')" class="fund-button px-4 py-2 rounded border">General Fund</button>
+      <button onclick="selectFund('600')" class="fund-button px-4 py-2 rounded border">Sewer Enterprise Fund</button>
+      <button onclick="selectFund('610')" class="fund-button px-4 py-2 rounded border">Transfer Station Enterprise Fund</button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-xl font-semibold mb-2">Expense Data</h2>
+        <p class="text-gray-600 mb-4">
+          View actual and projected spending by department and fund.
+        </p>
+        <a id="expenses-link" href="expenses.html?fund=010" class="bg-blue-600 text-white px-4 py-2 rounded">View Expenses</a>
+      </div>
+
+      <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-xl font-semibold mb-2">Revenue Data</h2>
+        <p class="text-gray-600 mb-4">
+          Coming soon: explore sources of revenue and trends by fund.
+        </p>
+        <button disabled class="bg-gray-400 text-white px-4 py-2 rounded">Coming Soon</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function selectFund(fundCode) {
+      const buttons = document.querySelectorAll(".fund-button");
+      buttons.forEach(btn => btn.classList.remove("bg-blue-600", "text-white"));
+
+      const selected = Array.from(buttons).find(btn => btn.textContent.includes(getFundName(fundCode)));
+      if (selected) selected.classList.add("bg-blue-600", "text-white");
+
+      document.getElementById("expenses-link").href = `expenses.html?fund=${fundCode}`;
+    }
+
+    function getFundName(code) {
+      const names = {
+        '010': 'General Fund',
+        '600': 'Sewer Enterprise Fund',
+        '610': 'Transfer Station Enterprise Fund'
+      };
+      return names[code];
+    }
+
+    // Default to General Fund on load
+    window.onload = () => selectFund('010');
+  </script>
+</body>
+</html>
