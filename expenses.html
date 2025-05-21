@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -25,8 +25,10 @@
       <h2 class="text-lg font-semibold mb-4">Navigate by Function</h2>
       <ul id="sidebarMenu" class="space-y-2 text-sm"></ul>
     </aside>
+
     <main class="flex-1 p-6 relative">
       <h1 class="text-3xl font-bold mb-4 text-center">Sutton Budget Expenses</h1>
+
       <div class="text-center mb-6">
         <label for="fundSelector" class="mr-2 font-medium">Select Fund:</label>
         <select id="fundSelector" class="p-2 border rounded">
@@ -47,24 +49,24 @@
         </div>
       </div>
 
-      <div class="mt-6 overflow-auto max-h-[70vh] border rounded-lg shadow-md">
-  <table class="table-auto w-full bg-white">
-    <thead class="bg-blue-600 text-white">
-      <tr class="sticky top-[104px] z-50 bg-blue-600">
-        <th class="p-3">Account</th>
-        <th class="p-3">Description</th>
-        <th class="p-3">2023 Actual</th>
-        <th class="p-3">2024 Actual</th>
-        <th class="p-3">2025 Budget</th>
-        <th class="p-3">2026 Budget</th>
-        <th class="p-3">$ Change</th>
-        <th class="p-3">% Change</th>
-      </tr>
-    </thead>
-    <tbody id="expenseTable" class="text-sm text-gray-700"></tbody>
-    <tfoot id="expenseTotal" class="font-bold text-black"></tfoot>
-  </table>
-</div>
+      <div class="mt-6 overflow-y-scroll h-[70vh] border rounded-lg shadow-md relative z-0">
+        <table class="table-auto w-full bg-white">
+          <thead>
+            <tr>
+              <th class="sticky top-[104px] z-50 bg-blue-600 text-white p-3">Account</th>
+              <th class="sticky top-[104px] z-50 bg-blue-600 text-white p-3">Description</th>
+              <th class="sticky top-[104px] z-50 bg-blue-600 text-white p-3">2023 Actual</th>
+              <th class="sticky top-[104px] z-50 bg-blue-600 text-white p-3">2024 Actual</th>
+              <th class="sticky top-[104px] z-50 bg-blue-600 text-white p-3">2025 Budget</th>
+              <th class="sticky top-[104px] z-50 bg-blue-600 text-white p-3">2026 Budget</th>
+              <th class="sticky top-[104px] z-50 bg-blue-600 text-white p-3">$ Change</th>
+              <th class="sticky top-[104px] z-50 bg-blue-600 text-white p-3">% Change</th>
+            </tr>
+          </thead>
+          <tbody id="expenseTable" class="text-sm text-gray-700"></tbody>
+          <tfoot id="expenseTotal" class="font-bold text-black"></tfoot>
+        </table>
+      </div>
     </main>
   </div>
 
