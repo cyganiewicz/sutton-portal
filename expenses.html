@@ -25,8 +25,8 @@
         </select>
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <canvas id="expenseChart" class="w-full h-[300px]"></canvas>
-        <canvas id="stackedChart" class="w-full h-[300px]"></canvas>
+        <canvas id="expenseChart" class="w-full h-[250px]"></canvas>
+        <canvas id="stackedChart" class="w-full h-[250px]"></canvas>
       </div>
       <div class="overflow-x-auto mt-6">
         <table class="table-auto w-full max-w-7xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
@@ -62,7 +62,11 @@
     let stackedInstance = null;
 
     function formatCurrency(num) {
-      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0
+      }).format(num);
     }
 
     function calculateChange(prev, curr) {
@@ -87,104 +91,6 @@
         li.innerHTML = `<strong>${func}</strong><ul class="ml-4 space-y-1">${depts.map(d => `<li><a href="#${d.name.replace(/\s+/g, '_')}-${func.replace(/\s+/g, '_')}" class="text-blue-600 hover:underline">${d.name}</a></li>`).join('')}</ul>`;
         sidebar.appendChild(li);
       });
-    }
-
-    function populateTable(data) {
-      const table = document.getElementById("expenseTable");
-      const footer = document.getElementById("expenseTotal");
-      table.innerHTML = '';
-      footer.innerHTML = '';
-
-      const grouped = {};
-      let grandTotals = { fy23: 0, fy24: 0, fy25: 0, fy26: 0 };
-
-      data.forEach(row => {
-        const account = row["Account Number"];
-        const desc = row["Description"] || "";
-        const deptCode = account.split("-")[1];
-        const funcName = functionMap[deptCode] || "Unknown";
-        const deptName = departmentMap[deptCode] || "";
-
-        const fy23 = parseFloat(row["2023 ACTUAL"].replace(/,/g, '')) || 0;
-        const fy24 = parseFloat(row["2024 ACTUAL"].replace(/,/g, '')) || 0;
-        const fy25 = parseFloat(row["2025 BUDGET"].replace(/,/g, '')) || 0;
-        const fy26 = parseFloat(row["2026 BUDGET"].replace(/,/g, '')) || 0;
-
-        if (!grouped[funcName]) grouped[funcName] = {};
-        if (!grouped[funcName][deptName]) grouped[funcName][deptName] = [];
-        grouped[funcName][deptName].push({ account, desc, fy23, fy24, fy25, fy26 });
-
-        grandTotals.fy23 += fy23;
-        grandTotals.fy24 += fy24;
-        grandTotals.fy25 += fy25;
-        grandTotals.fy26 += fy26;
-      });
-
-      for (const func in grouped) {
-        let funcTotals = { fy23: 0, fy24: 0, fy25: 0, fy26: 0 };
-        for (const dept in grouped[func]) {
-          let deptTotals = { fy23: 0, fy24: 0, fy25: 0, fy26: 0 };
-          grouped[func][dept].forEach(item => {
-            const [diff, percent] = calculateChange(item.fy25, item.fy26);
-            table.insertAdjacentHTML("beforeend", `
-              <tr class="border-b">
-                <td class="p-3">${item.account}</td>
-                <td class="p-3">${item.desc}</td>
-                <td class="p-3">${formatCurrency(item.fy23)}</td>
-                <td class="p-3">${formatCurrency(item.fy24)}</td>
-                <td class="p-3">${formatCurrency(item.fy25)}</td>
-                <td class="p-3">${formatCurrency(item.fy26)}</td>
-                <td class="p-3">${formatCurrency(diff)}</td>
-                <td class="p-3">${percent.toFixed(1)}%</td>
-              </tr>`);
-            deptTotals.fy23 += item.fy23;
-            deptTotals.fy24 += item.fy24;
-            deptTotals.fy25 += item.fy25;
-            deptTotals.fy26 += item.fy26;
-          });
-
-          const [deptDiff, deptPct] = calculateChange(deptTotals.fy25, deptTotals.fy26);
-          table.insertAdjacentHTML("beforeend", `
-            <tr class="bg-gray-100 font-semibold">
-              <td colspan="2" class="p-3 text-right">Subtotal - ${dept}</td>
-              <td class="p-3">${formatCurrency(deptTotals.fy23)}</td>
-              <td class="p-3">${formatCurrency(deptTotals.fy24)}</td>
-              <td class="p-3">${formatCurrency(deptTotals.fy25)}</td>
-              <td class="p-3">${formatCurrency(deptTotals.fy26)}</td>
-              <td class="p-3">${formatCurrency(deptDiff)}</td>
-              <td class="p-3">${deptPct.toFixed(1)}%</td>
-            </tr>`);
-
-          funcTotals.fy23 += deptTotals.fy23;
-          funcTotals.fy24 += deptTotals.fy24;
-          funcTotals.fy25 += deptTotals.fy25;
-          funcTotals.fy26 += deptTotals.fy26;
-        }
-
-        const [funcDiff, funcPct] = calculateChange(funcTotals.fy25, funcTotals.fy26);
-        table.insertAdjacentHTML("beforeend", `
-          <tr class="bg-gray-200 font-bold">
-            <td colspan="2" class="p-3 text-right">Subtotal - ${func}</td>
-            <td class="p-3">${formatCurrency(funcTotals.fy23)}</td>
-            <td class="p-3">${formatCurrency(funcTotals.fy24)}</td>
-            <td class="p-3">${formatCurrency(funcTotals.fy25)}</td>
-            <td class="p-3">${formatCurrency(funcTotals.fy26)}</td>
-            <td class="p-3">${formatCurrency(funcDiff)}</td>
-            <td class="p-3">${funcPct.toFixed(1)}%</td>
-          </tr>`);
-      }
-
-      const [grandDiff, grandPct] = calculateChange(grandTotals.fy25, grandTotals.fy26);
-      footer.insertAdjacentHTML("beforeend", `
-        <tr class="bg-gray-300 font-extrabold">
-          <td colspan="2" class="p-3 text-right">Grand Total</td>
-          <td class="p-3">${formatCurrency(grandTotals.fy23)}</td>
-          <td class="p-3">${formatCurrency(grandTotals.fy24)}</td>
-          <td class="p-3">${formatCurrency(grandTotals.fy25)}</td>
-          <td class="p-3">${formatCurrency(grandTotals.fy26)}</td>
-          <td class="p-3">${formatCurrency(grandDiff)}</td>
-          <td class="p-3">${grandPct.toFixed(1)}%</td>
-        </tr>`);
     }
 
     function renderChart(data) {
