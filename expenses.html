@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sutton Budget Portal - Expenses</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
 </head>
@@ -24,6 +24,8 @@
           <option value="610">Transfer Station Enterprise Fund</option>
         </select>
       </div>
+
+      <!-- Charts in Cards -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white p-4 rounded-lg shadow-md">
           <h2 class="text-lg font-semibold mb-2 text-center">FY26 Budget by Function</h2>
@@ -34,10 +36,75 @@
           <canvas id="stackedChart" class="w-full h-[250px]"></canvas>
         </div>
       </div>
-      <!-- Table omitted for brevity -->
+
+      <!-- Data Table -->
+      <div class="overflow-x-auto mt-6">
+        <table class="table-auto w-full max-w-7xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
+          <thead>
+            <tr class="bg-blue-600 text-white text-left">
+              <th class="p-3">Account</th>
+              <th class="p-3">Description</th>
+              <th class="p-3">2023 Actual</th>
+              <th class="p-3">2024 Actual</th>
+              <th class="p-3">2025 Budget</th>
+              <th class="p-3">2026 Budget</th>
+              <th class="p-3">$ Change</th>
+              <th class="p-3">% Change</th>
+            </tr>
+          </thead>
+          <tbody id="expenseTable" class="text-sm text-gray-700"></tbody>
+          <tfoot id="expenseTotal" class="font-bold text-black"></tfoot>
+        </table>
+      </div>
     </main>
   </div>
+
   <script>
+    const expenseSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTQI0lHBLQexriYO48j0pv5wbmy0e3osDh1m9QPZB9xBkq5KRqqxFrZFroAK5Gg0_NIaTht7c7RPcWQ/pub?output=csv';
+    const chartOfAccountsUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRezgn-Gen4lhkuO13Jm_y1QhYP4UovUyDKuLvGGrKqo1JwqnzSVdsSOr26epUKCkNuWdIQd-mu46sW/pub?output=csv';
+
+    let currentFund = "010";
+    let departmentMap = {};
+    let functionMap = {};
+    let function2Map = {};
+    let expenseData = [];
+    let chartInstance = null;
+    let stackedInstance = null;
+
+    function formatCurrency(num) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0
+      }).format(num);
+    }
+
+    function calculateChange(prev, curr) {
+      const diff = curr - prev;
+      const percent = prev !== 0 ? (diff / prev) * 100 : 0;
+      return [diff, percent];
+    }
+
+    function buildSidebar() {
+      const sidebar = document.getElementById("sidebarMenu");
+      sidebar.innerHTML = '';
+      const grouped = {};
+      Object.keys(departmentMap).forEach(code => {
+        const func = functionMap[code] || "Other";
+        const dept = departmentMap[code];
+        if (!grouped[func]) grouped[func] = [];
+        grouped[func].push({ code, name: dept });
+      });
+      Object.entries(grouped).forEach(([func, depts]) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<strong>${func}</strong><ul class="ml-4 space-y-1">${depts.map(d => {
+          const anchor = `${d.name.replace(/\\s+/g, '_')}-${func.replace(/\\s+/g, '_')}`;
+          return `<li><a href="#${anchor}" class="text-blue-600 hover:underline">${d.name}</a></li>`;
+        }).join('')}</ul>`;
+        sidebar.appendChild(li);
+      });
+    }
+
     function renderChart(data) {
       const chartData = {};
       data.forEach(row => {
@@ -47,23 +114,90 @@
         chartData[funcName] = (chartData[funcName] || 0) + value;
       });
 
-      const colors = Array.from({ length: Object.keys(chartData).length }, (_, i) => `hsl(${(i * 360 / Object.keys(chartData).length)}, 70%, 60%)`);
+      const labels = Object.keys(chartData);
+      const values = Object.values(chartData);
+      const colors = labels.map((_, i) => `hsl(${i * 360 / labels.length}, 70%, 60%)`);
+
       const ctx = document.getElementById("expenseChart").getContext("2d");
       if (chartInstance) chartInstance.destroy();
 
       chartInstance = new Chart(ctx, {
         type: 'pie',
         data: {
-          labels: Object.keys(chartData),
+          labels,
           datasets: [{
             label: "2026 Budget",
-            data: Object.values(chartData),
+            data: values,
             backgroundColor: colors
           }]
         },
         options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
       });
     }
+
+    function renderStackedChart(data) {
+      const chartData = {};
+      const years = ["2023 ACTUAL", "2024 ACTUAL", "2025 BUDGET", "2026 BUDGET"];
+      data.forEach(row => {
+        const deptCode = row["Account Number"].split("-")[1];
+        const func2 = function2Map[deptCode] || "Unknown";
+        if (!chartData[func2]) chartData[func2] = [0, 0, 0, 0];
+        years.forEach((year, i) => {
+          chartData[func2][i] += parseFloat(row[year].replace(/,/g, '')) || 0;
+        });
+      });
+      const ctx = document.getElementById("stackedChart").getContext("2d");
+      if (stackedInstance) stackedInstance.destroy();
+      stackedInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ["FY23", "FY24", "FY25", "FY26"],
+          datasets: Object.entries(chartData).map(([label, values]) => ({
+            label,
+            data: values,
+            backgroundColor: `hsl(${Math.random() * 360}, 70%, 60%)`
+          }))
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } },
+          scales: { x: { stacked: true }, y: { stacked: true } }
+        }
+      });
+    }
+
+    function loadAndRender() {
+      const filtered = expenseData.filter(row => row["Account Number"] && row["Account Number"].startsWith(currentFund));
+      buildSidebar();
+      populateTable(filtered);
+      renderChart(filtered);
+      renderStackedChart(filtered);
+    }
+
+    document.getElementById("fundSelector").addEventListener("change", e => {
+      currentFund = e.target.value;
+      loadAndRender();
+    });
+
+    Papa.parse(chartOfAccountsUrl, {
+      header: true,
+      download: true,
+      complete: results => {
+        results.data.forEach(row => {
+          departmentMap[row["DEPT CODE"]] = row["DEPARTMENT"];
+          functionMap[row["DEPT CODE"]] = row["FUNCTION_1"] || row["FUNCTION_2"] || "Unknown";
+          function2Map[row["DEPT CODE"]] = row["FUNCTION_2"] || row["FUNCTION_1"] || "Unknown";
+        });
+        Papa.parse(expenseSheetUrl, {
+          header: true,
+          download: true,
+          complete: results => {
+            expenseData = results.data;
+            loadAndRender();
+          }
+        });
+      }
+    });
   </script>
 </body>
 </html>
