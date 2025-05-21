@@ -163,7 +163,7 @@
         complete: results => {
           results.data.forEach(row => {
             departmentMap[row["DEPT CODE"]] = row["DEPARTMENT"];
-            functionMap[row["DEPT CODE"]] = row["FUNCTION_1"];
+            functionMap[row["DEPT CODE"]] = row["FUNCTION_1"] || row["FUNCTION_2"] || "Unknown";
           });
           populateFilters();
 
