@@ -94,7 +94,7 @@
 
       const filtered = expenseData.filter(row => {
         const account = row["Account Number"];
-        if (!account.startsWith(fundCode)) return false;
+        if (!account || !account.startsWith(fundCode)) return false;
         const deptCode = account.slice(3, 6);
         const deptName = departmentMap[deptCode];
         const funcName = functionMap[deptCode];
@@ -161,6 +161,7 @@
         header: true,
         download: true,
         complete: results => {
+          console.log("Chart of Accounts sample:", results.data[0]);
           results.data.forEach(row => {
             departmentMap[row["DEPT CODE"]] = row["DEPARTMENT"];
             functionMap[row["DEPT CODE"]] = row["FUNCTION_1"] || row["FUNCTION_2"] || "Unknown";
@@ -171,6 +172,7 @@
             header: true,
             download: true,
             complete: results => {
+              console.log("Expense data sample:", results.data[0]);
               expenseData = results.data;
               applyFilters();
             }
