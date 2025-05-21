@@ -15,13 +15,6 @@
       <a href="index.html" class="text-blue-600 underline">Back to Home</a>
     </div>
 
-    <div class="flex flex-wrap justify-center gap-4 mb-6">
-      <button onclick="updateChartYear('FY2023')" class="year-button px-4 py-2 rounded border">FY23</button>
-      <button onclick="updateChartYear('FY2024')" class="year-button px-4 py-2 rounded border">FY24</button>
-      <button onclick="updateChartYear('FY2025 Budget')" class="year-button px-4 py-2 rounded border">FY25</button>
-      <button onclick="updateChartYear('FY2026 Budget')" class="year-button px-4 py-2 rounded border">FY26</button>
-    </div>
-
     <div class="flex justify-center gap-4 mb-6">
       <select id="functionFilter" class="px-4 py-2 rounded border" onchange="applyFilters()">
         <option value="">All Functions</option>
@@ -37,6 +30,7 @@
         <thead>
           <tr class="bg-blue-600 text-white text-left">
             <th class="p-3">Account</th>
+            <th class="p-3">Description</th>
             <th class="p-3">Department</th>
             <th class="p-3">Function</th>
             <th class="p-3">FY23</th>
@@ -54,16 +48,110 @@
   </div>
 
   <script>
-    const yearPairs = {
-      'FY2024': ['FY2023', 'FY2024'],
-      'FY2025 Budget': ['FY2024', 'FY2025 Budget'],
-      'FY2026 Budget': ['FY2025 Budget', 'FY2026 Budget']
-    };
+    const expenseSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTQI0lHBLQexriYO48j0pv5wbmy0e3osDh1m9QPZB9xBkq5KRqqxFrZFroAK5Gg0_NIaTht7c7RPcWQ/pub?output=csv';
+    const chartOfAccountsUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRezgn-Gen4lhkuO13Jm_y1QhYP4UovUyDKuLvGGrKqo1JwqnzSVdsSOr26epUKCkNuWdIQd-mu46sW/pub?output=csv';
+
+    const fundCode = new URLSearchParams(window.location.search).get("fund") || "010";
+    let departmentMap = {};
+    let functionMap = {};
+    let expenseData = [];
+    let chartInstance = null;
+
+    function formatCurrency(num) {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+    }
 
     function calculateChange(prev, curr) {
       const diff = curr - prev;
       const percent = prev !== 0 ? (diff / prev) * 100 : 0;
       return [diff, percent];
+    }
+
+    function populateFilters() {
+      const deptSet = new Set();
+      const funcSet = new Set();
+
+      Object.keys(departmentMap).forEach(dept => deptSet.add(departmentMap[dept]));
+      Object.values(functionMap).forEach(func => funcSet.add(func));
+
+      const deptSelect = document.getElementById('departmentFilter');
+      const funcSelect = document.getElementById('functionFilter');
+
+      deptSet.forEach(dept => {
+        deptSelect.insertAdjacentHTML('beforeend', `<option value="${dept}">${dept}</option>`);
+      });
+
+      funcSet.forEach(func => {
+        funcSelect.insertAdjacentHTML('beforeend', `<option value="${func}">${func}</option>`);
+      });
+    }
+
+    function applyFilters() {
+      const deptFilter = document.getElementById('departmentFilter').value;
+      const funcFilter = document.getElementById('functionFilter').value;
+
+      const filtered = expenseData.filter(row => {
+        const account = row["Account Number"];
+        if (!account.startsWith(fundCode)) return false;
+        const deptCode = account.slice(4, 7);
+        const deptName = departmentMap[deptCode];
+        const funcName = functionMap[deptCode];
+
+        if (deptFilter && deptName !== deptFilter) return false;
+        if (funcFilter && funcName !== funcFilter) return false;
+        return true;
+      });
+
+      populateTable(filtered);
+      renderChart(filtered);
+    }
+
+    function renderChart(data) {
+      const chartData = {};
+      data.forEach(row => {
+        const account = row["Account Number"];
+        const deptCode = account.slice(4, 7);
+        const deptName = departmentMap[deptCode] || deptCode;
+        const value = parseFloat(row["FY2025 Budget"] || 0);
+        if (!chartData[deptName]) chartData[deptName] = 0;
+        chartData[deptName] += value;
+      });
+
+      const ctx = document.getElementById("expenseChart").getContext("2d");
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(chartData),
+          datasets: [{
+            label: `FY25 Budget by Department`,
+            data: Object.values(chartData),
+            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+            borderColor: 'rgba(59, 130, 246, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: context => formatCurrency(context.parsed.y)
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: value => formatCurrency(value)
+              }
+            }
+          }
+        }
+      });
     }
 
     function populateTable(data) {
@@ -75,25 +163,24 @@
       const subtotalByFunction = {};
       let grandTotal = 0;
 
-      const [prevYear, currYear] = yearPairs[selectedYear] || ['FY2024', 'FY2025 Budget'];
-
       data.forEach(row => {
         const account = row["Account Number"];
+        const desc = row["Description"] || "";
         const deptCode = account.slice(4, 7);
         const deptName = departmentMap[deptCode] || deptCode;
         const funcName = functionMap[deptCode] || "Unknown";
+
         const fy23 = parseFloat(row["FY2023"] || 0);
         const fy24 = parseFloat(row["FY2024"] || 0);
         const fy25 = parseFloat(row["FY2025 Budget"] || 0);
         const fy26 = parseFloat(row["FY2026 Budget"] || 0);
 
-        const current = parseFloat(row[currYear] || 0);
-        const previous = parseFloat(row[prevYear] || 0);
-        const [diff, percent] = calculateChange(previous, current);
+        const [diff, percent] = calculateChange(fy25, fy26);
 
         const rowHTML = `
           <tr class="border-b">
             <td class="p-3">${account}</td>
+            <td class="p-3">${desc}</td>
             <td class="p-3">${deptName}</td>
             <td class="p-3">${funcName}</td>
             <td class="p-3">${formatCurrency(fy23)}</td>
@@ -107,17 +194,42 @@
         table.insertAdjacentHTML("beforeend", rowHTML);
 
         if (!subtotalByFunction[funcName]) subtotalByFunction[funcName] = 0;
-        subtotalByFunction[funcName] += current;
-        grandTotal += current;
+        subtotalByFunction[funcName] += fy26;
+        grandTotal += fy26;
       });
 
       Object.entries(subtotalByFunction).forEach(([func, val]) => {
-        const row = `<tr><td colspan="8" class="p-3 text-right bg-gray-200">Subtotal for ${func}</td><td class="p-3 bg-gray-200">${formatCurrency(val)}</td></tr>`;
+        const row = `<tr><td colspan="9" class="p-3 text-right bg-gray-200">Subtotal for ${func}</td><td class="p-3 bg-gray-200">${formatCurrency(val)}</td></tr>`;
         footer.insertAdjacentHTML('beforeend', row);
       });
 
-      footer.insertAdjacentHTML('beforeend', `<tr><td colspan="8" class="p-3 text-right bg-gray-300">Grand Total</td><td class="p-3 bg-gray-300">${formatCurrency(grandTotal)}</td></tr>`);
+      footer.insertAdjacentHTML('beforeend', `<tr><td colspan="9" class="p-3 text-right bg-gray-300">Grand Total</td><td class="p-3 bg-gray-300">${formatCurrency(grandTotal)}</td></tr>`);
     }
+
+    function startApp() {
+      Papa.parse(chartOfAccountsUrl, {
+        header: true,
+        download: true,
+        complete: results => {
+          results.data.forEach(row => {
+            departmentMap[row["Dept Code"]] = row["Department"];
+            functionMap[row["Dept Code"]] = row["Function"];
+          });
+          populateFilters();
+
+          Papa.parse(expenseSheetUrl, {
+            header: true,
+            download: true,
+            complete: results => {
+              expenseData = results.data;
+              applyFilters();
+            }
+          });
+        }
+      });
+    }
+
+    window.onload = startApp;
   </script>
 </body>
 </html>
