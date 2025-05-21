@@ -186,8 +186,12 @@
     }
 
     function loadAndRender() {
-      const filteredData = expenseData.filter(row => row["Account Number"].startsWith(currentFund));
-      populateTable(filteredData);
+      const filteredData = expenseData.filter(row => row["Account Number"] && row["Account Number"].startsWith(currentFund));
+      if (typeof populateTable === 'function') {
+        populateTable(filteredData);
+      } else {
+        console.error("populateTable is not defined");
+      }
       renderChart(filteredData);
       renderStackedChart(filteredData);
     }
