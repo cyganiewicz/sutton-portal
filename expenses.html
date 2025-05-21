@@ -95,7 +95,7 @@
       const filtered = expenseData.filter(row => {
         const account = row["Account Number"];
         if (!account.startsWith(fundCode)) return false;
-        const deptCode = account.slice(5, 8);
+        const deptCode = account.slice(3, 6);
         const deptName = departmentMap[deptCode];
         const funcName = functionMap[deptCode];
 
@@ -112,9 +112,9 @@
       const chartData = {};
       data.forEach(row => {
         const account = row["Account Number"];
-        const deptCode = account.slice(5, 8);
+        const deptCode = account.slice(3, 6);
         const funcName = functionMap[deptCode] || "Unknown";
-        const value = parseFloat(row["2025 BUDGET"].replace(/[^\d.-]/g, '')) || 0;
+        const value = parseFloat(row["2025 BUDGET"] || 0);
         if (!chartData[funcName]) chartData[funcName] = 0;
         chartData[funcName] += value;
       });
