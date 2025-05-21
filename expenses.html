@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sutton Budget Portal - Expenses</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+</head>
+<body class="bg-gray-100">
+  <div class="p-6">
+    <h1 class="text-3xl font-bold mb-4 text-center">Sutton Budget Expenses</h1>
+    <div class="text-center mb-4">
+      <a href="index.html" class="text-blue-600 underline">Back to Home</a>
+    </div>
+    <canvas id="expenseChart" class="mb-8 mx-auto max-w-4xl"></canvas>
+    <div class="overflow-x-auto">
+      <table class="table-auto w-full max-w-6xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
+        <thead>
+          <tr class="bg-blue-600 text-white text-left">
+            <th class="p-3">Account</th>
+            <th class="p-3">Department</th>
+            <th class="p-3">FY23</th>
+            <th class="p-3">FY24</th>
+            <th class="p-3">FY25 Budget</th>
+            <th class="p-3">FY26 Budget</th>
+          </tr>
+        </thead>
+        <tbody id="expenseTable" class="text-sm text-gray-700"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTQI0lHBLQexriYO48j0pv5wbmy0e3osDh1m9QPZB9xBkq5KRqqxFrZFroAK5Gg0_NIaTht7c7RPcWQ/pub?output=csv';
+    const fundCode = new URLSearchParams(window.location.search).get("fund") || "010";
+
+    function getDepartmentFromAccount(accountNum) {
+      return accountNum.slice(4, 7);
+    }
+
+    function formatCurrency(num) {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+    }
+
+    function groupAndRender(data) {
+      const table = document.getElementById("expenseTable");
+      const chartData = {};
+
+      data.forEach(row => {
+        const account = row["Account Number"];
+        if (!account.startsWith(fundCode)) return;
+
+        const department = getDepartmentFromAccount(account);
+        const fy23 = parseFloat(row["FY2023"] || 0);
+        const fy24 = parseFloat(row["FY2024"] || 0);
+        const fy25 = parseFloat(row["FY2025 Budget"] || 0);
+        const fy26 = parseFloat(row["FY2026 Budget"] || 0);
+
+        if (!chartData[department]) chartData[department] = 0;
+        chartData[department] += fy25;
+
+        const rowHTML = `
+          <tr class="border-b">
+            <td class="p-3">${account}</td>
+            <td class="p-3">${department}</td>
+            <td class="p-3">${formatCurrency(fy23)}</td>
+            <td class="p-3">${formatCurrency(fy24)}</td>
+            <td class="p-3">${formatCurrency(fy25)}</td>
+            <td class="p-3">${formatCurrency(fy26)}</td>
+          </tr>`;
+
+        table.insertAdjacentHTML("beforeend", rowHTML);
+      });
+
+      const ctx = document.getElementById("expenseChart").getContext("2d");
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(chartData),
+          datasets: [{
+            label: 'FY25 Budget by Department',
+            data: Object.values(chartData),
+            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+            borderColor: 'rgba(59, 130, 246, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: context => formatCurrency(context.parsed.y)
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: value => formatCurrency(value)
+              }
+            }
+          }
+        }
+      });
+    }
+
+    Papa.parse(sheetUrl, {
+      header: true,
+      download: true,
+      complete: results => groupAndRender(results.data)
+    });
+  </script>
+</body>
+</html>
