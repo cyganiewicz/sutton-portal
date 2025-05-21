@@ -48,26 +48,24 @@
       </div>
 
       <!-- Data Table -->
-      <div class="overflow-x-auto mt-6">
-        <table class="table-auto w-full max-w-7xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
-          <thead>
-            <tr class="bg-blue-600 text-white text-left">
-              <th class="p-3">Account</th>
-              <th class="p-3">Description</th>
-              <th class="p-3">2023 Actual</th>
-              <th class="p-3">2024 Actual</th>
-              <th class="p-3">2025 Budget</th>
-              <th class="p-3">2026 Budget</th>
-              <th class="p-3">$ Change</th>
-              <th class="p-3">% Change</th>
-            </tr>
-          </thead>
-          <tbody id="expenseTable" class="text-sm text-gray-700"></tbody>
-          <tfoot id="expenseTotal" class="font-bold text-black"></tfoot>
-        </table>
-      </div>
-    </main>
-  </div>
+      <div class="overflow-y-auto max-h-[80vh] overflow-x-auto mt-6">
+  <table class="table-auto w-full max-w-7xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
+    <thead class="bg-blue-600 text-white sticky top-[128px] z-10">
+      <tr>
+        <th class="p-3">Account</th>
+        <th class="p-3">Description</th>
+        <th class="p-3">2023 Actual</th>
+        <th class="p-3">2024 Actual</th>
+        <th class="p-3">2025 Budget</th>
+        <th class="p-3">2026 Budget</th>
+        <th class="p-3">$ Change</th>
+        <th class="p-3">% Change</th>
+      </tr>
+    </thead>
+    <tbody id="expenseTable" class="text-sm text-gray-700"></tbody>
+    <tfoot id="expenseTotal" class="font-bold text-black"></tfoot>
+  </table>
+</div>
 
   <script>
     const expenseSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTQI0lHBLQexriYO48j0pv5wbmy0e3osDh1m9QPZB9xBkq5KRqqxFrZFroAK5Gg0_NIaTht7c7RPcWQ/pub?output=csv';
