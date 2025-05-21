@@ -31,8 +31,6 @@
           <tr class="bg-blue-600 text-white text-left">
             <th class="p-3">Account</th>
             <th class="p-3">Description</th>
-            <th class="p-3">Department</th>
-            <th class="p-3">Function</th>
             <th class="p-3">2023 Actual</th>
             <th class="p-3">2024 Actual</th>
             <th class="p-3">2025 Budget</th>
@@ -160,14 +158,13 @@
       table.innerHTML = '';
       footer.innerHTML = '';
 
-      const subtotalByFunction = {};
+      const subtotalMap = {};
       let grandTotal = 0;
 
       data.forEach(row => {
         const account = row["Account Number"];
         const desc = row["Description"] || "";
         const deptCode = account.slice(4, 7);
-        const deptName = departmentMap[deptCode] || deptCode;
         const funcName = functionMap[deptCode] || "Unknown";
 
         const fy23 = parseFloat(row["2023 ACTUAL"] || 0);
@@ -181,8 +178,6 @@
           <tr class="border-b">
             <td class="p-3">${account}</td>
             <td class="p-3">${desc}</td>
-            <td class="p-3">${deptName}</td>
-            <td class="p-3">${funcName}</td>
             <td class="p-3">${formatCurrency(fy23)}</td>
             <td class="p-3">${formatCurrency(fy24)}</td>
             <td class="p-3">${formatCurrency(fy25)}</td>
@@ -193,17 +188,25 @@
 
         table.insertAdjacentHTML("beforeend", rowHTML);
 
-        if (!subtotalByFunction[funcName]) subtotalByFunction[funcName] = 0;
-        subtotalByFunction[funcName] += fy26;
+        if (!subtotalMap[funcName]) subtotalMap[funcName] = 0;
+        subtotalMap[funcName] += fy26;
         grandTotal += fy26;
       });
 
-      Object.entries(subtotalByFunction).forEach(([func, val]) => {
-        const row = `<tr><td colspan="9" class="p-3 text-right bg-gray-200">Subtotal for ${func}</td><td class="p-3 bg-gray-200">${formatCurrency(val)}</td></tr>`;
-        footer.insertAdjacentHTML('beforeend', row);
+      Object.entries(subtotalMap).forEach(([func, total]) => {
+        const subtotalRow = `
+          <tr class="bg-gray-100">
+            <td colspan="7" class="p-3 text-right">Subtotal for ${func}</td>
+            <td class="p-3">${formatCurrency(total)}</td>
+          </tr>`;
+        footer.insertAdjacentHTML('beforeend', subtotalRow);
       });
 
-      footer.insertAdjacentHTML('beforeend', `<tr><td colspan="9" class="p-3 text-right bg-gray-300">Grand Total</td><td class="p-3 bg-gray-300">${formatCurrency(grandTotal)}</td></tr>`);
+      footer.insertAdjacentHTML('beforeend', `
+        <tr class="bg-gray-200">
+          <td colspan="7" class="p-3 text-right">Grand Total</td>
+          <td class="p-3">${formatCurrency(grandTotal)}</td>
+        </tr>`);
     }
 
     function startApp() {
