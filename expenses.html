@@ -16,8 +16,13 @@
     </aside>
     <main class="flex-1 p-6">
       <h1 class="text-3xl font-bold mb-4 text-center">Sutton Budget Expenses</h1>
-      <div class="text-center mb-4">
-        <a href="index.html" class="text-blue-600 underline">Back to Home</a>
+      <div class="text-center mb-6">
+        <label for="fundSelector" class="mr-2 font-medium">Select Fund:</label>
+        <select id="fundSelector" class="p-2 border rounded">
+          <option value="010">General Fund</option>
+          <option value="600">Sewer Enterprise Fund</option>
+          <option value="610">Transfer Station Enterprise Fund</option>
+        </select>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -50,7 +55,7 @@
     const expenseSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTQI0lHBLQexriYO48j0pv5wbmy0e3osDh1m9QPZB9xBkq5KRqqxFrZFroAK5Gg0_NIaTht7c7RPcWQ/pub?output=csv';
     const chartOfAccountsUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRezgn-Gen4lhkuO13Jm_y1QhYP4UovUyDKuLvGGrKqo1JwqnzSVdsSOr26epUKCkNuWdIQd-mu46sW/pub?output=csv';
 
-    const fundCode = new URLSearchParams(window.location.search).get("fund") || "010";
+    let currentFund = "010";
     let departmentMap = {};
     let functionMap = {};
     let function2Map = {};
@@ -164,6 +169,7 @@
 
     function buildSidebar() {
       const sidebar = document.getElementById("sidebarMenu");
+      sidebar.innerHTML = '';
       const grouped = {};
       Object.keys(departmentMap).forEach(code => {
         const func = functionMap[code] || "Other";
@@ -179,7 +185,20 @@
       });
     }
 
+    function loadAndRender() {
+      const filteredData = expenseData.filter(row => row["Account Number"].startsWith(currentFund));
+      populateTable(filteredData);
+      renderChart(filteredData);
+      renderStackedChart(filteredData);
+    }
+
     function startApp() {
+      document.getElementById("fundSelector").value = currentFund;
+      document.getElementById("fundSelector").addEventListener("change", e => {
+        currentFund = e.target.value;
+        loadAndRender();
+      });
+
       Papa.parse(chartOfAccountsUrl, {
         header: true,
         download: true,
@@ -195,9 +214,7 @@
             download: true,
             complete: results => {
               expenseData = results.data;
-              populateTable(expenseData);
-              renderChart(expenseData);
-              renderStackedChart(expenseData);
+              loadAndRender();
             }
           });
         }
