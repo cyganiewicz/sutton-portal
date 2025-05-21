@@ -162,8 +162,8 @@
         download: true,
         complete: results => {
           results.data.forEach(row => {
-            departmentMap[row["Dept Code"]] = row["Department"];
-            functionMap[row["Dept Code"]] = row["Function"];
+            departmentMap[row["DEPT CODE"]] = row["DEPARTMENT"];
+            functionMap[row["DEPT CODE"]] = row["FUNCTION_1"];
           });
           populateFilters();
 
