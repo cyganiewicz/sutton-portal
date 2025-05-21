@@ -9,31 +9,41 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
 </head>
 <body class="bg-gray-100">
-  <div class="p-6">
-    <h1 class="text-3xl font-bold mb-4 text-center">Sutton Budget Expenses</h1>
-    <div class="text-center mb-4">
-      <a href="index.html" class="text-blue-600 underline">Back to Home</a>
-    </div>
+  <div class="flex">
+    <aside class="w-64 bg-white p-4 shadow-md h-screen overflow-y-auto sticky top-0">
+      <h2 class="text-lg font-semibold mb-4">Navigate by Function</h2>
+      <ul id="sidebarMenu" class="space-y-2 text-sm"></ul>
+    </aside>
+    <main class="flex-1 p-6">
+      <h1 class="text-3xl font-bold mb-4 text-center">Sutton Budget Expenses</h1>
+      <div class="text-center mb-4">
+        <a href="index.html" class="text-blue-600 underline">Back to Home</a>
+      </div>
 
-    <canvas id="expenseChart" class="mb-8 mx-auto w-full max-w-6xl h-[500px]"></canvas>
-    <div class="overflow-x-auto">
-      <table class="table-auto w-full max-w-7xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
-        <thead>
-          <tr class="bg-blue-600 text-white text-left">
-            <th class="p-3">Account</th>
-            <th class="p-3">Description</th>
-            <th class="p-3">2023 Actual</th>
-            <th class="p-3">2024 Actual</th>
-            <th class="p-3">2025 Budget</th>
-            <th class="p-3">2026 Budget</th>
-            <th class="p-3">$ Change</th>
-            <th class="p-3">% Change</th>
-          </tr>
-        </thead>
-        <tbody id="expenseTable" class="text-sm text-gray-700"></tbody>
-        <tfoot id="expenseTotal" class="font-bold text-black"></tfoot>
-      </table>
-    </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <canvas id="expenseChart" class="w-full h-[300px]"></canvas>
+        <canvas id="stackedChart" class="w-full h-[300px]"></canvas>
+      </div>
+
+      <div class="overflow-x-auto mt-6">
+        <table class="table-auto w-full max-w-7xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
+          <thead>
+            <tr class="bg-blue-600 text-white text-left">
+              <th class="p-3">Account</th>
+              <th class="p-3">Description</th>
+              <th class="p-3">2023 Actual</th>
+              <th class="p-3">2024 Actual</th>
+              <th class="p-3">2025 Budget</th>
+              <th class="p-3">2026 Budget</th>
+              <th class="p-3">$ Change</th>
+              <th class="p-3">% Change</th>
+            </tr>
+          </thead>
+          <tbody id="expenseTable" class="text-sm text-gray-700"></tbody>
+          <tfoot id="expenseTotal" class="font-bold text-black"></tfoot>
+        </table>
+      </div>
+    </main>
   </div>
 
   <script>
@@ -43,8 +53,10 @@
     const fundCode = new URLSearchParams(window.location.search).get("fund") || "010";
     let departmentMap = {};
     let functionMap = {};
+    let function2Map = {};
     let expenseData = [];
     let chartInstance = null;
+    let stackedInstance = null;
 
     function formatCurrency(num) {
       return new Intl.NumberFormat('en-US', {
@@ -98,102 +110,73 @@
       });
     }
 
-    function populateTable(data) {
-      const table = document.getElementById("expenseTable");
-      const footer = document.getElementById("expenseTotal");
-      table.innerHTML = '';
-      footer.innerHTML = '';
-
-      const grouped = {};
-      let grandTotals = { fy23: 0, fy24: 0, fy25: 0, fy26: 0 };
+    function renderStackedChart(data) {
+      const chartData = {};
+      const years = ["2023 ACTUAL", "2024 ACTUAL", "2025 BUDGET", "2026 BUDGET"];
 
       data.forEach(row => {
         const account = row["Account Number"];
-        const desc = row["Description"] || "";
         const deptCode = account.split("-")[1];
-        const funcName = functionMap[deptCode] || "Unknown";
-        const deptName = departmentMap[deptCode] || "";
+        const func2 = function2Map[deptCode] || "Unknown";
 
-        const fy23 = parseFloat(row["2023 ACTUAL"].replace(/,/g, '')) || 0;
-        const fy24 = parseFloat(row["2024 ACTUAL"].replace(/,/g, '')) || 0;
-        const fy25 = parseFloat(row["2025 BUDGET"].replace(/,/g, '')) || 0;
-        const fy26 = parseFloat(row["2026 BUDGET"].replace(/,/g, '')) || 0;
-
-        if (!grouped[funcName]) grouped[funcName] = {};
-        if (!grouped[funcName][deptName]) grouped[funcName][deptName] = [];
-        grouped[funcName][deptName].push({ account, desc, fy23, fy24, fy25, fy26 });
-
-        grandTotals.fy23 += fy23;
-        grandTotals.fy24 += fy24;
-        grandTotals.fy25 += fy25;
-        grandTotals.fy26 += fy26;
+        if (!chartData[func2]) chartData[func2] = [0, 0, 0, 0];
+        years.forEach((year, idx) => {
+          chartData[func2][idx] += parseFloat(row[year].replace(/,/g, '')) || 0;
+        });
       });
 
-      for (const func in grouped) {
-        let funcTotals = { fy23: 0, fy24: 0, fy25: 0, fy26: 0 };
-        for (const dept in grouped[func]) {
-          let deptTotals = { fy23: 0, fy24: 0, fy25: 0, fy26: 0 };
-          grouped[func][dept].forEach(item => {
-            const [diff, percent] = calculateChange(item.fy25, item.fy26);
-            table.insertAdjacentHTML("beforeend", `
-              <tr class="border-b">
-                <td class="p-3">${item.account}</td>
-                <td class="p-3">${item.desc}</td>
-                <td class="p-3">${formatCurrency(item.fy23)}</td>
-                <td class="p-3">${formatCurrency(item.fy24)}</td>
-                <td class="p-3">${formatCurrency(item.fy25)}</td>
-                <td class="p-3">${formatCurrency(item.fy26)}</td>
-                <td class="p-3">${formatCurrency(diff)}</td>
-                <td class="p-3">${percent.toFixed(1)}%</td>
-              </tr>`);
-            deptTotals.fy23 += item.fy23;
-            deptTotals.fy24 += item.fy24;
-            deptTotals.fy25 += item.fy25;
-            deptTotals.fy26 += item.fy26;
-          });
+      const ctx = document.getElementById("stackedChart").getContext("2d");
+      if (stackedInstance) stackedInstance.destroy();
 
-          const [deptDiff, deptPct] = calculateChange(deptTotals.fy25, deptTotals.fy26);
-          table.insertAdjacentHTML("beforeend", `
-            <tr class="bg-gray-100 font-semibold">
-              <td colspan="2" class="p-3 text-right">Subtotal - ${dept}</td>
-              <td class="p-3">${formatCurrency(deptTotals.fy23)}</td>
-              <td class="p-3">${formatCurrency(deptTotals.fy24)}</td>
-              <td class="p-3">${formatCurrency(deptTotals.fy25)}</td>
-              <td class="p-3">${formatCurrency(deptTotals.fy26)}</td>
-              <td class="p-3">${formatCurrency(deptDiff)}</td>
-              <td class="p-3">${deptPct.toFixed(1)}%</td>
-            </tr>`);
-
-          funcTotals.fy23 += deptTotals.fy23;
-          funcTotals.fy24 += deptTotals.fy24;
-          funcTotals.fy25 += deptTotals.fy25;
-          funcTotals.fy26 += deptTotals.fy26;
+      stackedInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: years.map(y => y.replace(" ACTUAL", "").replace(" BUDGET", "")),
+          datasets: Object.keys(chartData).map(func2 => ({
+            label: func2,
+            data: chartData[func2],
+            backgroundColor: `hsl(${Math.random() * 360}, 70%, 60%)`
+          }))
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: context => `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`
+              }
+            },
+            legend: { position: 'bottom' }
+          },
+          scales: {
+            x: { stacked: true },
+            y: {
+              stacked: true,
+              beginAtZero: true,
+              ticks: {
+                callback: value => formatCurrency(value)
+              }
+            }
+          }
         }
+      });
+    }
 
-        const [funcDiff, funcPct] = calculateChange(funcTotals.fy25, funcTotals.fy26);
-        table.insertAdjacentHTML("beforeend", `
-          <tr class="bg-gray-200 font-bold">
-            <td colspan="2" class="p-3 text-right">Subtotal - ${func}</td>
-            <td class="p-3">${formatCurrency(funcTotals.fy23)}</td>
-            <td class="p-3">${formatCurrency(funcTotals.fy24)}</td>
-            <td class="p-3">${formatCurrency(funcTotals.fy25)}</td>
-            <td class="p-3">${formatCurrency(funcTotals.fy26)}</td>
-            <td class="p-3">${formatCurrency(funcDiff)}</td>
-            <td class="p-3">${funcPct.toFixed(1)}%</td>
-          </tr>`);
-      }
+    function buildSidebar() {
+      const sidebar = document.getElementById("sidebarMenu");
+      const grouped = {};
+      Object.keys(departmentMap).forEach(code => {
+        const func = functionMap[code] || "Other";
+        const dept = departmentMap[code];
+        if (!grouped[func]) grouped[func] = [];
+        grouped[func].push({ code, name: dept });
+      });
 
-      const [grandDiff, grandPct] = calculateChange(grandTotals.fy25, grandTotals.fy26);
-      footer.insertAdjacentHTML("beforeend", `
-        <tr class="bg-gray-300 font-extrabold">
-          <td colspan="2" class="p-3 text-right">Grand Total</td>
-          <td class="p-3">${formatCurrency(grandTotals.fy23)}</td>
-          <td class="p-3">${formatCurrency(grandTotals.fy24)}</td>
-          <td class="p-3">${formatCurrency(grandTotals.fy25)}</td>
-          <td class="p-3">${formatCurrency(grandTotals.fy26)}</td>
-          <td class="p-3">${formatCurrency(grandDiff)}</td>
-          <td class="p-3">${grandPct.toFixed(1)}%</td>
-        </tr>`);
+      Object.entries(grouped).forEach(([func, depts]) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<strong>${func}</strong><ul class="ml-4 space-y-1">${depts.map(d => `<li><a href="#${d.name.replace(/\s+/g, '_')}-${func.replace(/\s+/g, '_')}" class="text-blue-600 hover:underline">${d.name}</a></li>`).join('')}</ul>`;
+        sidebar.appendChild(li);
+      });
     }
 
     function startApp() {
@@ -204,8 +187,9 @@
           results.data.forEach(row => {
             departmentMap[row["DEPT CODE"]] = row["DEPARTMENT"];
             functionMap[row["DEPT CODE"]] = row["FUNCTION_1"] || row["FUNCTION_2"] || "Unknown";
+            function2Map[row["DEPT CODE"]] = row["FUNCTION_2"] || row["FUNCTION_1"] || "Unknown";
           });
-
+          buildSidebar();
           Papa.parse(expenseSheetUrl, {
             header: true,
             download: true,
@@ -213,6 +197,7 @@
               expenseData = results.data;
               populateTable(expenseData);
               renderChart(expenseData);
+              renderStackedChart(expenseData);
             }
           });
         }
