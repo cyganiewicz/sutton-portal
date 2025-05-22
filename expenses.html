@@ -7,6 +7,11 @@
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+  <style>
+    html {
+      scroll-padding-top: 110px;
+    }
+  </style>
 </head>
 <body class="bg-gray-100">
   <header class="bg-white shadow-md sticky top-0 z-50">
@@ -49,24 +54,25 @@
         </div>
       </div>
 
-     <div class="mt-6 border rounded-lg shadow-md relative">
-  <table class="table-auto w-full bg-white">
-    <thead>
-      <tr>
-        <th class="sticky top-[104px] z-50 bg-blue-600 text-white text-left p-3">Account</th>
-        <th class="sticky top-[104px] z-50 bg-blue-600 text-white text-left p-3">Description</th>
-        <th class="sticky top-[104px] z-50 bg-blue-600 text-white text-left p-3">2023 Actual</th>
-        <th class="sticky top-[104px] z-50 bg-blue-600 text-white text-left p-3">2024 Actual</th>
-        <th class="sticky top-[104px] z-50 bg-blue-600 text-white text-left p-3">2025 Budget</th>
-        <th class="sticky top-[104px] z-50 bg-blue-600 text-white text-left p-3">2026 Budget</th>
-        <th class="sticky top-[104px] z-50 bg-blue-600 text-white text-left p-3">$ Change</th>
-        <th class="sticky top-[104px] z-50 bg-blue-600 text-white text-left p-3">% Change</th>
-      </tr>
-    </thead>
-    <tbody id="expenseTable" class="text-sm text-gray-700"></tbody>
-    <tfoot id="expenseTotal" class="font-bold text-black"></tfoot>
-  </table>
-</div>
+      <!-- Table that scrolls with the page -->
+      <div class="mt-6 border rounded-lg shadow-md">
+        <table class="table-auto w-full bg-white">
+          <thead>
+            <tr>
+              <th class="sticky top-[104px] z-50 bg-blue-600 text-white p-3">Account</th>
+              <th class="sticky top-[104px] z-50 bg-blue-600 text-white p-3">Description</th>
+              <th class="sticky top-[104px] z-50 bg-blue-600 text-white p-3">2023 Actual</th>
+              <th class="sticky top-[104px] z-50 bg-blue-600 text-white p-3">2024 Actual</th>
+              <th class="sticky top-[104px] z-50 bg-blue-600 text-white p-3">2025 Budget</th>
+              <th class="sticky top-[104px] z-50 bg-blue-600 text-white p-3">2026 Budget</th>
+              <th class="sticky top-[104px] z-50 bg-blue-600 text-white p-3">$ Change</th>
+              <th class="sticky top-[104px] z-50 bg-blue-600 text-white p-3">% Change</th>
+            </tr>
+          </thead>
+          <tbody id="expenseTable" class="text-sm text-gray-700"></tbody>
+          <tfoot id="expenseTotal" class="font-bold text-black"></tfoot>
+        </table>
+      </div>
     </main>
   </div>
 
