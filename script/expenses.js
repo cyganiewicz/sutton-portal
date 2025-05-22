@@ -65,9 +65,23 @@ function renderPieChart(summary) {
       datasets: [{ data, backgroundColor: colors }]
     },
     options: {
-      responsive: true,
-      plugins: { legend: { position: 'bottom' } }
+  responsive: true,
+  plugins: {
+    tooltip: {
+      callbacks: {
+        label: function (context) {
+          const value = context.raw;
+          const total = context.chart._metasets[0].total || context.dataset.data.reduce((a, b) => a + b, 0);
+          const percentage = ((value / total) * 100).toFixed(1);
+          return `${context.label}: ${value.toLocaleString("en-US", { style: "currency", currency: "USD" })} (${percentage}%)`;
+        }
+      }
+    },
+    legend: {
+      position: 'bottom'
     }
+  }
+}
   });
 }
 
