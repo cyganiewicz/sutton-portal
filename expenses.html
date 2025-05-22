@@ -5,20 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sutton Budget Portal - Expenses</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="styles/expenses_styles.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
-  <style>
-    html {
-      scroll-padding-top: 120px;
-    }
-    thead th {
-      position: sticky;
-      top: 112px;
-      z-index: 40;
-      background-color: #2563eb;
-      color: white;
-    }
-  </style>
 </head>
 <body class="bg-gray-100">
   <header class="bg-white shadow-md sticky top-0 z-50">
@@ -54,15 +43,12 @@
       </div>
 
       <!-- Charts and Stats -->
-      <div class="flex flex-wrap justify-center gap-6">
-        <!-- Pie Chart Tile -->
-        <div class="bg-white p-4 rounded-lg shadow-md w-full md:w-[48%] max-w-[500px] h-[300px] flex flex-col justify-center">
+      <div class="chart-grid">
+        <div class="chart-tile">
           <h2 class="text-lg font-semibold text-center mb-2">FY26 Budget by Function</h2>
           <canvas id="expenseChart" class="w-full h-[220px]"></canvas>
         </div>
-
-        <!-- Bar Chart Tile -->
-        <div class="bg-white p-4 rounded-lg shadow-md w-full md:w-[48%] max-w-[500px] h-[300px] flex flex-col justify-center">
+        <div class="chart-tile">
           <h2 class="text-lg font-semibold text-center mb-2">Multi-Year Comparison by Function Area</h2>
           <canvas id="stackedChart" class="w-full h-[220px]"></canvas>
         </div>
