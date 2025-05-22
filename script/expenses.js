@@ -37,11 +37,14 @@ function buildSidebar(groupedData) {
   });
 }
 
-function updateStats(summaryByFunction, deptCount, totalFY26) {
+function updateStats(summaryByFunction, deptCount, totalFY26, totalFY25) {
   const topFunc = Object.entries(summaryByFunction).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+  const [diff, pct] = calculateChange(totalFY25, totalFY26);
   document.getElementById("statTotalBudget").textContent = formatShortCurrency(totalFY26);
   document.getElementById("statDepartments").textContent = deptCount;
   document.getElementById("statTopFunction").textContent = topFunc;
+  document.getElementById("statDollarChange").textContent = formatCurrency(diff);
+  document.getElementById("statPercentChange").textContent = `${pct.toFixed(1)}%`;
 }
 
 function renderChart(dataByFunc2) {
@@ -179,7 +182,7 @@ function populateTable(filteredData) {
     </tr>
   `;
 
-  updateStats(summaryByFunction2, departmentSet.size, grandTotals[3]);
+  updateStats(summaryByFunction2, departmentSet.size, grandTotals[3], grandTotals[2]);
   renderChart(summaryByFunction2);
 
   const stackedMap = {};
