@@ -4,14 +4,12 @@ const expenseSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTQI0lH
 const chartOfAccountsUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRezgn-Gen4lhkuO13Jm_y1QhYP4UovUyDKuLvGGrKqo1JwqnzSVdsSOr26epUKCkNuWdIQd-mu46sW/pub?output=csv';
 
 let currentFund = "010";
-let expenseData = [], accountMap = {}, functionMap = {}, function2Map = {}, departmentMap = {};
+let expenseData = [], departmentMap = {}, functionMap = {}, function2Map = {};
 let chartInstance = null, stackedInstance = null;
 
-const formatCurrency = num => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency', currency: 'USD', maximumFractionDigits: 0
-  }).format(num);
-};
+const formatCurrency = num => new Intl.NumberFormat('en-US', {
+  style: 'currency', currency: 'USD', maximumFractionDigits: 0
+}).format(num);
 
 const formatShortCurrency = num => {
   if (num >= 1e6) return `$${(num / 1e6).toFixed(1)}M`;
@@ -46,10 +44,10 @@ function updateStats(summaryByFunction, deptCount, totalFY26) {
   document.getElementById("statTopFunction").textContent = topFunc;
 }
 
-function renderChart(dataByFunc) {
+function renderChart(dataByFunc2) {
   const ctx = document.getElementById("expenseChart").getContext("2d");
-  const labels = Object.keys(dataByFunc);
-  const values = Object.values(dataByFunc);
+  const labels = Object.keys(dataByFunc2);
+  const values = Object.values(dataByFunc2);
   const colors = labels.map((_, i) => `hsl(${i * 47 % 360}, 70%, 60%)`);
 
   if (chartInstance) chartInstance.destroy();
@@ -90,35 +88,36 @@ function populateTable(filteredData) {
   tbody.innerHTML = "";
   tfoot.innerHTML = "";
 
-  const groups = {}, summaryByFunction = {};
-  let totalFY26 = 0, departmentSet = new Set();
+  const groups = {}, summaryByFunction2 = {};
+  let grandTotals = [0, 0, 0, 0];
+  let departmentSet = new Set();
 
   filteredData.forEach(row => {
     const account = row["Account Number"];
     const deptCode = account?.split("-")[1];
     const func = functionMap[deptCode] || "Unknown";
+    const func2 = function2Map[deptCode] || "Unknown";
     const dept = departmentMap[deptCode] || "Unknown";
     const fy23 = parseFloat(row["2023 ACTUAL"].replace(/,/g, '')) || 0;
     const fy24 = parseFloat(row["2024 ACTUAL"].replace(/,/g, '')) || 0;
     const fy25 = parseFloat(row["2025 BUDGET"].replace(/,/g, '')) || 0;
     const fy26 = parseFloat(row["2026 BUDGET"].replace(/,/g, '')) || 0;
-    const anchor = `${dept.replace(/\s+/g, '_')}-${func.replace(/\s+/g, '_')}`;
 
     if (!groups[func]) groups[func] = {};
     if (!groups[func][dept]) groups[func][dept] = [];
     groups[func][dept].push({ account, desc: row.Description, fy23, fy24, fy25, fy26 });
-    summaryByFunction[func] = (summaryByFunction[func] || 0) + fy26;
-    totalFY26 += fy26;
+
+    summaryByFunction2[func2] = (summaryByFunction2[func2] || 0) + fy26;
+    grandTotals[0] += fy23;
+    grandTotals[1] += fy24;
+    grandTotals[2] += fy25;
+    grandTotals[3] += fy26;
     departmentSet.add(dept);
   });
 
-  let grandTotals = [0, 0, 0, 0];
-
   Object.entries(groups).forEach(([func, depts]) => {
     let funcTotals = [0, 0, 0, 0];
-
     Object.entries(depts).forEach(([dept, entries]) => {
-      const anchor = `${dept.replace(/\s+/g, '_')}-${func.replace(/\s+/g, '_')}`;
       let deptTotals = [0, 0, 0, 0];
       entries.forEach(e => {
         const [chg, pct] = calculateChange(e.fy25, e.fy26);
@@ -141,7 +140,7 @@ function populateTable(filteredData) {
       });
       const [chg, pct] = calculateChange(deptTotals[2], deptTotals[3]);
       tbody.insertAdjacentHTML("beforeend", `
-        <tr id="${anchor}" class="bg-gray-100 font-semibold">
+        <tr class="bg-gray-100 font-semibold">
           <td colspan="2" class="p-2 text-right">Subtotal - ${dept}</td>
           <td class="p-2">${formatCurrency(deptTotals[0])}</td>
           <td class="p-2">${formatCurrency(deptTotals[1])}</td>
@@ -153,7 +152,6 @@ function populateTable(filteredData) {
       `);
       funcTotals = funcTotals.map((v, i) => v + deptTotals[i]);
     });
-
     const [chg, pct] = calculateChange(funcTotals[2], funcTotals[3]);
     tbody.insertAdjacentHTML("beforeend", `
       <tr class="bg-gray-200 font-bold">
@@ -166,7 +164,6 @@ function populateTable(filteredData) {
         <td class="p-2">${pct.toFixed(1)}%</td>
       </tr>
     `);
-    grandTotals = grandTotals.map((v, i) => v + funcTotals[i]);
   });
 
   const [chg, pct] = calculateChange(grandTotals[2], grandTotals[3]);
@@ -182,18 +179,18 @@ function populateTable(filteredData) {
     </tr>
   `;
 
-  updateStats(summaryByFunction, departmentSet.size, totalFY26);
-  renderChart(summaryByFunction);
+  updateStats(summaryByFunction2, departmentSet.size, grandTotals[3]);
+  renderChart(summaryByFunction2);
 
   const stackedMap = {};
-  Object.entries(groups).forEach(([func, depts]) => {
-    stackedMap[func] = [0, 0, 0, 0];
-    Object.values(depts).flat().forEach(e => {
-      stackedMap[func][0] += e.fy23;
-      stackedMap[func][1] += e.fy24;
-      stackedMap[func][2] += e.fy25;
-      stackedMap[func][3] += e.fy26;
-    });
+  filteredData.forEach(row => {
+    const deptCode = row["Account Number"].split("-")[1];
+    const func2 = function2Map[deptCode] || "Unknown";
+    const values = stackedMap[func2] = stackedMap[func2] || [0, 0, 0, 0];
+    values[0] += parseFloat(row["2023 ACTUAL"].replace(/,/g, '')) || 0;
+    values[1] += parseFloat(row["2024 ACTUAL"].replace(/,/g, '')) || 0;
+    values[2] += parseFloat(row["2025 BUDGET"].replace(/,/g, '')) || 0;
+    values[3] += parseFloat(row["2026 BUDGET"].replace(/,/g, '')) || 0;
   });
   renderStackedChart(stackedMap);
   buildSidebar(Object.fromEntries(Object.entries(groups).map(([f, d]) => [f, Object.keys(d)])));
