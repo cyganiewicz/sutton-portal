@@ -54,44 +54,37 @@
       </div>
 
       <!-- Charts and Stats -->
-      <div class="flex flex-col lg:flex-row gap-6">
+      <div class="flex flex-col lg:flex-row justify-center gap-6">
         <!-- Pie Chart Tile -->
-        <div class="bg-white p-4 rounded-lg shadow-md flex-1 h-[300px] flex flex-col justify-center">
+        <div class="bg-white p-4 rounded-lg shadow-md max-w-[500px] w-full h-[300px] mx-auto flex flex-col justify-center">
           <h2 class="text-lg font-semibold text-center mb-2">FY26 Budget by Function</h2>
-          <div class="w-full h-full">
-            <canvas id="expenseChart" class="w-full h-full"></canvas>
-          </div>
+          <canvas id="expenseChart" class="w-full h-[220px]"></canvas>
         </div>
 
-        <!-- Bar Chart and Stats Column -->
-        <div class="flex-1 flex flex-col gap-6">
-          <!-- Bar Chart -->
-          <div class="bg-white p-4 rounded-lg shadow-md flex-1 h-[300px] flex flex-col justify-center">
-            <h2 class="text-lg font-semibold text-center mb-2">Multi-Year Comparison by Function Area</h2>
-            <div class="w-full h-full">
-              <canvas id="stackedChart" class="w-full h-full"></canvas>
-            </div>
-          </div>
+        <!-- Bar Chart Tile -->
+        <div class="bg-white p-4 rounded-lg shadow-md max-w-[500px] w-full h-[300px] mx-auto flex flex-col justify-center">
+          <h2 class="text-lg font-semibold text-center mb-2">Multi-Year Comparison by Function Area</h2>
+          <canvas id="stackedChart" class="w-full h-[220px]"></canvas>
+        </div>
+      </div>
 
-          <!-- Summary Tiles -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div class="bg-white p-4 rounded-lg shadow border text-center">
-              <p class="text-gray-500 text-sm">Total FY26 Budget</p>
-              <p id="statTotalBudget" class="text-xl font-semibold">$0.0M</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow border text-center">
-              <p class="text-gray-500 text-sm">Largest Function</p>
-              <p id="statTopFunction" class="text-xl font-semibold">N/A</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow border text-center">
-              <p class="text-gray-500 text-sm">$ Change (FY25–FY26)</p>
-              <p id="statDollarChange" class="text-xl font-semibold">$0</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow border text-center">
-              <p class="text-gray-500 text-sm">% Change (FY25–FY26)</p>
-              <p id="statPercentChange" class="text-xl font-semibold">0%</p>
-            </div>
-          </div>
+      <!-- Summary Tiles -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
+        <div class="bg-white p-4 rounded-lg shadow border text-center">
+          <p class="text-gray-500 text-sm">Total FY26 Budget</p>
+          <p id="statTotalBudget" class="text-xl font-semibold">$0.0M</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow border text-center">
+          <p class="text-gray-500 text-sm">Largest Function</p>
+          <p id="statTopFunction" class="text-xl font-semibold">N/A</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow border text-center">
+          <p class="text-gray-500 text-sm">$ Change (FY25–FY26)</p>
+          <p id="statDollarChange" class="text-xl font-semibold">$0</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow border text-center">
+          <p class="text-gray-500 text-sm">% Change (FY25–FY26)</p>
+          <p id="statPercentChange" class="text-xl font-semibold">0%</p>
         </div>
       </div>
 
