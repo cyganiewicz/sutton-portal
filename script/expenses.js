@@ -112,9 +112,14 @@ function populateTable(filteredData) {
     departmentSet.add(dept);
   });
 
+  let grandTotals = [0, 0, 0, 0];
+
   Object.entries(groups).forEach(([func, depts]) => {
+    let funcTotals = [0, 0, 0, 0];
+
     Object.entries(depts).forEach(([dept, entries]) => {
       const anchor = `${dept.replace(/\s+/g, '_')}-${func.replace(/\s+/g, '_')}`;
+      let deptTotals = [0, 0, 0, 0];
       entries.forEach(e => {
         const [chg, pct] = calculateChange(e.fy25, e.fy26);
         tbody.insertAdjacentHTML("beforeend", `
@@ -129,16 +134,51 @@ function populateTable(filteredData) {
             <td class="p-2">${pct.toFixed(1)}%</td>
           </tr>
         `);
+        deptTotals[0] += e.fy23;
+        deptTotals[1] += e.fy24;
+        deptTotals[2] += e.fy25;
+        deptTotals[3] += e.fy26;
       });
-      tbody.insertAdjacentHTML("beforeend", `<tr id="${anchor}" class="bg-gray-100 font-semibold"><td colspan="8" class="p-2">Subtotal - ${dept} (${func})</td></tr>`);
+      const [chg, pct] = calculateChange(deptTotals[2], deptTotals[3]);
+      tbody.insertAdjacentHTML("beforeend", `
+        <tr id="${anchor}" class="bg-gray-100 font-semibold">
+          <td colspan="2" class="p-2 text-right">Subtotal - ${dept}</td>
+          <td class="p-2">${formatCurrency(deptTotals[0])}</td>
+          <td class="p-2">${formatCurrency(deptTotals[1])}</td>
+          <td class="p-2">${formatCurrency(deptTotals[2])}</td>
+          <td class="p-2">${formatCurrency(deptTotals[3])}</td>
+          <td class="p-2">${formatCurrency(chg)}</td>
+          <td class="p-2">${pct.toFixed(1)}%</td>
+        </tr>
+      `);
+      funcTotals = funcTotals.map((v, i) => v + deptTotals[i]);
     });
+
+    const [chg, pct] = calculateChange(funcTotals[2], funcTotals[3]);
+    tbody.insertAdjacentHTML("beforeend", `
+      <tr class="bg-gray-200 font-bold">
+        <td colspan="2" class="p-2 text-right">Subtotal - ${func}</td>
+        <td class="p-2">${formatCurrency(funcTotals[0])}</td>
+        <td class="p-2">${formatCurrency(funcTotals[1])}</td>
+        <td class="p-2">${formatCurrency(funcTotals[2])}</td>
+        <td class="p-2">${formatCurrency(funcTotals[3])}</td>
+        <td class="p-2">${formatCurrency(chg)}</td>
+        <td class="p-2">${pct.toFixed(1)}%</td>
+      </tr>
+    `);
+    grandTotals = grandTotals.map((v, i) => v + funcTotals[i]);
   });
 
+  const [chg, pct] = calculateChange(grandTotals[2], grandTotals[3]);
   tfoot.innerHTML = `
-    <tr class="bg-gray-200">
-      <td colspan="5" class="p-3 text-right">Grand Total FY26:</td>
-      <td class="p-3">${formatCurrency(totalFY26)}</td>
-      <td colspan="2"></td>
+    <tr class="bg-gray-300 font-extrabold">
+      <td colspan="2" class="p-3 text-right">Grand Total</td>
+      <td class="p-3">${formatCurrency(grandTotals[0])}</td>
+      <td class="p-3">${formatCurrency(grandTotals[1])}</td>
+      <td class="p-3">${formatCurrency(grandTotals[2])}</td>
+      <td class="p-3">${formatCurrency(grandTotals[3])}</td>
+      <td class="p-3">${formatCurrency(chg)}</td>
+      <td class="p-3">${pct.toFixed(1)}%</td>
     </tr>
   `;
 
