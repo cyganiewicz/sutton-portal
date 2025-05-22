@@ -21,8 +21,10 @@ thead th {
 }
 
 .chart-tile {
+  width: 100%;
   max-width: 500px;
-  height: 500px;
+  min-width: 300px;
+  height: 350px;
   display: flex;
   flex-direction: column;
   justify-content: center;
