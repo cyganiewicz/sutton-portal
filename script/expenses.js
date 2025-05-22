@@ -23,10 +23,10 @@ const calculateChange = (a, b) => {
   return [diff, pct];
 };
 
-function buildSidebar(groupedData) {
+function buildSidebar(groups) {
   const sidebar = document.getElementById("sidebarMenu");
   sidebar.innerHTML = "";
-  Object.entries(groupedData).forEach(([func, depts]) => {
+  Object.entries(groups).forEach(([func, depts]) => {
     const section = document.createElement("li");
     const deptLinks = depts.map(dept => {
       const anchor = `${dept.replace(/\s+/g, '_')}-${func.replace(/\s+/g, '_')}`;
@@ -37,22 +37,20 @@ function buildSidebar(groupedData) {
   });
 }
 
-function updateStats(summaryByFunction, deptCount, totalFY26, totalFY25) {
-  const topFunc = Object.entries(summaryByFunction).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+function updateStats(summary, totalFY26, totalFY25) {
+  const topFunc = Object.entries(summary).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
   const [diff, pct] = calculateChange(totalFY25, totalFY26);
   document.getElementById("statTotalBudget").textContent = formatShortCurrency(totalFY26);
-  document.getElementById("statDepartments").textContent = deptCount;
   document.getElementById("statTopFunction").textContent = topFunc;
   document.getElementById("statDollarChange").textContent = formatCurrency(diff);
   document.getElementById("statPercentChange").textContent = `${pct.toFixed(1)}%`;
 }
 
-function renderChart(dataByFunc2) {
+function renderChart(summaryByFunction2) {
   const ctx = document.getElementById("expenseChart").getContext("2d");
-  const labels = Object.keys(dataByFunc2);
-  const values = Object.values(dataByFunc2);
+  const labels = Object.keys(summaryByFunction2);
+  const values = Object.values(summaryByFunction2);
   const colors = labels.map((_, i) => `hsl(${i * 47 % 360}, 70%, 60%)`);
-
   if (chartInstance) chartInstance.destroy();
   chartInstance = new Chart(ctx, {
     type: 'pie',
@@ -72,7 +70,6 @@ function renderStackedChart(datasetMap) {
     data: values,
     backgroundColor: `hsl(${i * 37 % 360}, 65%, 55%)`
   }));
-
   if (stackedInstance) stackedInstance.destroy();
   stackedInstance = new Chart(ctx, {
     type: 'bar',
@@ -90,11 +87,8 @@ function populateTable(filteredData) {
   const tfoot = document.getElementById("expenseTotal");
   tbody.innerHTML = "";
   tfoot.innerHTML = "";
-
   const groups = {}, summaryByFunction2 = {};
   let grandTotals = [0, 0, 0, 0];
-  let departmentSet = new Set();
-
   filteredData.forEach(row => {
     const account = row["Account Number"];
     const deptCode = account?.split("-")[1];
@@ -105,17 +99,14 @@ function populateTable(filteredData) {
     const fy24 = parseFloat(row["2024 ACTUAL"].replace(/,/g, '')) || 0;
     const fy25 = parseFloat(row["2025 BUDGET"].replace(/,/g, '')) || 0;
     const fy26 = parseFloat(row["2026 BUDGET"].replace(/,/g, '')) || 0;
-
     if (!groups[func]) groups[func] = {};
     if (!groups[func][dept]) groups[func][dept] = [];
     groups[func][dept].push({ account, desc: row.Description, fy23, fy24, fy25, fy26 });
-
     summaryByFunction2[func2] = (summaryByFunction2[func2] || 0) + fy26;
     grandTotals[0] += fy23;
     grandTotals[1] += fy24;
     grandTotals[2] += fy25;
     grandTotals[3] += fy26;
-    departmentSet.add(dept);
   });
 
   Object.entries(groups).forEach(([func, depts]) => {
@@ -143,7 +134,7 @@ function populateTable(filteredData) {
       });
       const [chg, pct] = calculateChange(deptTotals[2], deptTotals[3]);
       tbody.insertAdjacentHTML("beforeend", `
-        <tr class="bg-gray-100 font-semibold">
+        <tr class="bg-gray-100 font-semibold" id="${dept.replace(/\s+/g, '_')}-${func.replace(/\s+/g, '_')}">
           <td colspan="2" class="p-2 text-right">Subtotal - ${dept}</td>
           <td class="p-2">${formatCurrency(deptTotals[0])}</td>
           <td class="p-2">${formatCurrency(deptTotals[1])}</td>
@@ -182,20 +173,9 @@ function populateTable(filteredData) {
     </tr>
   `;
 
-  updateStats(summaryByFunction2, departmentSet.size, grandTotals[3], grandTotals[2]);
+  updateStats(summaryByFunction2, grandTotals[3], grandTotals[2]);
   renderChart(summaryByFunction2);
-
-  const stackedMap = {};
-  filteredData.forEach(row => {
-    const deptCode = row["Account Number"].split("-")[1];
-    const func2 = function2Map[deptCode] || "Unknown";
-    const values = stackedMap[func2] = stackedMap[func2] || [0, 0, 0, 0];
-    values[0] += parseFloat(row["2023 ACTUAL"].replace(/,/g, '')) || 0;
-    values[1] += parseFloat(row["2024 ACTUAL"].replace(/,/g, '')) || 0;
-    values[2] += parseFloat(row["2025 BUDGET"].replace(/,/g, '')) || 0;
-    values[3] += parseFloat(row["2026 BUDGET"].replace(/,/g, '')) || 0;
-  });
-  renderStackedChart(stackedMap);
+  renderStackedChart(summaryByFunction2);
   buildSidebar(Object.fromEntries(Object.entries(groups).map(([f, d]) => [f, Object.keys(d)])));
 }
 
