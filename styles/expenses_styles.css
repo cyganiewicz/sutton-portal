@@ -5,11 +5,15 @@
   --navbar-height: 104px;
 }
 
-/* Chart tile layout */
+body {
+  scroll-padding-top: var(--navbar-height);
+}
+
 .chart-grid {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  align-items: center;
 }
 
 @media (min-width: 1024px) {
@@ -40,33 +44,71 @@ canvas {
   max-height: 280px;
 }
 
-/* STICKY HEADER — Use sticky on <th>, not thead */
-table thead th {
+.summary-tile {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
+  padding: 1rem;
+  text-align: center;
+}
+
+/* Sticky table header */
+.sticky-table-header {
   position: sticky;
-  top: 104px; /* matches header height */
+  top: var(--navbar-height);
+  z-index: 50;
   background-color: #2563eb;
   color: white;
-  z-index: 50;
-  padding: 0.75rem;
-  text-align: left;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.sticky-table-header div {
+  padding: 0.75rem;
   border-bottom: 1px solid #ddd;
+  text-align: left;
 }
 
 /* Table layout */
-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+#expenseTable div,
+#expenseTotal div {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  padding: 0.5rem 0.75rem;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.875rem;
 }
 
-/* Responsive fallback */
+#expenseTable .subtotal {
+  background-color: #f3f4f6;
+  font-weight: 600;
+}
+
+#expenseTable .function-total {
+  background-color: #e5e7eb;
+  font-weight: 700;
+}
+
+#expenseTotal {
+  background-color: #d1d5db;
+  font-weight: 800;
+  padding: 0.75rem;
+}
+
 @media (max-width: 768px) {
-  .chart-tile {
-    height: auto;
-    max-width: 100%;
+  .chart-grid {
+    flex-direction: column;
   }
-  canvas {
-    max-height: 220px;
+  .chart-tile {
+    max-width: 100%;
+    height: auto;
+  }
+  .chart-tile canvas {
+    height: 220px;
   }
 }
+
