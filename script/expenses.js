@@ -51,7 +51,7 @@ function renderCharts(data) {
 
   data.forEach(row => {
     const acct = row["Account Number"];
-    if (!acct.startsWith(currentFund)) return;
+    if (!acct.trim().startsWith(currentFund)) return;
     const deptCode = acct.split("-")[1];
     const func = functionMap[deptCode] || "Unknown";
     const fy26 = parseFloat(row["2026 BUDGET"].replace(/,/g, "")) || 0;
@@ -117,7 +117,7 @@ function renderCharts(data) {
   });
 }
 
-function renderTable(data) {
+function renderTable(filteredData) {
   const container = document.getElementById("expenseTable");
   const footer = document.getElementById("expenseTotal");
   container.innerHTML = "";
@@ -125,10 +125,11 @@ function renderTable(data) {
 
   const grouped = {};
   let grandTotals = { fy23: 0, fy24: 0, fy25: 0, fy26: 0 };
+  let largestFunction = "N/A";
+  let largestValue = 0;
 
-  data.forEach(row => {
-    const acct = row["Account Number"];
-    if (!acct.startsWith(currentFund)) return;
+  filteredData.forEach(row => {
+    const acct = row["Account Number"].trim();
     const deptCode = acct.split("-")[1];
     const func = functionMap[deptCode] || "Unknown";
     const dept = departmentMap[deptCode] || deptCode;
@@ -137,9 +138,6 @@ function renderTable(data) {
     if (!grouped[func][dept]) grouped[func][dept] = [];
     grouped[func][dept].push(row);
   });
-
-  let largestFunction = "N/A";
-  let largestValue = 0;
 
   Object.entries(grouped).forEach(([func, departments]) => {
     let funcTotal = 0;
@@ -199,11 +197,16 @@ function renderTable(data) {
   renderSummary(grandTotals, largestFunction, change, pct);
 }
 
+function renderAll() {
+  const filtered = expenseData.filter(row => row["Account Number"]?.trim().startsWith(currentFund));
+  renderSidebar();
+  renderTable(filtered);
+  renderCharts(filtered);
+}
+
 document.getElementById("fundSelector").addEventListener("change", e => {
   currentFund = e.target.value;
-  renderSidebar();
-  renderTable(expenseData);
-  renderCharts(expenseData);
+  renderAll();
 });
 
 Papa.parse(chartOfAccountsUrl, {
@@ -221,9 +224,7 @@ Papa.parse(chartOfAccountsUrl, {
       download: true,
       complete: results => {
         expenseData = results.data;
-        renderSidebar();
-        renderTable(expenseData);
-        renderCharts(expenseData);
+        renderAll();
       }
     });
   }
