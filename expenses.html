@@ -45,13 +45,13 @@
       <!-- Charts and Stats -->
       <div class="flex flex-col lg:flex-row justify-center gap-6">
         <!-- Pie Chart Tile -->
-        <div class="bg-white p-4 rounded-lg shadow-md w-full max-w-[500px] h-[360px] mx-auto flex flex-col justify-center items-center">
+        <div class="bg-white p-4 rounded-lg shadow-md w-full max-w-[500px] h-[340px] mx-auto flex flex-col justify-center items-center">
           <h2 class="text-lg font-semibold text-center mb-2">FY26 Budget by Function</h2>
           <canvas id="expenseChart" class="w-full max-w-[400px] h-[260px]"></canvas>
         </div>
 
         <!-- Bar Chart Tile -->
-        <div class="bg-white p-4 rounded-lg shadow-md w-full max-w-[500px] h-[360px] mx-auto flex flex-col justify-center items-center">
+        <div class="bg-white p-4 rounded-lg shadow-md w-full max-w-[500px] h-[340px] mx-auto flex flex-col justify-center items-center">
           <h2 class="text-lg font-semibold text-center mb-2">Multi-Year Comparison by Function Area</h2>
           <canvas id="stackedChart" class="w-full max-w-[400px] h-[260px]"></canvas>
         </div>
@@ -78,18 +78,18 @@
       </div>
 
       <!-- Budget Table -->
-      <div class="mt-6 border rounded-lg shadow-md overflow-x-auto">
+      <div class="mt-6 overflow-x-auto border rounded-lg shadow-md">
         <table class="min-w-full bg-white">
           <thead>
             <tr>
-              <th class="p-3">Account</th>
-              <th class="p-3">Description</th>
-              <th class="p-3">2023 Actual</th>
-              <th class="p-3">2024 Actual</th>
-              <th class="p-3">2025 Budget</th>
-              <th class="p-3">2026 Budget</th>
-              <th class="p-3">$ Change</th>
-              <th class="p-3">% Change</th>
+              <th class="sticky top-[120px] z-50 bg-blue-600 text-white p-3">Account</th>
+              <th class="sticky top-[120px] z-50 bg-blue-600 text-white p-3">Description</th>
+              <th class="sticky top-[120px] z-50 bg-blue-600 text-white p-3">2023 Actual</th>
+              <th class="sticky top-[120px] z-50 bg-blue-600 text-white p-3">2024 Actual</th>
+              <th class="sticky top-[120px] z-50 bg-blue-600 text-white p-3">2025 Budget</th>
+              <th class="sticky top-[120px] z-50 bg-blue-600 text-white p-3">2026 Budget</th>
+              <th class="sticky top-[120px] z-50 bg-blue-600 text-white p-3">$ Change</th>
+              <th class="sticky top-[120px] z-50 bg-blue-600 text-white p-3">% Change</th>
             </tr>
           </thead>
           <tbody id="expenseTable" class="text-sm text-gray-700"></tbody>
