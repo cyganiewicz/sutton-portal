@@ -22,17 +22,14 @@
   </header>
 
   <div class="flex">
-    <!-- Sidebar -->
     <aside class="w-64 bg-white p-4 shadow-md h-screen overflow-y-auto sticky top-[104px]">
       <h2 class="text-lg font-semibold mb-4">Navigate by Function</h2>
       <ul id="sidebarMenu" class="space-y-2 text-sm"></ul>
     </aside>
 
-    <!-- Main Content -->
     <main class="flex-1 p-6">
       <h1 class="text-3xl font-bold mb-4 text-center">Sutton Budget Expenses</h1>
 
-      <!-- Fund Selector -->
       <div class="text-center mb-6">
         <label for="fundSelector" class="mr-2 font-medium">Select Fund:</label>
         <select id="fundSelector" class="p-2 border rounded">
@@ -42,59 +39,49 @@
         </select>
       </div>
 
-      <!-- Charts and Stats -->
       <div class="chart-grid">
-        <!-- Pie Chart Tile -->
         <div class="chart-tile">
           <h2 class="text-lg font-semibold text-center mb-2">FY26 Budget by Function</h2>
           <canvas id="expenseChart"></canvas>
         </div>
-
-        <!-- Bar Chart Tile -->
         <div class="chart-tile">
           <h2 class="text-lg font-semibold text-center mb-2">Multi-Year Comparison by Function Area</h2>
           <canvas id="stackedChart"></canvas>
         </div>
       </div>
 
-      <!-- Summary Tiles -->
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
-        <div class="bg-white p-4 rounded-lg shadow border text-center">
+        <div class="summary-tile">
           <p class="text-gray-500 text-sm">Total FY26 Budget</p>
           <p id="statTotalBudget" class="text-xl font-semibold">$0.0M</p>
         </div>
-        <div class="bg-white p-4 rounded-lg shadow border text-center">
+        <div class="summary-tile">
           <p class="text-gray-500 text-sm">Largest Function</p>
           <p id="statTopFunction" class="text-xl font-semibold">N/A</p>
         </div>
-        <div class="bg-white p-4 rounded-lg shadow border text-center">
+        <div class="summary-tile">
           <p class="text-gray-500 text-sm">$ Change (FY25–FY26)</p>
           <p id="statDollarChange" class="text-xl font-semibold">$0</p>
         </div>
-        <div class="bg-white p-4 rounded-lg shadow border text-center">
+        <div class="summary-tile">
           <p class="text-gray-500 text-sm">% Change (FY25–FY26)</p>
           <p id="statPercentChange" class="text-xl font-semibold">0%</p>
         </div>
       </div>
 
-      <!-- Budget Table -->
       <div class="mt-6 border rounded-lg shadow-md overflow-x-auto">
-        <table class="min-w-full bg-white">
-          <thead>
-            <tr>
-              <th>Account</th>
-              <th>Description</th>
-              <th>2023 Actual</th>
-              <th>2024 Actual</th>
-              <th>2025 Budget</th>
-              <th>2026 Budget</th>
-              <th>$ Change</th>
-              <th>% Change</th>
-            </tr>
-          </thead>
-          <tbody id="expenseTable"></tbody>
-          <tfoot id="expenseTotal"></tfoot>
-        </table>
+        <div class="sticky-table-header">
+          <div>Account</div>
+          <div>Description</div>
+          <div>2023 Actual</div>
+          <div>2024 Actual</div>
+          <div>2025 Budget</div>
+          <div>2026 Budget</div>
+          <div>$ Change</div>
+          <div>% Change</div>
+        </div>
+        <div id="expenseTable" class="text-sm text-gray-700"></div>
+        <div id="expenseTotal"></div>
       </div>
     </main>
   </div>
