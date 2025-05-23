@@ -48,47 +48,41 @@ body {
   height: 240px !important;
 }
 
-/* Sticky table header */
+/* Table structure and alignment */
 table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
 }
 
-thead th {
-  position: sticky;
-  top: var(--navbar-height);
-  background-color: #2563eb;
-  color: white;
-  z-index: 50;
+th, td {
   padding: 0.75rem;
   text-align: left;
-  font-weight: 600;
-  border-bottom: 1px solid #ddd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Table cell padding */
-td {
-  padding: 0.65rem;
-  text-align: left;
-  vertical-align: top;
-}
-
-/* Subtotal row styles */
-tr.bg-gray-100 td {
-  background-color: #f3f4f6;
+/* Sticky header */
+thead th {
+  position: sticky;
+  top: 104px; /* height of your fixed header */
+  z-index: 50;
+  background-color: #2563eb;
+  color: white;
   font-weight: 600;
 }
 
-/* Function total row styles */
-tr.bg-gray-200 td {
-  background-color: #e5e7eb;
-  font-weight: bold;
-}
-
-/* Grand total footer */
+/* Subtotal and total rows */
+tr.bg-gray-100 td,
+tr.bg-gray-200 td,
 tr.bg-gray-300 td {
-  background-color: #d1d5db;
-  font-weight: 800;
+  font-weight: 600;
+}
+
+tfoot td {
+  background-color: #f3f4f6;
+  font-weight: 700;
 }
 
 /* Responsive canvas height for mobile */
