@@ -2,7 +2,7 @@
 thead th {
   position: sticky;
   top: 112px; /* adjust based on navbar height */
-  z-index: 40;
+  z-index: 50;
   background-color: #2563eb;
   color: white;
 }
