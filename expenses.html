@@ -8,6 +8,15 @@
   <link href="styles/expenses_styles.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+  <style>
+    thead th {
+      position: sticky;
+      top: 104px; /* Match the height of the navbar */
+      background-color: #2563eb;
+      color: white;
+      z-index: 50;
+    }
+  </style>
 </head>
 <body class="bg-gray-100">
   <header class="bg-white shadow-md sticky top-0 z-50">
@@ -76,24 +85,22 @@
 
       <!-- Budget Table -->
       <div class="mt-6 border rounded-lg shadow-md overflow-x-auto">
-        <div class="overflow-auto max-h-[600px]">
-          <table class="min-w-full bg-white">
-            <thead>
-              <tr>
-                <th class="sticky top-[104px] z-50 bg-blue-600 p-3">Account</th>
-                <th class="sticky top-[104px] z-50 bg-blue-600 p-3">Description</th>
-                <th class="sticky top-[104px] z-50 bg-blue-600 p-3">2023 Actual</th>
-                <th class="sticky top-[104px] z-50 bg-blue-600 p-3">2024 Actual</th>
-                <th class="sticky top-[104px] z-50 bg-blue-600 p-3">2025 Budget</th>
-                <th class="sticky top-[104px] z-50 bg-blue-600 p-3">2026 Budget</th>
-                <th class="sticky top-[104px] z-50 bg-blue-600 p-3">$ Change</th>
-                <th class="sticky top-[104px] z-50 bg-blue-600 p-3">% Change</th>
-              </tr>
-            </thead>
-            <tbody id="expenseTable" class="text-sm text-gray-700"></tbody>
-            <tfoot id="expenseTotal" class="font-bold text-black"></tfoot>
-          </table>
-        </div>
+        <table class="min-w-full bg-white">
+          <thead>
+            <tr>
+              <th class="p-3">Account</th>
+              <th class="p-3">Description</th>
+              <th class="p-3">2023 Actual</th>
+              <th class="p-3">2024 Actual</th>
+              <th class="p-3">2025 Budget</th>
+              <th class="p-3">2026 Budget</th>
+              <th class="p-3">$ Change</th>
+              <th class="p-3">% Change</th>
+            </tr>
+          </thead>
+          <tbody id="expenseTable" class="text-sm text-gray-700"></tbody>
+          <tfoot id="expenseTotal" class="font-bold text-black"></tfoot>
+        </table>
       </div>
     </main>
   </div>
