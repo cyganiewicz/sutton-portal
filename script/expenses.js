@@ -1,5 +1,4 @@
-
-// expenses.js — full restore with sticky header, fund filtering, sidebar, charts, and summary tiles
+// expenses.js (Full Refreshed Version)
 
 let currentFund = "010";
 const chartOfAccountsUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRezgn-Gen4lhkuO13Jm_y1QhYP4UovUyDKuLvGGrKqo1JwqnzSVdsSOr26epUKCkNuWdIQd-mu46sW/pub?output=csv";
@@ -49,6 +48,16 @@ function renderSummary(grandTotals, largestFunction, change, percent) {
   document.getElementById("statPercentChange").textContent = percent.toFixed(1) + "%";
 }
 
+function resizeCanvasForDPI(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  return ctx;
+}
+
 function renderCharts(data) {
   const pieData = {};
   const barData = {};
@@ -71,8 +80,8 @@ function renderCharts(data) {
     barData[func][3] += fy26;
   });
 
-  const pieCtx = document.getElementById("expenseChart").getContext("2d");
-  const barCtx = document.getElementById("stackedChart").getContext("2d");
+  const pieCtx = resizeCanvasForDPI(document.getElementById("expenseChart"));
+  const barCtx = resizeCanvasForDPI(document.getElementById("stackedChart"));
 
   const pieLabels = Object.keys(pieData);
   const pieValues = Object.values(pieData);
@@ -149,6 +158,7 @@ function renderTable(filteredData) {
 
     Object.entries(departments).forEach(([dept, rows]) => {
       let deptTotals = { fy23: 0, fy24: 0, fy25: 0, fy26: 0 };
+      const anchorId = `${dept.replace(/\s+/g, '_')}-${func.replace(/\s+/g, '_')}`;
 
       rows.forEach(row => {
         const fy23 = parseFloat(row["2023 ACTUAL"].replace(/,/g, "")) || 0;
@@ -179,6 +189,7 @@ function renderTable(filteredData) {
 
       const [change, pct] = calculateChange(deptTotals.fy25, deptTotals.fy26);
       const subtotalTr = document.createElement("tr");
+      subtotalTr.id = anchorId;
       subtotalTr.className = "bg-gray-100 font-semibold";
       subtotalTr.innerHTML = `
         <td colspan="2" class="p-3 text-right">Subtotal - ${dept}</td>
