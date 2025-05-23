@@ -34,16 +34,16 @@ function renderTable(data) {
     totalFY26 += fy26;
 
     const rowDiv = document.createElement("div");
-    rowDiv.className = "grid grid-cols-8 p-3 hover:bg-gray-50";
+    rowDiv.className = "grid grid-cols-8 border-b text-sm";
     rowDiv.innerHTML = `
-      <div>${acct}</div>
-      <div>${desc}</div>
-      <div>${formatCurrency(fy23)}</div>
-      <div>${formatCurrency(fy24)}</div>
-      <div>${formatCurrency(fy25)}</div>
-      <div>${formatCurrency(fy26)}</div>
-      <div>${formatCurrency(diff)}</div>
-      <div>${pct.toFixed(1)}%</div>
+      <div class="px-2 py-1 break-words w-[15%]">${acct}</div>
+      <div class="px-2 py-1 break-words w-[25%]">${desc}</div>
+      <div class="px-2 py-1 text-right w-[10%]">${formatCurrency(fy23)}</div>
+      <div class="px-2 py-1 text-right w-[10%]">${formatCurrency(fy24)}</div>
+      <div class="px-2 py-1 text-right w-[10%]">${formatCurrency(fy25)}</div>
+      <div class="px-2 py-1 text-right w-[10%]">${formatCurrency(fy26)}</div>
+      <div class="px-2 py-1 text-right w-[10%]">${formatCurrency(diff)}</div>
+      <div class="px-2 py-1 text-right w-[10%]">${pct.toFixed(1)}%</div>
     `;
     tableContainer.appendChild(rowDiv);
   });
@@ -52,13 +52,13 @@ function renderTable(data) {
   const footerDiv = document.createElement("div");
   footerDiv.className = "grid grid-cols-8 font-bold p-3 bg-gray-100 border-t border-gray-300";
   footerDiv.innerHTML = `
-    <div colspan="2" class="col-span-2 text-right">Grand Total</div>
-    <div>${formatCurrency(totalFY23)}</div>
-    <div>${formatCurrency(totalFY24)}</div>
-    <div>${formatCurrency(totalFY25)}</div>
-    <div>${formatCurrency(totalFY26)}</div>
-    <div>${formatCurrency(totalDiff)}</div>
-    <div>${totalPct.toFixed(1)}%</div>
+    <div class="col-span-2 text-right px-2">Grand Total</div>
+    <div class="text-right px-2">${formatCurrency(totalFY23)}</div>
+    <div class="text-right px-2">${formatCurrency(totalFY24)}</div>
+    <div class="text-right px-2">${formatCurrency(totalFY25)}</div>
+    <div class="text-right px-2">${formatCurrency(totalFY26)}</div>
+    <div class="text-right px-2">${formatCurrency(totalDiff)}</div>
+    <div class="text-right px-2">${totalPct.toFixed(1)}%</div>
   `;
   totalContainer.appendChild(footerDiv);
 }
