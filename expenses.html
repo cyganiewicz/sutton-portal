@@ -8,15 +8,6 @@
   <link href="styles/expenses_styles.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
-  <style>
-    thead th {
-      position: sticky;
-      top: 104px; /* Match the height of the navbar */
-      background-color: #2563eb;
-      color: white;
-      z-index: 50;
-    }
-  </style>
 </head>
 <body class="bg-gray-100">
   <header class="bg-white shadow-md sticky top-0 z-50">
@@ -52,14 +43,17 @@
       </div>
 
       <!-- Charts and Stats -->
-      <div class="chart-grid">
-        <div class="chart-tile">
+      <div class="flex flex-col lg:flex-row justify-center gap-6">
+        <!-- Pie Chart Tile -->
+        <div class="bg-white p-4 rounded-lg shadow-md w-full max-w-[500px] h-[360px] mx-auto flex flex-col justify-center items-center">
           <h2 class="text-lg font-semibold text-center mb-2">FY26 Budget by Function</h2>
-          <canvas id="expenseChart" class="w-full h-full max-w-full max-h-full"></canvas>
+          <canvas id="expenseChart" class="w-full max-w-[400px] h-[260px]"></canvas>
         </div>
-        <div class="chart-tile">
+
+        <!-- Bar Chart Tile -->
+        <div class="bg-white p-4 rounded-lg shadow-md w-full max-w-[500px] h-[360px] mx-auto flex flex-col justify-center items-center">
           <h2 class="text-lg font-semibold text-center mb-2">Multi-Year Comparison by Function Area</h2>
-          <canvas id="stackedChart" class="w-full h-full max-w-full max-h-full"></canvas>
+          <canvas id="stackedChart" class="w-full max-w-[400px] h-[260px]"></canvas>
         </div>
       </div>
 
