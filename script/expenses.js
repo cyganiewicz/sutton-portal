@@ -1,15 +1,5 @@
-// expenses.js — FIXED: Fully restored charts, filters, subtotals, sidebar, summaries
 
-function formatCurrency(value) {
-  if (isNaN(value)) return "$0";
-  return "$" + parseFloat(value).toLocaleString(undefined, { maximumFractionDigits: 0 });
-}
-
-function calculateChange(fy25, fy26) {
-  const change = fy26 - fy25;
-  const percent = fy25 === 0 ? 0 : (change / fy25) * 100;
-  return [change, percent];
-}
+// expenses.js — full restore with sticky header, fund filtering, sidebar, charts, and summary tiles
 
 let currentFund = "010";
 const chartOfAccountsUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRezgn-Gen4lhkuO13Jm_y1QhYP4UovUyDKuLvGGrKqo1JwqnzSVdsSOr26epUKCkNuWdIQd-mu46sW/pub?output=csv";
@@ -21,109 +11,199 @@ let functionMap = {};
 let chartInstance = null;
 let stackedInstance = null;
 
-function buildSidebar() {
+function formatCurrency(value) {
+  return "$" + parseFloat(value).toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+
+function calculateChange(fy25, fy26) {
+  const change = fy26 - fy25;
+  const percent = fy25 === 0 ? 0 : (change / fy25) * 100;
+  return [change, percent];
+}
+
+function renderSidebar() {
   const sidebar = document.getElementById("sidebarMenu");
   sidebar.innerHTML = "";
   const grouped = {};
   Object.keys(departmentMap).forEach(code => {
     const func = functionMap[code] || "Other";
-    const dept = departmentMap[code];
     if (!grouped[func]) grouped[func] = [];
-    grouped[func].push({ code, name: dept });
+    grouped[func].push(departmentMap[code]);
   });
+
   Object.entries(grouped).forEach(([func, depts]) => {
-    const li = document.createElement("li");
-    li.innerHTML = `<strong>${func}</strong><ul class="ml-4 space-y-1">${depts.map(d => {
-      const anchor = `${d.name.replace(/\s+/g, '_')}-${func.replace(/\s+/g, '_')}`;
-      return `<li><a href="#${anchor}" class="text-blue-600 hover:underline">${d.name}</a></li>`;
-    }).join('')}</ul>`;
-    sidebar.appendChild(li);
+    const section = document.createElement("div");
+    section.innerHTML = `<strong>${func}</strong><ul class="ml-2 space-y-1">${depts.map(dept => `<li>${dept}</li>`).join('')}</ul>`;
+    sidebar.appendChild(section);
   });
 }
 
-function updateSummaries(grandTotals, topFunction, diff, pct) {
-  document.getElementById("statTotalBudget").textContent = formatCurrency(grandTotals.fy26 / 1_000_000) + "M";
-  document.getElementById("statTopFunction").textContent = topFunction;
-  document.getElementById("statDollarChange").textContent = formatCurrency(diff);
-  document.getElementById("statPercentChange").textContent = pct.toFixed(1) + "%";
+function renderSummary(grandTotals, largestFunction, change, percent) {
+  document.getElementById("statTotalBudget").textContent = formatCurrency(grandTotals.fy26).replace(".00", "M");
+  document.getElementById("statTopFunction").textContent = largestFunction;
+  document.getElementById("statDollarChange").textContent = formatCurrency(change);
+  document.getElementById("statPercentChange").textContent = percent.toFixed(1) + "%";
 }
 
-function renderChart(data) {
-  const ctx = document.getElementById("expenseChart").getContext("2d");
-  if (chartInstance) chartInstance.destroy();
-  const funcTotals = {};
+function renderCharts(data) {
+  const pieData = {};
+  const barData = {};
+
   data.forEach(row => {
-    if (!row["Account Number"].startsWith(currentFund)) return;
-    const code = row["Account Number"].split("-")[1];
-    const func = functionMap[code] || "Unknown";
-    const value = parseFloat(row["2026 BUDGET"].replace(/,/g, "")) || 0;
-    funcTotals[func] = (funcTotals[func] || 0) + value;
+    const acct = row["Account Number"];
+    if (!acct.startsWith(currentFund)) return;
+    const deptCode = acct.split("-")[1];
+    const func = functionMap[deptCode] || "Unknown";
+    const fy26 = parseFloat(row["2026 BUDGET"].replace(/,/g, "")) || 0;
+    const fy25 = parseFloat(row["2025 BUDGET"].replace(/,/g, "")) || 0;
+    const fy24 = parseFloat(row["2024 ACTUAL"].replace(/,/g, "")) || 0;
+    const fy23 = parseFloat(row["2023 ACTUAL"].replace(/,/g, "")) || 0;
+
+    pieData[func] = (pieData[func] || 0) + fy26;
+    if (!barData[func]) barData[func] = [0, 0, 0, 0];
+    barData[func][0] += fy23;
+    barData[func][1] += fy24;
+    barData[func][2] += fy25;
+    barData[func][3] += fy26;
   });
-  const labels = Object.keys(funcTotals);
-  const values = Object.values(funcTotals);
-  chartInstance = new Chart(ctx, {
-    type: 'pie',
+
+  const pieCtx = document.getElementById("expenseChart").getContext("2d");
+  const barCtx = document.getElementById("stackedChart").getContext("2d");
+
+  const pieLabels = Object.keys(pieData);
+  const pieValues = Object.values(pieData);
+  const colors = pieLabels.map((_, i) => `hsl(${i * 360 / pieLabels.length}, 70%, 60%)`);
+  const totalPie = pieValues.reduce((a, b) => a + b, 0);
+
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(pieCtx, {
+    type: "pie",
     data: {
-      labels,
-      datasets: [{ data: values, backgroundColor: Chart.helpers.colorScheme }]
+      labels: pieLabels,
+      datasets: [{ data: pieValues, backgroundColor: colors }]
     },
     options: {
+      responsive: true,
       plugins: {
-        legend: { position: 'bottom' },
         tooltip: {
           callbacks: {
-            label: (ctx) => `${ctx.label}: ${formatCurrency(ctx.raw)} (${((ctx.raw / values.reduce((a,b)=>a+b,0))*100).toFixed(1)}%)`
+            label: ctx => {
+              const val = ctx.raw;
+              const pct = ((val / totalPie) * 100).toFixed(1);
+              return `${ctx.label}: ${formatCurrency(val)} (${pct}%)`;
+            }
           }
         }
       }
     }
   });
-}
 
-function renderStackedChart(data) {
-  const ctx = document.getElementById("stackedChart").getContext("2d");
   if (stackedInstance) stackedInstance.destroy();
-  const byFunc = {};
-  const years = ["2023 ACTUAL", "2024 ACTUAL", "2025 BUDGET", "2026 BUDGET"];
-  data.forEach(row => {
-    if (!row["Account Number"].startsWith(currentFund)) return;
-    const code = row["Account Number"].split("-")[1];
-    const func = functionMap[code] || "Unknown";
-    if (!byFunc[func]) byFunc[func] = [0, 0, 0, 0];
-    years.forEach((y, i) => {
-      byFunc[func][i] += parseFloat(row[y].replace(/,/g, "")) || 0;
-    });
-  });
-  const datasets = Object.entries(byFunc).map(([label, values], i) => ({
-    label,
-    data: values,
-    backgroundColor: Chart.helpers.colorScheme[i % 12]
-  }));
-  stackedInstance = new Chart(ctx, {
-    type: 'bar',
+  stackedInstance = new Chart(barCtx, {
+    type: "bar",
     data: {
       labels: ["FY23", "FY24", "FY25", "FY26"],
-      datasets
+      datasets: Object.entries(barData).map(([label, values], i) => ({
+        label,
+        data: values,
+        backgroundColor: colors[i % colors.length]
+      }))
     },
     options: {
-      plugins: { legend: { position: 'bottom' } },
       responsive: true,
+      plugins: { legend: { position: "bottom" } },
       scales: { x: { stacked: true }, y: { stacked: true } }
     }
   });
 }
 
-function renderAll() {
-  const filtered = expenseData.filter(row => row["Account Number"]?.startsWith(currentFund));
-  buildSidebar();
-  renderTable(filtered);
-  renderChart(expenseData);
-  renderStackedChart(expenseData);
+function renderTable(data) {
+  const container = document.getElementById("expenseTable");
+  const footer = document.getElementById("expenseTotal");
+  container.innerHTML = "";
+  footer.innerHTML = "";
+
+  const grouped = {};
+  let grandTotals = { fy23: 0, fy24: 0, fy25: 0, fy26: 0 };
+
+  data.forEach(row => {
+    const acct = row["Account Number"];
+    if (!acct.startsWith(currentFund)) return;
+    const deptCode = acct.split("-")[1];
+    const func = functionMap[deptCode] || "Unknown";
+    const dept = departmentMap[deptCode] || deptCode;
+
+    if (!grouped[func]) grouped[func] = {};
+    if (!grouped[func][dept]) grouped[func][dept] = [];
+    grouped[func][dept].push(row);
+  });
+
+  let largestFunction = "N/A";
+  let largestValue = 0;
+
+  Object.entries(grouped).forEach(([func, departments]) => {
+    let funcTotal = 0;
+    Object.entries(departments).forEach(([dept, rows]) => {
+      let deptTotals = { fy23: 0, fy24: 0, fy25: 0, fy26: 0 };
+      rows.forEach(row => {
+        const fy23 = parseFloat(row["2023 ACTUAL"].replace(/,/g, "")) || 0;
+        const fy24 = parseFloat(row["2024 ACTUAL"].replace(/,/g, "")) || 0;
+        const fy25 = parseFloat(row["2025 BUDGET"].replace(/,/g, "")) || 0;
+        const fy26 = parseFloat(row["2026 BUDGET"].replace(/,/g, "")) || 0;
+        const [change, pct] = calculateChange(fy25, fy26);
+
+        deptTotals.fy23 += fy23;
+        deptTotals.fy24 += fy24;
+        deptTotals.fy25 += fy25;
+        deptTotals.fy26 += fy26;
+
+        container.innerHTML += `
+          <div class="grid grid-cols-8 px-2 py-1">
+            <div>${row["Account Number"]}</div>
+            <div>${row["Description"]}</div>
+            <div class="text-right">${formatCurrency(fy23)}</div>
+            <div class="text-right">${formatCurrency(fy24)}</div>
+            <div class="text-right">${formatCurrency(fy25)}</div>
+            <div class="text-right">${formatCurrency(fy26)}</div>
+            <div class="text-right">${formatCurrency(change)}</div>
+            <div class="text-right">${pct.toFixed(1)}%</div>
+          </div>`;
+      });
+
+      const [change, pct] = calculateChange(deptTotals.fy25, deptTotals.fy26);
+      container.innerHTML += `
+        <div class="grid grid-cols-8 px-2 py-1 bg-gray-100 font-semibold">
+          <div colspan="2" class="col-span-2 text-right">Subtotal - ${dept}</div>
+          <div class="text-right">${formatCurrency(deptTotals.fy23)}</div>
+          <div class="text-right">${formatCurrency(deptTotals.fy24)}</div>
+          <div class="text-right">${formatCurrency(deptTotals.fy25)}</div>
+          <div class="text-right">${formatCurrency(deptTotals.fy26)}</div>
+          <div class="text-right">${formatCurrency(change)}</div>
+          <div class="text-right">${pct.toFixed(1)}%</div>
+        </div>`;
+
+      funcTotal += deptTotals.fy26;
+      grandTotals.fy23 += deptTotals.fy23;
+      grandTotals.fy24 += deptTotals.fy24;
+      grandTotals.fy25 += deptTotals.fy25;
+      grandTotals.fy26 += deptTotals.fy26;
+    });
+
+    if (funcTotal > largestValue) {
+      largestValue = funcTotal;
+      largestFunction = func;
+    }
+  });
+
+  const [change, pct] = calculateChange(grandTotals.fy25, grandTotals.fy26);
+  renderSummary(grandTotals, largestFunction, change, pct);
 }
 
 document.getElementById("fundSelector").addEventListener("change", e => {
   currentFund = e.target.value;
-  renderAll();
+  renderSidebar();
+  renderTable(expenseData);
+  renderCharts(expenseData);
 });
 
 Papa.parse(chartOfAccountsUrl, {
@@ -133,14 +213,17 @@ Papa.parse(chartOfAccountsUrl, {
     results.data.forEach(row => {
       const code = row["DEPT CODE"];
       departmentMap[code] = row["DEPARTMENT"];
-      functionMap[code] = row["FUNCTION_2"] || row["FUNCTION_1"] || "Unknown";
+      functionMap[code] = row["FUNCTION_1"] || row["FUNCTION_2"] || "Unknown";
     });
+
     Papa.parse(expenseSheetUrl, {
       header: true,
       download: true,
       complete: results => {
         expenseData = results.data;
-        renderAll();
+        renderSidebar();
+        renderTable(expenseData);
+        renderCharts(expenseData);
       }
     });
   }
