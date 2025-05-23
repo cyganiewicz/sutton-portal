@@ -1,6 +1,5 @@
 /* expenses_styles.css */
 
-/* Layout constants */
 :root {
   --navbar-height: 104px;
 }
@@ -21,22 +20,23 @@
 
 .chart-tile {
   width: 100%;
-  max-width: 800px;
+  max-width: 600px;
   min-width: 360px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   background-color: white;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   padding: 1rem;
   margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
-.chart-tile canvas {
-  width: 100%;
-  max-width: 400px;
-  height: 260px;
+canvas {
+  max-width: 100%;
+  height: auto;
 }
 
 /* Table styles */
@@ -45,31 +45,19 @@ table {
   border-collapse: collapse;
 }
 
+th, td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
 thead th {
   position: sticky;
   top: var(--navbar-height);
-  z-index: 10;
   background-color: #2563eb;
   color: white;
-  text-align: left;
+  z-index: 50;
   font-weight: 600;
-  border-bottom: 1px solid #ddd;
-  padding: 0.5rem 0.75rem;
-  white-space: nowrap;
-}
-
-tbody td {
-  padding: 0.5rem 0.75rem;
-  white-space: nowrap;
-}
-
-/* Totals and subtotals */
-tfoot td,
-tr.bg-gray-100 td,
-tr.bg-gray-200 td,
-tr.bg-gray-300 td {
-  padding: 0.5rem 0.75rem;
-  white-space: nowrap;
 }
 
 /* Responsive fallback */
@@ -78,7 +66,22 @@ tr.bg-gray-300 td {
     height: auto;
     max-width: 100%;
   }
-  .chart-tile canvas {
-    height: 220px;
+  canvas {
+    max-height: 220px;
   }
+}
+
+/* Sticky sidebar adjustments */
+aside {
+  top: var(--navbar-height);
+}
+
+/* Summary tile styles */
+.summary-tile {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
+  text-align: center;
 }
