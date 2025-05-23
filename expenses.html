@@ -70,23 +70,23 @@
       </div>
 
       <div class="mt-6 border rounded-lg shadow-md overflow-x-auto">
-        <table class="min-w-full text-sm">
-          <thead>
-            <tr>
-              <th>Account</th>
-              <th>Description</th>
-              <th>2023 Actual</th>
-              <th>2024 Actual</th>
-              <th>2025 Budget</th>
-              <th>2026 Budget</th>
-              <th>$ Change</th>
-              <th>% Change</th>
-            </tr>
-          </thead>
-          <tbody id="expenseTable"></tbody>
-          <tfoot id="expenseTotal"></tfoot>
-        </table>
-      </div>
+  <table class="min-w-full table-fixed">
+    <thead>
+      <tr class="bg-blue-600 text-white text-sm sticky top-[104px] z-50">
+        <th class="p-3 text-left">Account</th>
+        <th class="p-3 text-left">Description</th>
+        <th class="p-3 text-right">2023 Actual</th>
+        <th class="p-3 text-right">2024 Actual</th>
+        <th class="p-3 text-right">2025 Budget</th>
+        <th class="p-3 text-right">2026 Budget</th>
+        <th class="p-3 text-right">$ Change</th>
+        <th class="p-3 text-right">% Change</th>
+      </tr>
+    </thead>
+    <tbody id="expenseTable" class="text-sm text-gray-700 divide-y divide-gray-200"></tbody>
+    <tfoot id="expenseTotal" class="font-bold text-black"></tfoot>
+  </table>
+</div>
     </main>
   </div>
 
