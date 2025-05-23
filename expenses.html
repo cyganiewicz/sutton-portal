@@ -46,11 +46,11 @@
       <div class="chart-grid">
         <div class="chart-tile">
           <h2 class="text-lg font-semibold text-center mb-2">FY26 Budget by Function</h2>
-          <canvas id="expenseChart" class="w-full h-full"></canvas>
+          <canvas id="expenseChart" class="w-full h-full max-w-full max-h-full"></canvas>
         </div>
         <div class="chart-tile">
           <h2 class="text-lg font-semibold text-center mb-2">Multi-Year Comparison by Function Area</h2>
-          <canvas id="stackedChart" class="w-full h-full"></canvas>
+          <canvas id="stackedChart" class="w-full h-full max-w-full max-h-full"></canvas>
         </div>
       </div>
 
@@ -76,16 +76,22 @@
 
       <!-- Budget Table -->
       <div class="mt-6 relative overflow-x-auto border rounded-lg shadow-md">
-  <table class="min-w-full bg-white">
-  <thead class="bg-blue-600 text-white">
-    <tr>
-      <th class="p-3 sticky top-[112px] z-50">Account</th>
-      <!-- ... -->
-    </tr>
-  </thead>
-  <tbody id="expenseTable" class="text-sm text-gray-700"></tbody>
-  <tfoot id="expenseTotal" class="font-bold text-black"></tfoot>
-</table>
+        <table class="min-w-full bg-white">
+          <thead class="bg-blue-600 text-white">
+            <tr>
+              <th class="p-3 sticky top-[112px] z-50">Account</th>
+              <th class="p-3 sticky top-[112px] z-50">Description</th>
+              <th class="p-3 sticky top-[112px] z-50">2023 Actual</th>
+              <th class="p-3 sticky top-[112px] z-50">2024 Actual</th>
+              <th class="p-3 sticky top-[112px] z-50">2025 Budget</th>
+              <th class="p-3 sticky top-[112px] z-50">2026 Budget</th>
+              <th class="p-3 sticky top-[112px] z-50">$ Change</th>
+              <th class="p-3 sticky top-[112px] z-50">% Change</th>
+            </tr>
+          </thead>
+          <tbody id="expenseTable" class="text-sm text-gray-700"></tbody>
+          <tfoot id="expenseTotal" class="font-bold text-black"></tfoot>
+        </table>
       </div>
     </main>
   </div>
