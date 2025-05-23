@@ -146,9 +146,9 @@ function renderTable(filteredData) {
 
   Object.entries(grouped).forEach(([func, departments]) => {
     let funcTotal = 0;
+
     Object.entries(departments).forEach(([dept, rows]) => {
       let deptTotals = { fy23: 0, fy24: 0, fy25: 0, fy26: 0 };
-      const anchorId = `${dept.replace(/\s+/g, '_')}-${func.replace(/\s+/g, '_')}`;
 
       rows.forEach(row => {
         const fy23 = parseFloat(row["2023 ACTUAL"].replace(/,/g, "")) || 0;
@@ -162,30 +162,34 @@ function renderTable(filteredData) {
         deptTotals.fy25 += fy25;
         deptTotals.fy26 += fy26;
 
-        container.innerHTML += `
-          <div class="grid grid-cols-8 px-2 py-2">
-            <div>${row["Account Number"]}</div>
-            <div>${row["Description"]}</div>
-            <div class="text-right">${formatCurrency(fy23)}</div>
-            <div class="text-right">${formatCurrency(fy24)}</div>
-            <div class="text-right">${formatCurrency(fy25)}</div>
-            <div class="text-right">${formatCurrency(fy26)}</div>
-            <div class="text-right">${formatCurrency(change)}</div>
-            <div class="text-right">${pct.toFixed(1)}%</div>
-          </div>`;
+        const tr = document.createElement("tr");
+        tr.className = "border-b";
+        tr.innerHTML = `
+          <td class="p-3">${row["Account Number"]}</td>
+          <td class="p-3">${row["Description"]}</td>
+          <td class="p-3 text-right">${formatCurrency(fy23)}</td>
+          <td class="p-3 text-right">${formatCurrency(fy24)}</td>
+          <td class="p-3 text-right">${formatCurrency(fy25)}</td>
+          <td class="p-3 text-right">${formatCurrency(fy26)}</td>
+          <td class="p-3 text-right">${formatCurrency(change)}</td>
+          <td class="p-3 text-right">${pct.toFixed(1)}%</td>
+        `;
+        container.appendChild(tr);
       });
 
       const [change, pct] = calculateChange(deptTotals.fy25, deptTotals.fy26);
-      container.innerHTML += `
-        <div id="${anchorId}" class="grid grid-cols-8 px-2 py-2 bg-gray-100 font-semibold">
-          <div colspan="2" class="col-span-2 text-right">Subtotal - ${dept}</div>
-          <div class="text-right">${formatCurrency(deptTotals.fy23)}</div>
-          <div class="text-right">${formatCurrency(deptTotals.fy24)}</div>
-          <div class="text-right">${formatCurrency(deptTotals.fy25)}</div>
-          <div class="text-right">${formatCurrency(deptTotals.fy26)}</div>
-          <div class="text-right">${formatCurrency(change)}</div>
-          <div class="text-right">${pct.toFixed(1)}%</div>
-        </div>`;
+      const subtotalTr = document.createElement("tr");
+      subtotalTr.className = "bg-gray-100 font-semibold";
+      subtotalTr.innerHTML = `
+        <td colspan="2" class="p-3 text-right">Subtotal - ${dept}</td>
+        <td class="p-3 text-right">${formatCurrency(deptTotals.fy23)}</td>
+        <td class="p-3 text-right">${formatCurrency(deptTotals.fy24)}</td>
+        <td class="p-3 text-right">${formatCurrency(deptTotals.fy25)}</td>
+        <td class="p-3 text-right">${formatCurrency(deptTotals.fy26)}</td>
+        <td class="p-3 text-right">${formatCurrency(change)}</td>
+        <td class="p-3 text-right">${pct.toFixed(1)}%</td>
+      `;
+      container.appendChild(subtotalTr);
 
       funcTotal += deptTotals.fy26;
       grandTotals.fy23 += deptTotals.fy23;
@@ -200,19 +204,21 @@ function renderTable(filteredData) {
     }
   });
 
-  const [change, pct] = calculateChange(grandTotals.fy25, grandTotals.fy26);
-  footer.innerHTML = `
-    <div class="grid grid-cols-8 px-2 py-2 bg-gray-300 font-extrabold">
-      <div colspan="2" class="col-span-2 text-right">Grand Total</div>
-      <div class="text-right">${formatCurrency(grandTotals.fy23)}</div>
-      <div class="text-right">${formatCurrency(grandTotals.fy24)}</div>
-      <div class="text-right">${formatCurrency(grandTotals.fy25)}</div>
-      <div class="text-right">${formatCurrency(grandTotals.fy26)}</div>
-      <div class="text-right">${formatCurrency(change)}</div>
-      <div class="text-right">${pct.toFixed(1)}%</div>
-    </div>`;
+  const [grandDiff, grandPct] = calculateChange(grandTotals.fy25, grandTotals.fy26);
+  const footerTr = document.createElement("tr");
+  footerTr.className = "bg-gray-300 font-extrabold";
+  footerTr.innerHTML = `
+    <td colspan="2" class="p-3 text-right">Grand Total</td>
+    <td class="p-3 text-right">${formatCurrency(grandTotals.fy23)}</td>
+    <td class="p-3 text-right">${formatCurrency(grandTotals.fy24)}</td>
+    <td class="p-3 text-right">${formatCurrency(grandTotals.fy25)}</td>
+    <td class="p-3 text-right">${formatCurrency(grandTotals.fy26)}</td>
+    <td class="p-3 text-right">${formatCurrency(grandDiff)}</td>
+    <td class="p-3 text-right">${grandPct.toFixed(1)}%</td>
+  `;
+  footer.appendChild(footerTr);
 
-  renderSummary(grandTotals, largestFunction, change, pct);
+  renderSummary(grandTotals, largestFunction, grandDiff, grandPct);
 }
 
 function renderAll() {
