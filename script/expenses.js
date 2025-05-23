@@ -25,16 +25,20 @@ function renderSidebar() {
   const sidebar = document.getElementById("sidebarMenu");
   sidebar.innerHTML = "";
   const grouped = {};
+
   Object.keys(departmentMap).forEach(code => {
     const func = functionMap[code] || "Other";
     if (!grouped[func]) grouped[func] = [];
-    grouped[func].push(departmentMap[code]);
+    grouped[func].push({ code, name: departmentMap[code] });
   });
 
   Object.entries(grouped).forEach(([func, depts]) => {
-    const section = document.createElement("div");
-    section.innerHTML = `<strong>${func}</strong><ul class="ml-2 space-y-1">${depts.map(dept => `<li>${dept}</li>`).join('')}</ul>`;
-    sidebar.appendChild(section);
+    const html = depts.map(d => {
+      const anchor = `${d.name.replace(/\s+/g, '_')}-${func.replace(/\s+/g, '_')}`;
+      return `<li><a href="#${anchor}" class="text-blue-600 hover:underline">${d.name}</a></li>`;
+    }).join("");
+
+    sidebar.innerHTML += `<strong>${func}</strong><ul class="ml-2 space-y-1">${html}</ul>`;
   });
 }
 
@@ -85,6 +89,7 @@ function renderCharts(data) {
     options: {
       responsive: true,
       plugins: {
+        legend: { position: "bottom" },
         tooltip: {
           callbacks: {
             label: ctx => {
@@ -143,6 +148,8 @@ function renderTable(filteredData) {
     let funcTotal = 0;
     Object.entries(departments).forEach(([dept, rows]) => {
       let deptTotals = { fy23: 0, fy24: 0, fy25: 0, fy26: 0 };
+      const anchorId = `${dept.replace(/\s+/g, '_')}-${func.replace(/\s+/g, '_')}`;
+
       rows.forEach(row => {
         const fy23 = parseFloat(row["2023 ACTUAL"].replace(/,/g, "")) || 0;
         const fy24 = parseFloat(row["2024 ACTUAL"].replace(/,/g, "")) || 0;
@@ -156,7 +163,7 @@ function renderTable(filteredData) {
         deptTotals.fy26 += fy26;
 
         container.innerHTML += `
-          <div class="grid grid-cols-8 px-2 py-1">
+          <div class="grid grid-cols-8 px-2 py-2">
             <div>${row["Account Number"]}</div>
             <div>${row["Description"]}</div>
             <div class="text-right">${formatCurrency(fy23)}</div>
@@ -170,7 +177,7 @@ function renderTable(filteredData) {
 
       const [change, pct] = calculateChange(deptTotals.fy25, deptTotals.fy26);
       container.innerHTML += `
-        <div class="grid grid-cols-8 px-2 py-1 bg-gray-100 font-semibold">
+        <div id="${anchorId}" class="grid grid-cols-8 px-2 py-2 bg-gray-100 font-semibold">
           <div colspan="2" class="col-span-2 text-right">Subtotal - ${dept}</div>
           <div class="text-right">${formatCurrency(deptTotals.fy23)}</div>
           <div class="text-right">${formatCurrency(deptTotals.fy24)}</div>
@@ -194,6 +201,17 @@ function renderTable(filteredData) {
   });
 
   const [change, pct] = calculateChange(grandTotals.fy25, grandTotals.fy26);
+  footer.innerHTML = `
+    <div class="grid grid-cols-8 px-2 py-2 bg-gray-300 font-extrabold">
+      <div colspan="2" class="col-span-2 text-right">Grand Total</div>
+      <div class="text-right">${formatCurrency(grandTotals.fy23)}</div>
+      <div class="text-right">${formatCurrency(grandTotals.fy24)}</div>
+      <div class="text-right">${formatCurrency(grandTotals.fy25)}</div>
+      <div class="text-right">${formatCurrency(grandTotals.fy26)}</div>
+      <div class="text-right">${formatCurrency(change)}</div>
+      <div class="text-right">${pct.toFixed(1)}%</div>
+    </div>`;
+
   renderSummary(grandTotals, largestFunction, change, pct);
 }
 
