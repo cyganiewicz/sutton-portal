@@ -1,138 +1,108 @@
+/* expenses_styles.css */
+
+/* Set base layout values */
 :root {
   --navbar-height: 104px;
 }
 
-/* Base layout */
-body {
-  font-family: system-ui, sans-serif;
-  margin: 0;
-  padding: 0;
-}
-
-/* ===== TABLE STYLING ===== */
-
-table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: collapse;
-}
-
-thead th {
-  position: sticky;
-  top: var(--navbar-height);
-  z-index: 50;
-  background-color: #2563eb;
-  color: white;
-  padding: 0.75rem;
-  font-weight: 600;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  border-bottom: 1px solid #ddd;
-}
-
-tbody td {
-  padding: 0.75rem;
-  border-bottom: 1px solid #e5e7eb;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  vertical-align: top;
-}
-
-tfoot td {
-  padding: 0.75rem;
-  font-weight: bold;
-  background-color: #f3f4f6;
-  border-top: 2px solid #ccc;
-}
-
-/* Column widths */
-th:nth-child(1), td:nth-child(1) { width: 140px; }
-th:nth-child(2), td:nth-child(2) { width: 200px; }
-th:nth-child(n+3), td:nth-child(n+3) {
-  width: 110px;
-  text-align: right;
-}
-
-/* Highlighted total rows */
-tr.bg-gray-100 td {
-  background-color: #f9fafb;
-  font-weight: 600;
-}
-tr.bg-gray-200 td {
-  background-color: #e5e7eb;
-  font-weight: 700;
-}
-tr.bg-gray-300 td {
-  background-color: #d1d5db;
-  font-weight: 800;
-}
-
-/* ===== CHART GRID ===== */
-
+/* Chart container layout */
 .chart-grid {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  align-items: center;
 }
-
 @media (min-width: 1024px) {
   .chart-grid {
     flex-direction: row;
     justify-content: center;
-    align-items: stretch;
+    align-items: flex-start;
   }
 }
 
 .chart-tile {
-  background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 1rem;
   width: 100%;
-  max-width: 500px;
+  max-width: 550px;
+  min-width: 300px;
   height: 380px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-}
-
-.chart-tile canvas {
-  max-width: 100%;
-  height: 240px !important;
-}
-
-/* ===== SUMMARY TILE ===== */
-
-.summary-tile {
   background-color: white;
   border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   padding: 1rem;
+  margin: 0 auto;
+}
+
+/* Canvas within chart */
+canvas {
+  max-width: 100%;
+  max-height: 260px;
+  height: auto;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+/* Summary tiles */
+.summary-tile {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   text-align: center;
   border: 1px solid #e5e7eb;
 }
 
-/* ===== SIDEBAR ===== */
-
-aside {
-  height: calc(100vh - var(--navbar-height));
-  overflow-y: auto;
-  top: var(--navbar-height);
+/* Sticky table header — attached to actual <thead> */
+table thead th {
   position: sticky;
+  top: var(--navbar-height);
+  background-color: #2563eb;
+  color: white;
+  z-index: 40;
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 1px solid #ddd;
+  white-space: nowrap;
+}
+
+/* Table layout */
+table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  background-color: white;
+}
+
+table th,
+table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Footer */
+tfoot tr {
+  border-top: 2px solid #d1d5db;
 }
 
 /* Responsive fallback */
 @media (max-width: 768px) {
   .chart-tile {
     height: auto;
+    max-width: 100%;
   }
 
-  .chart-tile canvas {
-    height: 200px !important;
+  canvas {
+    max-height: 220px;
+  }
+
+  table thead th {
+    font-size: 0.875rem;
   }
 }
