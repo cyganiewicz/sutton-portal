@@ -39,16 +39,17 @@
         </select>
       </div>
 
-      <div class="chart-grid">
-        <div class="chart-tile">
-          <h2 class="text-lg font-semibold text-center mb-2">FY26 Budget by Function</h2>
-          <canvas id="expenseChart"></canvas>
-        </div>
-        <div class="chart-tile">
-          <h2 class="text-lg font-semibold text-center mb-2">Multi-Year Comparison by Function Area</h2>
-          <canvas id="stackedChart"></canvas>
-        </div>
-      </div>
+      <!-- Charts -->
+<div class="chart-grid mt-6">
+  <div class="chart-tile">
+    <h2 class="text-lg font-semibold text-center mb-2">FY26 Budget by Function</h2>
+    <canvas id="expenseChart"></canvas>
+  </div>
+  <div class="chart-tile">
+    <h2 class="text-lg font-semibold text-center mb-2">Multi-Year Comparison by Function Area</h2>
+    <canvas id="stackedChart"></canvas>
+  </div>
+</div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
         <div class="summary-tile">
@@ -69,22 +70,25 @@
         </div>
       </div>
 
-      <div class="mt-6 border rounded-lg shadow-md overflow-x-auto">
-        <div class="sticky-table-header">
-          <div>Account</div>
-          <div>Description</div>
-          <div>2023 Actual</div>
-          <div>2024 Actual</div>
-          <div>2025 Budget</div>
-          <div>2026 Budget</div>
-          <div>$ Change</div>
-          <div>% Change</div>
-        </div>
-        <div id="expenseTable" class="text-sm text-gray-700"></div>
-        <div id="expenseTotal"></div>
-      </div>
-    </main>
-  </div>
+      <!-- Budget Table -->
+<div class="mt-6 border rounded-lg shadow-md overflow-x-auto">
+  <table class="min-w-full bg-white">
+    <thead>
+      <tr>
+        <th>Account</th>
+        <th>Description</th>
+        <th>2023 Actual</th>
+        <th>2024 Actual</th>
+        <th>2025 Budget</th>
+        <th>2026 Budget</th>
+        <th>$ Change</th>
+        <th>% Change</th>
+      </tr>
+    </thead>
+    <tbody id="expenseTable" class="text-sm text-gray-700 divide-y divide-gray-200"></tbody>
+    <tfoot id="expenseTotal" class="font-bold text-black"></tfoot>
+  </table>
+</div>
 
   <script src="script/expenses.js"></script>
 </body>
