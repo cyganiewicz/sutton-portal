@@ -70,20 +70,20 @@
       </div>
 
 <!-- Budget Table -->
-<div class="mt-6 border rounded-lg shadow-md overflow-x-auto">
+<div class="mt-6 border rounded-lg shadow-md overflow-auto max-h-[600px]">
   <table class="min-w-full table-fixed text-sm text-gray-700">
-    <thead class="bg-blue-600 text-white">
-  <tr>
-    <th class="p-3 w-36 text-left sticky top-[104px] z-50">Account</th>
-    <th class="p-3 w-56 text-left sticky top-[104px] z-50">Description</th>
-    <th class="p-3 w-28 text-right sticky top-[104px] z-50">2023 Actual</th>
-    <th class="p-3 w-28 text-right sticky top-[104px] z-50">2024 Actual</th>
-    <th class="p-3 w-28 text-right sticky top-[104px] z-50">2025 Budget</th>
-    <th class="p-3 w-28 text-right sticky top-[104px] z-50">2026 Budget</th>
-    <th class="p-3 w-28 text-right sticky top-[104px] z-50">$ Change</th>
-    <th class="p-3 w-28 text-right sticky top-[104px] z-50">% Change</th>
-  </tr>
-</thead>
+    <thead>
+      <tr>
+        <th class="p-3 w-36 text-left sticky top-[104px] bg-blue-600 text-white z-50">Account</th>
+        <th class="p-3 w-56 text-left sticky top-[104px] bg-blue-600 text-white z-50">Description</th>
+        <th class="p-3 w-28 text-right sticky top-[104px] bg-blue-600 text-white z-50">2023 Actual</th>
+        <th class="p-3 w-28 text-right sticky top-[104px] bg-blue-600 text-white z-50">2024 Actual</th>
+        <th class="p-3 w-28 text-right sticky top-[104px] bg-blue-600 text-white z-50">2025 Budget</th>
+        <th class="p-3 w-28 text-right sticky top-[104px] bg-blue-600 text-white z-50">2026 Budget</th>
+        <th class="p-3 w-28 text-right sticky top-[104px] bg-blue-600 text-white z-50">$ Change</th>
+        <th class="p-3 w-28 text-right sticky top-[104px] bg-blue-600 text-white z-50">% Change</th>
+      </tr>
+    </thead>
     <tbody id="expenseTable" class="divide-y divide-gray-200 bg-white"></tbody>
     <tfoot id="expenseTotal" class="bg-gray-100 font-bold text-black"></tfoot>
   </table>
