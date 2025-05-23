@@ -22,9 +22,9 @@ thead th {
 
 .chart-tile {
   width: 100%;
-  max-width: 700px;
-  min-width: 420px;
-  height: 600px;
+  max-width: 700px;     /* Scales up nicely on wide screens */
+  min-width: 340px;
+  height: 450px;         /* Taller for full chart visibility */
   display: flex;
   flex-direction: column;
   justify-content: center;
