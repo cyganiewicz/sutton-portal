@@ -77,24 +77,22 @@
         </div>
       </div>
 
-      <!-- Budget Table -->
-      <div class="mt-6 overflow-x-auto border rounded-lg shadow-md">
-        <table class="min-w-full bg-white">
-          <thead>
-            <tr>
-              <th class="sticky top-[120px] z-50 bg-blue-600 text-white p-3">Account</th>
-              <th class="sticky top-[120px] z-50 bg-blue-600 text-white p-3">Description</th>
-              <th class="sticky top-[120px] z-50 bg-blue-600 text-white p-3">2023 Actual</th>
-              <th class="sticky top-[120px] z-50 bg-blue-600 text-white p-3">2024 Actual</th>
-              <th class="sticky top-[120px] z-50 bg-blue-600 text-white p-3">2025 Budget</th>
-              <th class="sticky top-[120px] z-50 bg-blue-600 text-white p-3">2026 Budget</th>
-              <th class="sticky top-[120px] z-50 bg-blue-600 text-white p-3">$ Change</th>
-              <th class="sticky top-[120px] z-50 bg-blue-600 text-white p-3">% Change</th>
-            </tr>
-          </thead>
-          <tbody id="expenseTable" class="text-sm text-gray-700"></tbody>
-          <tfoot id="expenseTotal" class="font-bold text-black"></tfoot>
-        </table>
+      <!-- Budget Table with div-based sticky header -->
+      <div class="mt-6 border rounded-lg shadow-md overflow-x-auto">
+        <!-- Sticky header row -->
+        <div class="sticky top-[104px] z-50 bg-blue-600 text-white grid grid-cols-8 font-semibold text-sm">
+          <div class="p-3">Account</div>
+          <div class="p-3">Description</div>
+          <div class="p-3">2023 Actual</div>
+          <div class="p-3">2024 Actual</div>
+          <div class="p-3">2025 Budget</div>
+          <div class="p-3">2026 Budget</div>
+          <div class="p-3">$ Change</div>
+          <div class="p-3">% Change</div>
+        </div>
+        <!-- Dynamic content rows inserted via JS -->
+        <div id="expenseTable" class="text-sm text-gray-700 divide-y divide-gray-200"></div>
+        <div id="expenseTotal" class="font-bold text-black"></div>
       </div>
     </main>
   </div>
