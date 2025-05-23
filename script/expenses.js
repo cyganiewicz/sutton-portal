@@ -1,4 +1,4 @@
-// expenses.js
+// expenses.js — rewritten to use native <table> elements
 
 function formatCurrency(value) {
   if (isNaN(value)) return "$0";
@@ -12,10 +12,10 @@ function calculateChange(fy25, fy26) {
 }
 
 function renderTable(data) {
-  const tableContainer = document.getElementById("expenseTable");
-  const totalContainer = document.getElementById("expenseTotal");
-  tableContainer.innerHTML = "";
-  totalContainer.innerHTML = "";
+  const tableBody = document.getElementById("expenseTable");
+  const tableFooter = document.getElementById("expenseTotal");
+  tableBody.innerHTML = "";
+  tableFooter.innerHTML = "";
 
   let totalFY23 = 0, totalFY24 = 0, totalFY25 = 0, totalFY26 = 0;
 
@@ -33,34 +33,34 @@ function renderTable(data) {
     totalFY25 += fy25;
     totalFY26 += fy26;
 
-    const rowDiv = document.createElement("div");
-    rowDiv.className = "grid grid-cols-8 border-b text-sm";
-    rowDiv.innerHTML = `
-      <div class="px-2 py-1 break-words w-[15%]">${acct}</div>
-      <div class="px-2 py-1 break-words w-[25%]">${desc}</div>
-      <div class="px-2 py-1 text-right w-[10%]">${formatCurrency(fy23)}</div>
-      <div class="px-2 py-1 text-right w-[10%]">${formatCurrency(fy24)}</div>
-      <div class="px-2 py-1 text-right w-[10%]">${formatCurrency(fy25)}</div>
-      <div class="px-2 py-1 text-right w-[10%]">${formatCurrency(fy26)}</div>
-      <div class="px-2 py-1 text-right w-[10%]">${formatCurrency(diff)}</div>
-      <div class="px-2 py-1 text-right w-[10%]">${pct.toFixed(1)}%</div>
+    const tr = document.createElement("tr");
+    tr.className = "border-b";
+    tr.innerHTML = `
+      <td class="p-3">${acct}</td>
+      <td class="p-3">${desc}</td>
+      <td class="p-3 text-right">${formatCurrency(fy23)}</td>
+      <td class="p-3 text-right">${formatCurrency(fy24)}</td>
+      <td class="p-3 text-right">${formatCurrency(fy25)}</td>
+      <td class="p-3 text-right">${formatCurrency(fy26)}</td>
+      <td class="p-3 text-right">${formatCurrency(diff)}</td>
+      <td class="p-3 text-right">${pct.toFixed(1)}%</td>
     `;
-    tableContainer.appendChild(rowDiv);
+    tableBody.appendChild(tr);
   });
 
   const [totalDiff, totalPct] = calculateChange(totalFY25, totalFY26);
-  const footerDiv = document.createElement("div");
-  footerDiv.className = "grid grid-cols-8 font-bold p-3 bg-gray-100 border-t border-gray-300";
-  footerDiv.innerHTML = `
-    <div class="col-span-2 text-right px-2">Grand Total</div>
-    <div class="text-right px-2">${formatCurrency(totalFY23)}</div>
-    <div class="text-right px-2">${formatCurrency(totalFY24)}</div>
-    <div class="text-right px-2">${formatCurrency(totalFY25)}</div>
-    <div class="text-right px-2">${formatCurrency(totalFY26)}</div>
-    <div class="text-right px-2">${formatCurrency(totalDiff)}</div>
-    <div class="text-right px-2">${totalPct.toFixed(1)}%</div>
+  const footerRow = document.createElement("tr");
+  footerRow.className = "bg-gray-100 font-bold";
+  footerRow.innerHTML = `
+    <td colspan="2" class="p-3 text-right">Grand Total</td>
+    <td class="p-3 text-right">${formatCurrency(totalFY23)}</td>
+    <td class="p-3 text-right">${formatCurrency(totalFY24)}</td>
+    <td class="p-3 text-right">${formatCurrency(totalFY25)}</td>
+    <td class="p-3 text-right">${formatCurrency(totalFY26)}</td>
+    <td class="p-3 text-right">${formatCurrency(totalDiff)}</td>
+    <td class="p-3 text-right">${totalPct.toFixed(1)}%</td>
   `;
-  totalContainer.appendChild(footerDiv);
+  tableFooter.appendChild(footerRow);
 }
 
 function loadData() {
