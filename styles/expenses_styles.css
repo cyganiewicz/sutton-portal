@@ -38,7 +38,7 @@
 /* Canvas within chart */
 canvas {
   max-width: 100%;
-  max-height: 260px;
+  max-height: 360px;
   height: auto;
   margin-top: auto;
   margin-bottom: auto;
