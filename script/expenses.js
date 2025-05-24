@@ -25,16 +25,23 @@ function renderSidebar() {
   sidebar.innerHTML = "";
   const grouped = {};
 
-  Object.keys(departmentMap).forEach(code => {
-    const func = functionMap[code] || "Other";
-    if (!grouped[func]) grouped[func] = [];
-    grouped[func].push({ code, name: departmentMap[code] });
+  // Filter relevant departments based on current fund
+  expenseData.forEach(row => {
+    const acct = row["Account Number"]?.trim();
+    if (!acct || !acct.startsWith(currentFund)) return;
+
+    const deptCode = acct.split("-")[1];
+    const func = functionMap[deptCode] || "Other";
+    const deptName = departmentMap[deptCode] || deptCode;
+
+    if (!grouped[func]) grouped[func] = new Set();
+    grouped[func].add(deptName);
   });
 
-  Object.entries(grouped).forEach(([func, depts]) => {
-    const html = depts.map(d => {
-      const anchor = `${d.name.replace(/\s+/g, '_')}-${func.replace(/\s+/g, '_')}`;
-      return `<li><a href="#${anchor}" class="text-blue-600 hover:underline">${d.name}</a></li>`;
+  Object.entries(grouped).forEach(([func, deptSet]) => {
+    const html = [...deptSet].map(dept => {
+      const anchor = `${dept.replace(/\s+/g, '_')}-${func.replace(/\s+/g, '_')}`;
+      return `<li><a href="#${anchor}" class="text-blue-600 hover:underline">${dept}</a></li>`;
     }).join("");
 
     sidebar.innerHTML += `<strong>${func}</strong><ul class="ml-2 space-y-1">${html}</ul>`;
