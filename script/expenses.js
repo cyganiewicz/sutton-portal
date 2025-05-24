@@ -1,4 +1,4 @@
-// expenses.js (Full Refreshed Version)
+// expenses.js (Full Refreshed Version with Mobile Dropdown Support)
 
 let currentFund = "010";
 const chartOfAccountsUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRezgn-Gen4lhkuO13Jm_y1QhYP4UovUyDKuLvGGrKqo1JwqnzSVdsSOr26epUKCkNuWdIQd-mu46sW/pub?output=csv";
@@ -38,6 +38,43 @@ function renderSidebar() {
     }).join("");
 
     sidebar.innerHTML += `<strong>${func}</strong><ul class="ml-2 space-y-1">${html}</ul>`;
+  });
+}
+
+function renderMobileSidebar() {
+  const dropdown = document.getElementById("mobileSidebar");
+  if (!dropdown) return;
+
+  dropdown.innerHTML = '<option disabled selected>Jump to Department</option>';
+
+  const grouped = {};
+  Object.keys(departmentMap).forEach(code => {
+    const func = functionMap[code] || "Other";
+    if (!grouped[func]) grouped[func] = [];
+    grouped[func].push({ code, name: departmentMap[code] });
+  });
+
+  Object.entries(grouped).forEach(([func, depts]) => {
+    const optgroup = document.createElement("optgroup");
+    optgroup.label = func;
+    depts.forEach(({ name }) => {
+      const option = document.createElement("option");
+      const anchor = `${name.replace(/\s+/g, '_')}-${func.replace(/\s+/g, '_')}`;
+      option.value = anchor;
+      option.textContent = name;
+      optgroup.appendChild(option);
+    });
+    dropdown.appendChild(optgroup);
+  });
+
+  dropdown.addEventListener("change", (e) => {
+    const anchorId = e.target.value;
+    const target = document.getElementById(anchorId);
+    if (target) {
+      const yOffset = -100;
+      const y = target.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
   });
 }
 
@@ -167,11 +204,6 @@ function renderTable(filteredData) {
         const fy26 = parseFloat(row["2026 BUDGET"].replace(/,/g, "")) || 0;
         const [change, pct] = calculateChange(fy25, fy26);
 
-        deptTotals.fy23 += fy23;
-        deptTotals.fy24 += fy24;
-        deptTotals.fy25 += fy25;
-        deptTotals.fy26 += fy26;
-
         const tr = document.createElement("tr");
         tr.className = "border-b";
         tr.innerHTML = `
@@ -185,6 +217,11 @@ function renderTable(filteredData) {
           <td class="p-3 text-right">${pct.toFixed(1)}%</td>
         `;
         container.appendChild(tr);
+
+        deptTotals.fy23 += fy23;
+        deptTotals.fy24 += fy24;
+        deptTotals.fy25 += fy25;
+        deptTotals.fy26 += fy26;
       });
 
       const [change, pct] = calculateChange(deptTotals.fy25, deptTotals.fy26);
@@ -235,6 +272,7 @@ function renderTable(filteredData) {
 function renderAll() {
   const filtered = expenseData.filter(row => row["Account Number"]?.trim().startsWith(currentFund));
   renderSidebar();
+  renderMobileSidebar();  // ✅ now included
   renderTable(filtered);
   renderCharts(filtered);
 }
