@@ -3,6 +3,14 @@
 /* Set base layout values */
 :root {
   --navbar-height: 104px;
+  --navbar-bg: #3f6522; /* Forest green to match Sutton website */
+  --header-text: #ffffff;
+}
+
+/* Header Styling Override (in case Tailwind doesn't apply) */
+header {
+  background-color: var(--navbar-bg);
+  color: var(--header-text);
 }
 
 /* Chart container layout */
@@ -56,7 +64,7 @@ canvas {
 
 /* Sticky table header — attached to actual <thead> */
 table thead th {
-  background-color: #2563eb;
+  background-color: #3f6522;  /* Matching Sutton green */
   color: white;
   font-weight: 600;
   text-align: left;
@@ -90,7 +98,7 @@ tfoot tr {
 
 /* Responsive fallback */
 @media (max-width: 1024px) {
-  /* Hide sidebar */
+  /* Hide desktop sidebar */
   #desktopSidebar {
     display: none;
   }
