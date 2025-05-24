@@ -9,8 +9,8 @@
 
 /* Header Styling Override (in case Tailwind doesn't apply) */
 header {
-  background-color: var(--navbar-bg);
-  color: var(--header-text);
+  background-color: #3f6522;
+  color: white;
 }
 
 /* Chart container layout */
