@@ -289,7 +289,7 @@ Papa.parse(chartOfAccountsUrl, {
     results.data.forEach(row => {
       const code = row["DEPT CODE"];
       departmentMap[code] = row["DEPARTMENT"];
-      functionMap[code] = row["FUNCTION_1"] || row["FUNCTION_2"] || "Unknown";
+      functionMap[code] = row["FUNCTION_2"] || row["FUNCTION_1"] || "Unknown";
     });
 
     Papa.parse(expenseSheetUrl, {
