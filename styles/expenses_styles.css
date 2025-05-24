@@ -89,7 +89,13 @@ tfoot tr {
 }
 
 /* Responsive fallback */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+  /* Hide sidebar */
+  #desktopSidebar {
+    display: none;
+  }
+
+  /* Adjust chart tile stacking */
   .chart-tile {
     height: auto;
     max-width: 100%;
@@ -102,4 +108,16 @@ tfoot tr {
   table thead th {
     font-size: 0.875rem;
   }
+
+  /* Optional: Add horizontal scroll for table */
+  table {
+    overflow-x: auto;
+    display: block;
+  }
+}
+
+/* Mobile dropdown spacing */
+#mobileSidebar {
+  width: 100%;
+  max-width: 300px;
 }
