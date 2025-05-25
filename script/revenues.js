@@ -271,6 +271,39 @@ function renderCategorySection(cat1Name, rows) {
     }
   });
 }
+function updateSummaryTiles(data) {
+  let totalsByCategory = {};
+  let grand25 = 0;
+  let grand26 = 0;
+
+  data.forEach(row => {
+    const cat = row["REV_CATEGORY_1"] || "Unknown";
+    const fy25 = getSafeValue(row["2025 ACTUAL"]);
+    const fy26 = getSafeValue(row["2026 BUDGET"]);
+
+    totalsByCategory[cat] = (totalsByCategory[cat] || 0) + fy26;
+    grand25 += fy25;
+    grand26 += fy26;
+  });
+
+  const [diff, pct] = calculateChange(grand25, grand26);
+
+  // Find largest category
+  let largest = "N/A";
+  let largestValue = 0;
+  Object.entries(totalsByCategory).forEach(([cat, val]) => {
+    if (val > largestValue) {
+      largestValue = val;
+      largest = cat;
+    }
+  });
+
+  // Populate the DOM
+  document.getElementById("revTotalRevenue").textContent = formatCurrency(grand26).replace(".00", "M");
+  document.getElementById("revTopCategory").textContent = largest;
+  document.getElementById("revDollarChange").textContent = formatCurrency(diff);
+  document.getElementById("revPercentChange").textContent = pct.toFixed(1) + "%";
+}
 
 // Load and render
 Papa.parse(revenueDataUrl, {
@@ -278,6 +311,7 @@ Papa.parse(revenueDataUrl, {
   download: true,
   complete: results => {
     revenueData = results.data.filter(r => r["2026 BUDGET"]?.trim());
+    updateSummaryTiles(revenueData); // 👈 Add this line
     renderTopCharts(revenueData);
 
     const byCat1 = groupDataByCategory1(revenueData);
