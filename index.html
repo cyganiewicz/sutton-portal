@@ -1,65 +1,146 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Town of Sutton Budget Portal</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="styles/index_styles.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
 </head>
-<body class="bg-gray-50">
-  <div class="min-h-screen p-6">
-    <h1 class="text-4xl font-bold mb-4 text-center">Town of Sutton Budget Portal</h1>
-    <p class="text-lg text-center mb-8">
-      Explore detailed budget data for fiscal years 2023 to 2026 by fund and department.
-    </p>
+<body class="bg-gray-100">
 
-    <div class="flex justify-center gap-4 mb-10">
-      <button onclick="selectFund('010')" class="fund-button px-4 py-2 rounded border">General Fund</button>
-      <button onclick="selectFund('600')" class="fund-button px-4 py-2 rounded border">Sewer Enterprise Fund</button>
-      <button onclick="selectFund('610')" class="fund-button px-4 py-2 rounded border">Transfer Station Enterprise Fund</button>
+  <!-- Navbar -->
+  <header class="bg-[#4a5a7c] shadow-md sticky top-0 z-50 text-white">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <img src="logo.png" alt="Sutton Logo" class="h-10 w-auto" />
+        <h1 class="text-2xl font-bold">Sutton Budget Portal</h1>
+      </div>
+      <nav class="space-x-6 text-sm font-medium">
+        <a href="index.html" class="hover:underline">Home</a>
+        <a href="expenses.html" class="hover:underline">Expenses</a>
+        <a href="#" class="text-gray-300 cursor-not-allowed" title="Coming soon">Revenues</a>
+      </nav>
     </div>
+  </header>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-      <div class="bg-white shadow-md rounded-lg p-6">
-        <h2 class="text-xl font-semibold mb-2">Expense Data</h2>
-        <p class="text-gray-600 mb-4">
-          View actual and projected spending by department and fund.
-        </p>
-        <a id="expenses-link" href="expenses.html?fund=010" class="bg-blue-600 text-white px-4 py-2 rounded">View Expenses</a>
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <h2 class="text-3xl font-bold mb-4 text-center">Explore the Town of Sutton’s Budget</h2>
+    <p class="text-center text-gray-600 mb-8">Review actual and proposed budget data for all funds and functions.</p>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Expenses Tile -->
+      <div class="bg-white rounded-lg shadow-md p-4 flex flex-col items-center">
+        <h3 class="text-lg font-semibold mb-2 text-center">FY26 Expenses by Function</h3>
+        <canvas id="summaryPieChart" class="w-full max-w-[300px] h-[300px]"></canvas>
+        <a href="expenses.html" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">View Full Expenses</a>
       </div>
 
-      <div class="bg-white shadow-md rounded-lg p-6">
-        <h2 class="text-xl font-semibold mb-2">Revenue Data</h2>
-        <p class="text-gray-600 mb-4">
-          Coming soon: explore sources of revenue and trends by fund.
-        </p>
+      <!-- Summary Table Tile -->
+      <div class="bg-white rounded-lg shadow-md p-4">
+        <h3 class="text-lg font-semibold mb-2 text-center">Summary by Function (FY25 vs FY26)</h3>
+        <table class="w-full text-sm">
+          <thead class="bg-gray-200">
+            <tr>
+              <th class="text-left p-2">Function</th>
+              <th class="text-right p-2">FY25</th>
+              <th class="text-right p-2">FY26</th>
+              <th class="text-right p-2">Change</th>
+            </tr>
+          </thead>
+          <tbody id="summaryTable" class="text-gray-700 divide-y divide-gray-200"></tbody>
+        </table>
+      </div>
+
+      <!-- Placeholder Tile -->
+      <div class="bg-white rounded-lg shadow-md p-6 flex flex-col justify-between">
+        <h3 class="text-lg font-semibold mb-2">Capital Budget</h3>
+        <p class="text-gray-600 mb-4">Coming soon: view capital project requests and funding plans.</p>
         <button disabled class="bg-gray-400 text-white px-4 py-2 rounded">Coming Soon</button>
       </div>
     </div>
-  </div>
+  </main>
 
   <script>
-    function selectFund(fundCode) {
-      const buttons = document.querySelectorAll(".fund-button");
-      buttons.forEach(btn => btn.classList.remove("bg-blue-600", "text-white"));
+    const chartOfAccountsUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRezgn-Gen4lhkuO13Jm_y1QhYP4UovUyDKuLvGGrKqo1JwqnzSVdsSOr26epUKCkNuWdIQd-mu46sW/pub?output=csv";
+    const expenseSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTQI0lHBLQexriYO48j0pv5wbmy0e3osDh1m9QPZB9xBkq5KRqqxFrZFroAK5Gg0_NIaTht7c7RPcWQ/pub?output=csv";
 
-      const selected = Array.from(buttons).find(btn => btn.textContent.includes(getFundName(fundCode)));
-      if (selected) selected.classList.add("bg-blue-600", "text-white");
+    let functionMap = {};
 
-      document.getElementById("expenses-link").href = `expenses.html?fund=${fundCode}`;
+    function formatCurrency(val) {
+      return "$" + parseFloat(val).toLocaleString(undefined, { maximumFractionDigits: 0 });
     }
 
-    function getFundName(code) {
-      const names = {
-        '010': 'General Fund',
-        '600': 'Sewer Enterprise Fund',
-        '610': 'Transfer Station Enterprise Fund'
-      };
-      return names[code];
+    function calculateChange(fy25, fy26) {
+      const diff = fy26 - fy25;
+      const pct = fy25 !== 0 ? (diff / fy25) * 100 : 0;
+      return [diff, pct];
     }
 
-    // Default to General Fund on load
-    window.onload = () => selectFund('010');
+    function renderSummary(data) {
+      const grouped = {};
+
+      data.forEach(row => {
+        const acct = row["Account Number"] || "";
+        if (!acct.startsWith("010")) return; // General Fund only
+        const deptCode = acct.split("-")[1];
+        const func = functionMap[deptCode] || "Unknown";
+        const fy25 = parseFloat(row["2025 BUDGET"].replace(/,/g, "")) || 0;
+        const fy26 = parseFloat(row["2026 BUDGET"].replace(/,/g, "")) || 0;
+        if (!grouped[func]) grouped[func] = [0, 0];
+        grouped[func][0] += fy25;
+        grouped[func][1] += fy26;
+      });
+
+      const table = document.getElementById("summaryTable");
+      const labels = Object.keys(grouped);
+      const values = Object.values(grouped);
+      const pieCtx = document.getElementById("summaryPieChart").getContext("2d");
+      const colors = labels.map((_, i) => `hsl(${i * 360 / labels.length}, 70%, 60%)`);
+      const pieValues = values.map(v => v[1]);
+
+      labels.forEach((label, i) => {
+        const [fy25, fy26] = grouped[label];
+        const [diff, pct] = calculateChange(fy25, fy26);
+        table.innerHTML += `
+          <tr>
+            <td class="p-2">${label}</td>
+            <td class="p-2 text-right">${formatCurrency(fy25)}</td>
+            <td class="p-2 text-right">${formatCurrency(fy26)}</td>
+            <td class="p-2 text-right">${formatCurrency(diff)} (${pct.toFixed(1)}%)</td>
+          </tr>`;
+      });
+
+      new Chart(pieCtx, {
+        type: "pie",
+        data: {
+          labels,
+          datasets: [{ data: pieValues, backgroundColor: colors }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: "bottom" } }
+        }
+      });
+    }
+
+    Papa.parse(chartOfAccountsUrl, {
+      header: true,
+      download: true,
+      complete: results => {
+        results.data.forEach(row => {
+          const code = row["DEPT CODE"];
+          functionMap[code] = row["FUNCTION_2"] || row["FUNCTION_1"] || "Unknown";
+        });
+        Papa.parse(expenseSheetUrl, {
+          header: true,
+          download: true,
+          complete: results => renderSummary(results.data)
+        });
+      }
+    });
   </script>
 </body>
 </html>
