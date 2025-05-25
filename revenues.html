@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sutton Budget Portal - Revenues</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="styles/revenues_styles.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+</head>
+<body class="bg-gray-100">
+  <header class="bg-green-700 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="assets/logo.png" alt="Town Seal" class="h-10 w-auto" />
+        <h1 class="text-2xl font-bold">Sutton Budget Portal</h1>
+      </div>
+      <nav class="space-x-6 text-sm font-medium">
+        <a href="index.html" class="hover:underline">Home</a>
+        <a href="expenses.html" class="hover:underline">Expenses</a>
+        <a href="revenues.html" class="underline font-semibold">Revenues</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto p-6">
+    <h2 class="text-3xl font-bold text-center mb-8">Sutton Budget Revenues</h2>
+
+    <!-- Total Revenues Charts -->
+    <div class="chart-grid mb-12">
+      <div class="chart-tile">
+        <h3 class="text-lg font-semibold text-center mb-2">FY26 Revenues by Category</h3>
+        <canvas id="revenueTotalPie"></canvas>
+      </div>
+      <div class="chart-tile">
+        <h3 class="text-lg font-semibold text-center mb-2">Multi-Year Comparison of Revenues</h3>
+        <canvas id="revenueTotalBar"></canvas>
+      </div>
+    </div>
+
+    <!-- Section Template -->
+    <section id="revenueSections">
+      <!-- Dynamic content: each category gets its own set of charts and a table -->
+    </section>
+  </main>
+
+  <script src="script/revenues.js"></script>
+</body>
+</html>
