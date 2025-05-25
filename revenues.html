@@ -3,46 +3,49 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sutton Budget Portal - Revenues</title>
+  <title>Sutton Budget Portal – Revenues</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
   <link href="styles/revenues_styles.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 text-gray-800">
+
+  <!-- Navbar -->
   <header class="bg-[#3f6522] text-white shadow-md sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <img src="assets/logo.png" alt="Town Logo" class="h-10 w-auto" />
-        <h1 class="text-2xl font-bold">Sutton Budget Portal</h1>
+      <div class="flex items-center space-x-4">
+        <img src="assets/logo.png" alt="Sutton Seal" class="h-10 w-auto" />
+        <h1 class="text-xl font-bold">Sutton Budget Portal</h1>
       </div>
       <nav class="space-x-6 text-sm font-medium">
         <a href="index.html" class="hover:underline">Home</a>
         <a href="expenses.html" class="hover:underline">Expenses</a>
-        <a href="revenues.html" class="underline">Revenues</a>
+        <a href="revenues.html" class="underline font-semibold">Revenues</a>
       </nav>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto p-6">
-    <h2 class="text-3xl font-bold mb-6 text-center">Revenues Overview</h2>
+  <main class="max-w-7xl mx-auto px-4 py-10">
+    <h2 class="text-3xl font-bold text-center mb-10">Revenues Overview</h2>
 
     <!-- Top-Level Charts -->
-    <div class="chart-grid mb-10">
+    <div class="chart-row">
       <div class="chart-tile">
         <h3 class="text-lg font-semibold mb-2 text-center">FY26 Revenue by Category</h3>
-        <canvas id="totalRevenuePie"></canvas>
+        <canvas id="revenueTotalPie" width="400" height="260"></canvas>
       </div>
       <div class="chart-tile">
         <h3 class="text-lg font-semibold mb-2 text-center">Revenue Comparison by Category</h3>
-        <canvas id="totalRevenueBar"></canvas>
+        <canvas id="revenueTotalBar" width="400" height="260"></canvas>
       </div>
     </div>
 
-    <!-- Category Sections -->
-    <div id="revenueSections" class="space-y-16"></div>
+    <!-- Per-Category Sections Will Be Injected Here -->
+    <div id="revenueSections" class="space-y-16 mt-10"></div>
   </main>
 
+  <!-- JS Logic -->
   <script src="script/revenues.js"></script>
 </body>
 </html>
