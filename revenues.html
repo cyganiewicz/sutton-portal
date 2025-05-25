@@ -28,7 +28,25 @@
 
   <main class="max-w-7xl mx-auto px-4 py-10">
     <h2 class="text-3xl font-bold text-center mb-10">Revenues Overview</h2>
-
+<!-- Summary Tiles -->
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+  <div class="summary-tile text-center">
+    <p class="text-gray-500 text-sm">Total FY26 Revenue</p>
+    <p id="revTotalRevenue" class="text-xl font-semibold">$0.0M</p>
+  </div>
+  <div class="summary-tile text-center">
+    <p class="text-gray-500 text-sm">Largest Revenue Area</p>
+    <p id="revTopCategory" class="text-xl font-semibold">N/A</p>
+  </div>
+  <div class="summary-tile text-center">
+    <p class="text-gray-500 text-sm">$ Change (FY25–FY26)</p>
+    <p id="revDollarChange" class="text-xl font-semibold">$0</p>
+  </div>
+  <div class="summary-tile text-center">
+    <p class="text-gray-500 text-sm">% Change (FY25–FY26)</p>
+    <p id="revPercentChange" class="text-xl font-semibold">0%</p>
+  </div>
+</div>
     <!-- Top-Level Charts -->
     <div class="chart-row">
       <div class="chart-tile">
