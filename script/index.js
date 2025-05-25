@@ -1,10 +1,10 @@
-""const chartOfAccountsUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRezgn-Gen4lhkuO13Jm_y1QhYP4UovUyDKuLvGGrKqo1JwqnzSVdsSOr26epUKCkNuWdIQd-mu46sW/pub?output=csv";
+const chartOfAccountsUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRezgn-Gen4lhkuO13Jm_y1QhYP4UovUyDKuLvGGrKqo1JwqnzSVdsSOr26epUKCkNuWdIQd-mu46sW/pub?output=csv";
 const expenseSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTQI0lHBLQexriYO48j0pv5wbmy0e3osDh1m9QPZB9xBkq5KRqqxFrZFroAK5Gg0_NIaTht7c7RPcWQ/pub?output=csv";
 const revenueSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1YaxCko649QeAXcYP83nDoDk7n_9FPX7vL7QwzcyDR9DMHBKsep5S-7tphpwlzQ-yZY5s-KOhYEPO/pub?output=csv";
 
 let functionMap = {};
-let chartInstance = null;
-let revenueChartInstance = null;
+let expenseChart = null;
+let revenueChart = null;
 
 function formatCurrency(value) {
   return "$" + parseFloat(value).toLocaleString(undefined, { maximumFractionDigits: 0 });
@@ -16,14 +16,14 @@ function calculateChange(fy25, fy26) {
   return [change, percent];
 }
 
-function drawPieChart(dataMap, canvasId) {
-  const ctx = document.getElementById(canvasId).getContext("2d");
+function drawPieChart(ctxId, dataMap) {
+  const ctx = document.getElementById(ctxId).getContext("2d");
   const labels = Object.keys(dataMap);
   const values = Object.values(dataMap);
   const total = values.reduce((sum, val) => sum + val, 0);
   const colors = labels.map((_, i) => `hsl(${i * 360 / labels.length}, 70%, 60%)`);
 
-  const chart = new Chart(ctx, {
+  return new Chart(ctx, {
     type: "pie",
     data: {
       labels,
@@ -45,13 +45,11 @@ function drawPieChart(dataMap, canvasId) {
       }
     }
   });
-
-  return chart;
 }
 
-function populateSummaryTable(summaryMap, tableBodyId, totalRowId) {
-  const tbody = document.getElementById(tableBodyId);
-  const tfootRow = document.getElementById(totalRowId);
+function populateSummaryTable(tbodyId, tfootId, summaryMap) {
+  const tbody = document.getElementById(tbodyId);
+  const tfootRow = document.getElementById(tfootId);
   tbody.innerHTML = "";
   tfootRow.innerHTML = "";
 
@@ -64,26 +62,31 @@ function populateSummaryTable(summaryMap, tableBodyId, totalRowId) {
     totalFY26 += fy26;
 
     const row = `
-  <tr>
-    <td class="p-2">${label}</td>
-    <td class="p-2 text-right whitespace-nowrap">${formatCurrency(fy25)}</td>
-    <td class="p-2 text-right whitespace-nowrap">${formatCurrency(fy26)}</td>
-    <td class="p-2 text-right whitespace-nowrap">${formatCurrency(change)}</td>
-    <td class="p-2 text-right whitespace-nowrap">${pct.toFixed(1)}%</td>
-  </tr>`;
+      <tr>
+        <td class="p-2">${label}</td>
+        <td class="p-2 text-right whitespace-nowrap">${formatCurrency(fy25)}</td>
+        <td class="p-2 text-right whitespace-nowrap">${formatCurrency(fy26)}</td>
+        <td class="p-2 text-right whitespace-nowrap">${formatCurrency(change)}</td>
+        <td class="p-2 text-right whitespace-nowrap">${pct.toFixed(1)}%</td>
+      </tr>`;
     tbody.insertAdjacentHTML("beforeend", row);
   });
 
   const [totalChange, totalPct] = calculateChange(totalFY25, totalFY26);
   tfootRow.innerHTML = `
-  <td class="p-2 text-right font-semibold">Total</td>
-  <td class="p-2 text-right whitespace-nowrap">${formatCurrency(totalFY25)}</td>
-  <td class="p-2 text-right whitespace-nowrap">${formatCurrency(totalFY26)}</td>
-  <td class="p-2 text-right whitespace-nowrap">${formatCurrency(totalChange)}</td>
-  <td class="p-2 text-right whitespace-nowrap">${totalPct.toFixed(1)}%</td>
-`;
+    <td class="p-2 text-right font-semibold">Total</td>
+    <td class="p-2 text-right whitespace-nowrap">${formatCurrency(totalFY25)}</td>
+    <td class="p-2 text-right whitespace-nowrap">${formatCurrency(totalFY26)}</td>
+    <td class="p-2 text-right whitespace-nowrap">${formatCurrency(totalChange)}</td>
+    <td class="p-2 text-right whitespace-nowrap">${totalPct.toFixed(1)}%</td>
+  `;
 }
 
+function getSafeValue(str) {
+  return parseFloat((str || "").replace(/,/g, "")) || 0;
+}
+
+// Load Expense Data
 Papa.parse(chartOfAccountsUrl, {
   header: true,
   download: true,
@@ -97,7 +100,7 @@ Papa.parse(chartOfAccountsUrl, {
       header: true,
       download: true,
       complete: results => {
-        const data = results.data.filter(row => (row["Account Number"] || "").startsWith("010")); // General Fund only
+        const data = results.data.filter(row => (row["Account Number"] || "").startsWith("010")); // General Fund
         const summaryMap = {};
         const chartMap = {};
 
@@ -105,8 +108,8 @@ Papa.parse(chartOfAccountsUrl, {
           const acct = row["Account Number"];
           const deptCode = acct.split("-")[1];
           const func = functionMap[deptCode] || "Unknown";
-          const fy25 = parseFloat(row["2025 BUDGET"].replace(/,/g, "")) || 0;
-          const fy26 = parseFloat(row["2026 BUDGET"].replace(/,/g, "")) || 0;
+          const fy25 = getSafeValue(row["2025 BUDGET"]);
+          const fy26 = getSafeValue(row["2026 BUDGET"]);
 
           if (!summaryMap[func]) summaryMap[func] = [0, 0];
           summaryMap[func][0] += fy25;
@@ -115,36 +118,41 @@ Papa.parse(chartOfAccountsUrl, {
           chartMap[func] = (chartMap[func] || 0) + fy26;
         });
 
-        chartInstance = drawPieChart(chartMap, "homeExpenseChart");
-        populateSummaryTable(summaryMap, "homeSummaryTable", "homeSummaryTotalRow");
+        if (expenseChart) expenseChart.destroy();
+        expenseChart = drawPieChart("homeExpenseChart", chartMap);
+        populateSummaryTable("homeSummaryTable", "homeSummaryTotalRow", summaryMap);
       }
     });
   }
 });
 
-// Load revenue chart and table
+// Load Revenue Data
 Papa.parse(revenueSheetUrl, {
   header: true,
   download: true,
   complete: results => {
     const data = results.data.filter(row => row["2026 BUDGET"]?.trim());
-    const pieMap = {};
+
+    // Pie: REV_CATEGORY_1
+    const chartMap = {};
+    // Table: REV_CATEGORY_2
     const summaryMap = {};
 
     data.forEach(row => {
       const cat1 = row["REV_CATEGORY_1"] || "Unknown";
       const cat2 = row["REV_CATEGORY_2"] || cat1;
-      const fy25 = parseFloat(row["2025 ACTUAL"].replace(/,/g, "")) || 0;
-      const fy26 = parseFloat(row["2026 BUDGET"].replace(/,/g, "")) || 0;
+      const fy25 = getSafeValue(row["2025 ACTUAL"]);
+      const fy26 = getSafeValue(row["2026 BUDGET"]);
 
-      pieMap[cat1] = (pieMap[cat1] || 0) + fy26;
+      chartMap[cat1] = (chartMap[cat1] || 0) + fy26;
 
       if (!summaryMap[cat2]) summaryMap[cat2] = [0, 0];
       summaryMap[cat2][0] += fy25;
       summaryMap[cat2][1] += fy26;
     });
 
-    revenueChartInstance = drawPieChart(pieMap, "homeRevenueChart");
-    populateSummaryTable(summaryMap, "homeRevenueSummaryTable", "homeRevenueSummaryTotalRow");
+    if (revenueChart) revenueChart.destroy();
+    revenueChart = drawPieChart("homeRevenueChart", chartMap);
+    populateSummaryTable("homeRevenueSummaryTable", "homeRevenueTotalRow", summaryMap);
   }
 });
