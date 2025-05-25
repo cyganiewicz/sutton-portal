@@ -36,30 +36,33 @@
     <!-- Expenses Section -->
     <section class="mb-12">
       <h3 class="text-2xl font-semibold mb-4 text-center">Expenses – General Fund</h3>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Pie Chart -->
-        <div class="chart-tile w-full max-w-[500px] h-[380px] mx-auto">
-          <h4 class="text-lg font-semibold text-center mb-2">FY26 Budget by Function</h4>
-          <canvas id="homeExpenseChart" class="w-full h-[260px]"></canvas>
-        </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 my-8">
+  <!-- Pie Chart Tile -->
+  <div class="chart-tile h-[480px]">
+    <h2 class="text-lg font-semibold text-center mb-2">FY26 Budget by Function</h2>
+    <canvas id="homeExpenseChart" class="w-full max-w-[400px] h-[360px]"></canvas>
+  </div>
 
-        <!-- Summary Table -->
-        <div class="bg-white p-4 rounded-lg shadow-md w-full overflow-x-auto">
-          <h4 class="text-lg font-semibold text-center mb-4">Summary of Expenses by Function</h4>
-          <table class="w-full text-sm text-left">
-            <thead class="bg-gray-100 font-semibold">
-              <tr>
-                <th class="p-2">Function</th>
-                <th class="p-2 text-right">FY25</th>
-                <th class="p-2 text-right">FY26</th>
-                <th class="p-2 text-right">$ Change</th>
-                <th class="p-2 text-right">% Change</th>
-              </tr>
-            </thead>
-            <tbody id="homeSummaryTable"></tbody>
-          </table>
-        </div>
-      </div>
+  <!-- Summary Table Tile -->
+  <div class="chart-tile h-[480px] overflow-auto">
+    <h2 class="text-lg font-semibold text-center mb-2">Summary Table (FY25–FY26)</h2>
+    <table class="w-full text-sm mt-2">
+      <thead>
+        <tr>
+          <th>Function</th>
+          <th class="text-right">FY25</th>
+          <th class="text-right">FY26</th>
+          <th class="text-right">$ Change</th>
+          <th class="text-right">% Change</th>
+        </tr>
+      </thead>
+      <tbody id="homeSummaryTable"></tbody>
+      <tfoot>
+        <tr class="font-bold bg-gray-100" id="homeSummaryTotalRow"></tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
 
       <div class="text-center mt-6">
         <a href="expenses.html" class="inline-block bg-[#3f6522] text-white px-6 py-2 rounded hover:bg-green-800 transition">View Full Expenses Page</a>
