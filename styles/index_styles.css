@@ -36,7 +36,7 @@ body {
 /* Canvas responsive sizing */
 canvas {
   max-width: 100%;
-  max-height: 360px;
+  max-height: 460px;
   height: auto;
 }
 
