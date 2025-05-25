@@ -28,6 +28,33 @@ header {
     align-items: flex-start;
   }
 }
+/* Summary tile styling */
+.revenue-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.summary-tile {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  text-align: center;
+  border: 1px solid #e5e7eb;
+}
+
+.summary-tile p:first-child {
+  color: #6b7280; /* Tailwind gray-500 */
+  font-size: 0.875rem;
+}
+
+.summary-tile p:last-child {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
 
 /* Chart tile layout */
 .chart-tile {
