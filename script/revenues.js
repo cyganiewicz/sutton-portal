@@ -1,31 +1,25 @@
-// revenues.js
+const revenueDataUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1YaxCko649QeAXcYP83nDoDk7n_9FPX7vL7QwzcyDR9DMHBKsep5S-7tphpwlzQ-yZY5s-KOhYEPO/pub?output=csv";
+const categoryNames = ["Real and Personal Property Taxes", "State Aid and Assessments", "Local Receipts"];
 
-const revenueSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1YaxCko649QeAXcYP83nDoDk7n_9FPX7vL7QwzcyDR9DMHBKsep5S-7tphpwlzQ-yZY5s-KOhYEPO/pub?gid=0&single=true&output=csv";
+let totalChart, totalBarCharts = [];
 
-let chartInstances = {};
-
-function formatCurrency(value) {
-  return "$" + parseFloat(value).toLocaleString(undefined, { maximumFractionDigits: 0 });
+function formatCurrency(val) {
+  return "$" + parseFloat(val).toLocaleString(undefined, { maximumFractionDigits: 0 });
 }
 
-function calculateChange(fy25, fy26) {
-  const change = fy26 - fy25;
-  const percent = fy25 === 0 ? 0 : (change / fy25) * 100;
-  return [change, percent];
-}
-
-function drawCharts(ctxPie, ctxBar, labels, valuesByYear) {
-  const colors = labels.map((_, i) => `hsl(${i * 360 / labels.length}, 70%, 60%)`);
-  const total = valuesByYear.fy26.reduce((sum, v) => sum + v, 0);
-
-  if (chartInstances[ctxPie]) chartInstances[ctxPie].destroy();
-  chartInstances[ctxPie] = new Chart(document.getElementById(ctxPie), {
+function createPieChart(ctx, labels, values) {
+  const total = values.reduce((sum, v) => sum + v, 0);
+  return new Chart(ctx, {
     type: "pie",
     data: {
       labels,
-      datasets: [{ data: valuesByYear.fy26, backgroundColor: colors }]
+      datasets: [{
+        data: values,
+        backgroundColor: labels.map((_, i) => `hsl(${i * 360 / labels.length}, 70%, 60%)`)
+      }]
     },
     options: {
+      responsive: true,
       plugins: {
         legend: { position: "bottom" },
         tooltip: {
@@ -40,72 +34,106 @@ function drawCharts(ctxPie, ctxBar, labels, valuesByYear) {
       }
     }
   });
+}
 
-  if (chartInstances[ctxBar]) chartInstances[ctxBar].destroy();
-  chartInstances[ctxBar] = new Chart(document.getElementById(ctxBar), {
+function createBarChart(ctx, labels, valuesByYear) {
+  const colors = labels.map((_, i) => `hsl(${i * 360 / labels.length}, 70%, 60%)`);
+  return new Chart(ctx, {
     type: "bar",
     data: {
-      labels: ["FY23", "FY24", "FY25", "FY26"],
+      labels: ["2023", "2024", "2025", "2026"],
       datasets: labels.map((label, i) => ({
         label,
-        backgroundColor: colors[i],
-        data: [valuesByYear.fy23[i], valuesByYear.fy24[i], valuesByYear.fy25[i], valuesByYear.fy26[i]]
+        data: valuesByYear[label],
+        backgroundColor: colors[i]
       }))
     },
     options: {
       responsive: true,
-      plugins: { legend: { position: "bottom" } },
-      scales: { x: { stacked: true }, y: { stacked: true } }
+      plugins: {
+        legend: { position: "bottom" }
+      },
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true }
+      }
     }
   });
 }
 
-function renderTable(rows, containerId) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = "";
+function populateTable(id, rows) {
+  const tbody = document.getElementById(id);
+  tbody.innerHTML = "";
   rows.forEach(row => {
-    const fy23 = parseFloat(row["2023 ACTUAL"].replace(/,/g, "")) || 0;
-    const fy24 = parseFloat(row["2024 ACTUAL"].replace(/,/g, "")) || 0;
-    const fy25 = parseFloat(row["2025 ACTUAL"].replace(/,/g, "")) || 0;
-    const fy26 = parseFloat(row["2026 BUDGET"].replace(/,/g, "")) || 0;
-    const [chg, pct] = calculateChange(fy25, fy26);
-    container.innerHTML += `
-      <tr>
-        <td class="p-2">${row.Description}</td>
-        <td class="p-2 text-right">${formatCurrency(fy23)}</td>
-        <td class="p-2 text-right">${formatCurrency(fy24)}</td>
-        <td class="p-2 text-right">${formatCurrency(fy25)}</td>
-        <td class="p-2 text-right">${formatCurrency(fy26)}</td>
-        <td class="p-2 text-right">${formatCurrency(chg)}</td>
-        <td class="p-2 text-right">${pct.toFixed(1)}%</td>
-      </tr>`;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${row.Description}</td>
+      <td class="p-2 text-right">${formatCurrency(row["2023 ACTUAL"])}</td>
+      <td class="p-2 text-right">${formatCurrency(row["2024 ACTUAL"])}</td>
+      <td class="p-2 text-right">${formatCurrency(row["2025 ACTUAL"])}</td>
+      <td class="p-2 text-right">${formatCurrency(row["2026 BUDGET"])}</td>
+    `;
+    tbody.appendChild(tr);
   });
 }
 
-Papa.parse(revenueSheetUrl, {
+function parseNumber(val) {
+  return parseFloat(val.replace(/,/g, "")) || 0;
+}
+
+Papa.parse(revenueDataUrl, {
   header: true,
   download: true,
   complete: results => {
-    const rows = results.data.filter(row => row.Description);
+    const data = results.data.filter(row => row["REV_CATEGORY_1"]);
+    const grouped = [[], [], []]; // For three major revenue categories
 
-    const categories = [...new Set(rows.map(row => row.REV_CATEGORY_1))];
+    data.forEach(row => {
+      const categoryIndex = categoryNames.indexOf(row["REV_CATEGORY_1"]);
+      if (categoryIndex !== -1) {
+        grouped[categoryIndex].push(row);
+      }
+    });
 
-    categories.forEach(category => {
-      const sectionRows = rows.filter(r => r.REV_CATEGORY_1 === category);
-      const labels = [];
-      const valuesByYear = { fy23: [], fy24: [], fy25: [], fy26: [] };
+    // Section-level charts & tables
+    let overallMapPie = {};
+    let overallMapBar = {};
 
-      sectionRows.forEach(row => {
-        const label = row.REV_CATEGORY_2 || row.Description;
-        labels.push(label);
-        valuesByYear.fy23.push(parseFloat(row["2023 ACTUAL"].replace(/,/g, "")) || 0);
-        valuesByYear.fy24.push(parseFloat(row["2024 ACTUAL"].replace(/,/g, "")) || 0);
-        valuesByYear.fy25.push(parseFloat(row["2025 ACTUAL"].replace(/,/g, "")) || 0);
-        valuesByYear.fy26.push(parseFloat(row["2026 BUDGET"].replace(/,/g, "")) || 0);
+    grouped.forEach((rows, index) => {
+      const pieMap = {};
+      const barMap = {};
+
+      rows.forEach(row => {
+        const key = row["REV_CATEGORY_2"] || row["Description"];
+        const fy23 = parseNumber(row["2023 ACTUAL"]);
+        const fy24 = parseNumber(row["2024 ACTUAL"]);
+        const fy25 = parseNumber(row["2025 ACTUAL"]);
+        const fy26 = parseNumber(row["2026 BUDGET"]);
+
+        pieMap[key] = (pieMap[key] || 0) + fy26;
+        if (!barMap[key]) barMap[key] = [0, 0, 0, 0];
+        barMap[key][0] += fy23;
+        barMap[key][1] += fy24;
+        barMap[key][2] += fy25;
+        barMap[key][3] += fy26;
+
+        // Add to overall maps
+        overallMapPie[key] = (overallMapPie[key] || 0) + fy26;
+        if (!overallMapBar[key]) overallMapBar[key] = [0, 0, 0, 0];
+        overallMapBar[key][0] += fy23;
+        overallMapBar[key][1] += fy24;
+        overallMapBar[key][2] += fy25;
+        overallMapBar[key][3] += fy26;
       });
 
-      drawCharts(`${category}-pie`, `${category}-bar`, labels, valuesByYear);
-      renderTable(sectionRows, `${category}-table`);
+      // Charts per section
+      createPieChart(document.getElementById(`revenuePie${index}`), Object.keys(pieMap), Object.values(pieMap));
+      createBarChart(document.getElementById(`revenueBar${index}`), Object.keys(barMap), barMap);
+      populateTable(`revenueTable${index}`, rows);
     });
+
+    // Total-level charts
+    createPieChart(document.getElementById("revenuePieTotal"), Object.keys(overallMapPie), Object.values(overallMapPie));
+    createBarChart(document.getElementById("revenueBarTotal"), Object.keys(overallMapBar), overallMapBar);
   }
 });
