@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Town of Sutton Budget Portal</title>
+  <title>Sutton Budget Portal</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
   <link href="styles/index_styles.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -12,135 +12,67 @@
 <body class="bg-gray-100">
 
   <!-- Navbar -->
-  <header class="bg-[#4a5a7c] shadow-md sticky top-0 z-50 text-white">
+  <header class="bg-[var(--sutton-green)] text-white sticky top-0 z-50 shadow-md">
     <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
       <div class="flex items-center gap-4">
-        <img src="logo.png" alt="Sutton Logo" class="h-10 w-auto" />
-        <h1 class="text-2xl font-bold">Sutton Budget Portal</h1>
+        <img src="assets/logo.png" alt="Town Seal" class="h-10 w-10" />
+        <h1 class="text-2xl font-bold">Town of Sutton Budget Portal</h1>
       </div>
       <nav class="space-x-6 text-sm font-medium">
         <a href="index.html" class="hover:underline">Home</a>
         <a href="expenses.html" class="hover:underline">Expenses</a>
-        <a href="#" class="text-gray-300 cursor-not-allowed" title="Coming soon">Revenues</a>
+        <span class="text-gray-400 cursor-not-allowed" title="Coming soon">Revenues</span>
       </nav>
     </div>
   </header>
 
-  <main class="max-w-6xl mx-auto px-4 py-8">
-    <h2 class="text-3xl font-bold mb-4 text-center">Explore the Town of Sutton’s Budget</h2>
-    <p class="text-center text-gray-600 mb-8">Review actual and proposed budget data for all funds and functions.</p>
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto p-6">
+    <p class="text-lg text-center mb-8 text-gray-700">
+      Explore actual and projected budget data for Sutton across functions and fiscal years.
+    </p>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Expenses Tile -->
-      <div class="bg-white rounded-lg shadow-md p-4 flex flex-col items-center">
-        <h3 class="text-lg font-semibold mb-2 text-center">FY26 Expenses by Function</h3>
-        <canvas id="summaryPieChart" class="w-full max-w-[300px] h-[300px]"></canvas>
-        <a href="expenses.html" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">View Full Expenses</a>
+    <!-- Expense Tiles -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+      <!-- Pie Chart -->
+      <div class="bg-white p-4 rounded-lg shadow-md">
+        <h2 class="text-lg font-semibold text-center mb-2">FY26 Budget by Function</h2>
+        <canvas id="expenseChart" class="w-full h-[300px]"></canvas>
       </div>
 
-      <!-- Summary Table Tile -->
-      <div class="bg-white rounded-lg shadow-md p-4">
-        <h3 class="text-lg font-semibold mb-2 text-center">Summary by Function (FY25 vs FY26)</h3>
-        <table class="w-full text-sm">
+      <!-- Summary Table -->
+      <div class="bg-white p-4 rounded-lg shadow-md overflow-x-auto">
+        <h2 class="text-lg font-semibold text-center mb-2">FY25–FY26 Summary by Function</h2>
+        <table class="w-full text-sm text-left">
           <thead class="bg-gray-200">
             <tr>
-              <th class="text-left p-2">Function</th>
-              <th class="text-right p-2">FY25</th>
-              <th class="text-right p-2">FY26</th>
-              <th class="text-right p-2">Change</th>
+              <th class="p-2">Function</th>
+              <th class="p-2 text-right">FY25</th>
+              <th class="p-2 text-right">FY26</th>
+              <th class="p-2 text-right">$ Change</th>
+              <th class="p-2 text-right">% Change</th>
             </tr>
           </thead>
-          <tbody id="summaryTable" class="text-gray-700 divide-y divide-gray-200"></tbody>
+          <tbody id="summaryTable" class="divide-y divide-gray-100"></tbody>
         </table>
       </div>
+    </section>
 
-      <!-- Placeholder Tile -->
-      <div class="bg-white rounded-lg shadow-md p-6 flex flex-col justify-between">
-        <h3 class="text-lg font-semibold mb-2">Capital Budget</h3>
-        <p class="text-gray-600 mb-4">Coming soon: view capital project requests and funding plans.</p>
-        <button disabled class="bg-gray-400 text-white px-4 py-2 rounded">Coming Soon</button>
-      </div>
-    </div>
+    <!-- Revenues -->
+    <section class="bg-white p-6 rounded-lg shadow-md mb-6 text-center">
+      <h2 class="text-xl font-semibold mb-2">Revenues</h2>
+      <p class="text-gray-600 mb-4">Coming soon: Explore sources of revenue and trends.</p>
+      <button disabled class="bg-gray-400 text-white px-4 py-2 rounded">Coming Soon</button>
+    </section>
+
+    <!-- Capital Budget -->
+    <section class="bg-white p-6 rounded-lg shadow-md text-center">
+      <h2 class="text-xl font-semibold mb-2">Capital Budget</h2>
+      <p class="text-gray-600 mb-4">Coming soon: View capital improvement projects and funding sources.</p>
+      <button disabled class="bg-gray-400 text-white px-4 py-2 rounded">Coming Soon</button>
+    </section>
   </main>
 
-  <script>
-    const chartOfAccountsUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRezgn-Gen4lhkuO13Jm_y1QhYP4UovUyDKuLvGGrKqo1JwqnzSVdsSOr26epUKCkNuWdIQd-mu46sW/pub?output=csv";
-    const expenseSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTQI0lHBLQexriYO48j0pv5wbmy0e3osDh1m9QPZB9xBkq5KRqqxFrZFroAK5Gg0_NIaTht7c7RPcWQ/pub?output=csv";
-
-    let functionMap = {};
-
-    function formatCurrency(val) {
-      return "$" + parseFloat(val).toLocaleString(undefined, { maximumFractionDigits: 0 });
-    }
-
-    function calculateChange(fy25, fy26) {
-      const diff = fy26 - fy25;
-      const pct = fy25 !== 0 ? (diff / fy25) * 100 : 0;
-      return [diff, pct];
-    }
-
-    function renderSummary(data) {
-      const grouped = {};
-
-      data.forEach(row => {
-        const acct = row["Account Number"] || "";
-        if (!acct.startsWith("010")) return; // General Fund only
-        const deptCode = acct.split("-")[1];
-        const func = functionMap[deptCode] || "Unknown";
-        const fy25 = parseFloat(row["2025 BUDGET"].replace(/,/g, "")) || 0;
-        const fy26 = parseFloat(row["2026 BUDGET"].replace(/,/g, "")) || 0;
-        if (!grouped[func]) grouped[func] = [0, 0];
-        grouped[func][0] += fy25;
-        grouped[func][1] += fy26;
-      });
-
-      const table = document.getElementById("summaryTable");
-      const labels = Object.keys(grouped);
-      const values = Object.values(grouped);
-      const pieCtx = document.getElementById("summaryPieChart").getContext("2d");
-      const colors = labels.map((_, i) => `hsl(${i * 360 / labels.length}, 70%, 60%)`);
-      const pieValues = values.map(v => v[1]);
-
-      labels.forEach((label, i) => {
-        const [fy25, fy26] = grouped[label];
-        const [diff, pct] = calculateChange(fy25, fy26);
-        table.innerHTML += `
-          <tr>
-            <td class="p-2">${label}</td>
-            <td class="p-2 text-right">${formatCurrency(fy25)}</td>
-            <td class="p-2 text-right">${formatCurrency(fy26)}</td>
-            <td class="p-2 text-right">${formatCurrency(diff)} (${pct.toFixed(1)}%)</td>
-          </tr>`;
-      });
-
-      new Chart(pieCtx, {
-        type: "pie",
-        data: {
-          labels,
-          datasets: [{ data: pieValues, backgroundColor: colors }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { position: "bottom" } }
-        }
-      });
-    }
-
-    Papa.parse(chartOfAccountsUrl, {
-      header: true,
-      download: true,
-      complete: results => {
-        results.data.forEach(row => {
-          const code = row["DEPT CODE"];
-          functionMap[code] = row["FUNCTION_2"] || row["FUNCTION_1"] || "Unknown";
-        });
-        Papa.parse(expenseSheetUrl, {
-          header: true,
-          download: true,
-          complete: results => renderSummary(results.data)
-        });
-      }
-    });
-  </script>
+  <script src="script/index.js"></script>
 </body>
 </html>
