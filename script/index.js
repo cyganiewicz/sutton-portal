@@ -140,7 +140,7 @@ Papa.parse(revenueSheetUrl, {
 
     data.forEach(row => {
       const cat1 = row["REV_CATEGORY_1"] || "Unknown";
-      const cat2 = row["REV_CATEGORY_2"] || cat1;
+      const cat2 = row["REV_CATEGORY_1"] || cat1;
       const fy25 = getSafeValue(row["2025 ACTUAL"]);
       const fy26 = getSafeValue(row["2026 BUDGET"]);
 
