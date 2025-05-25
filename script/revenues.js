@@ -62,8 +62,8 @@ function renderTopCharts(data) {
   const values = Object.values(pieData);
   const pieTotal = values.reduce((sum, v) => sum + v, 0);
 
-  const pieCtx = document.getElementById("revenuePieChart").getContext("2d");
-  const barCtx = document.getElementById("revenueBarChart").getContext("2d");
+  const pieCtx = document.getElementById("revenueTotalPie").getContext("2d");
+  const barCtx = document.getElementById("revenueTotalBar").getContext("2d");
 
   if (topChartInstance) topChartInstance.destroy();
   if (topBarInstance) topBarInstance.destroy();
