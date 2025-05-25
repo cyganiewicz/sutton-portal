@@ -1,88 +1,114 @@
-/* revenues_styles.css */
-
+/* Base spacing */
 :root {
   --navbar-height: 104px;
-  --navbar-bg: #3f6522;
-  --text-light: #ffffff;
+  --header-bg: #3f6522;
+  --header-text: white;
 }
 
-/* Header Styling */
+/* Header styling */
 header {
-  background-color: var(--navbar-bg);
-  color: var(--text-light);
+  background-color: var(--header-bg);
+  color: var(--header-text);
 }
 
-/* Tile Styles */
-.tile {
+/* Layout for chart rows */
+.chart-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+@media (min-width: 1024px) {
+  .chart-row {
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+  }
+}
+
+/* Individual chart tile */
+.chart-tile {
+  width: 100%;
+  max-width: 750px;
+  min-width: 300px;
+  height: 460px;
   background-color: white;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   padding: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.tile h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  text-align: center;
-}
-
-/* Chart container */
-.chart-container {
-  max-width: 500px;
   margin: 0 auto;
-}
-
-/* Responsive chart grid */
-.chart-grid {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  justify-content: flex-start;
   align-items: center;
 }
 
-@media (min-width: 768px) {
-  .chart-grid {
-    flex-direction: row;
-    justify-content: space-around;
-  }
-}
-
+/* Chart canvas inside tiles */
 canvas {
   max-width: 100%;
+  max-height: 360px;
   height: auto;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+/* Section headings */
+.section-header {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 2rem 0 1rem 0;
+  text-align: center;
 }
 
 /* Table styles */
-table {
+.revenue-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
   background-color: white;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-thead {
-  background-color: var(--navbar-bg);
-  color: var(--text-light);
-  text-align: left;
-}
-
-thead th, tbody td {
+.revenue-table th,
+.revenue-table td {
   padding: 0.75rem;
+  text-align: right;
   border-bottom: 1px solid #e5e7eb;
   font-size: 0.875rem;
 }
 
-tbody tr:hover {
-  background-color: #f9fafb;
+.revenue-table th:first-child,
+.revenue-table td:first-child {
+  text-align: left;
 }
 
-.section-header {
-  font-size: 1.5rem;
+.revenue-table thead {
+  background-color: var(--header-bg);
+  color: white;
   font-weight: 600;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
-  border-bottom: 2px solid #e5e7eb;
-  padding-bottom: 0.5rem;
+}
+
+.revenue-table tfoot {
+  font-weight: bold;
+  background-color: #f3f4f6;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .chart-tile {
+    height: auto;
+    max-width: 100%;
+  }
+
+  canvas {
+    max-height: 240px;
+  }
+
+  .revenue-table th,
+  .revenue-table td {
+    font-size: 0.8rem;
+    padding: 0.5rem;
+  }
 }
