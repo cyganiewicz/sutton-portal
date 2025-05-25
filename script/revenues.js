@@ -1,3 +1,5 @@
+// revenues.js (updated to dynamically create per-category sections)
+
 const revenueDataUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1YaxCko649QeAXcYP83nDoDk7n_9FPX7vL7QwzcyDR9DMHBKsep5S-7tphpwlzQ-yZY5s-KOhYEPO/pub?output=csv";
 
 let revenueData = [];
@@ -111,16 +113,15 @@ function renderTopCharts(data) {
   });
 }
 
-function renderDetailSection(containerId, title, rows) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = "";
+function renderDetailSection(parentEl, category, rows) {
+  const sectionId = category.replace(/\s+/g, '-').toLowerCase();
+  const chartIdPie = `${sectionId}-pie`;
+  const chartIdBar = `${sectionId}-bar`;
+  const tableId = `${sectionId}-table`;
 
-  const chartIdPie = `${containerId}-pie`;
-  const chartIdBar = `${containerId}-bar`;
-  const tableId = `${containerId}-table`;
-
-  const html = `
-    <h2 class="text-2xl font-bold mb-2 mt-12">${title}</h2>
+  const section = document.createElement("section");
+  section.innerHTML = `
+    <h2 class="text-2xl font-bold mb-4 mt-12">${category}</h2>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
       <div class="chart-tile">
         <h3 class="text-lg font-semibold text-center mb-2">FY26 Breakdown</h3>
@@ -147,12 +148,11 @@ function renderDetailSection(containerId, title, rows) {
       </table>
     </div>
   `;
-  container.innerHTML = html;
+  parentEl.appendChild(section);
 
-  // Pie/Bar chart data
   const pieMap = {};
   const barMap = {};
-  const table = document.getElementById(tableId);
+  const table = section.querySelector(`#${tableId}`);
   let grandTotals = [0, 0, 0];
 
   const grouped = groupByCategory2(rows);
@@ -207,7 +207,6 @@ function renderDetailSection(containerId, title, rows) {
     grandTotals[2] += subtotal[2];
   });
 
-  // Grand total row
   const [totalChg, totalPct] = calculateChange(grandTotals[1], grandTotals[2]);
   const totalRow = document.createElement("tr");
   totalRow.className = "bg-gray-300 font-extrabold";
@@ -221,19 +220,11 @@ function renderDetailSection(containerId, title, rows) {
   `;
   table.appendChild(totalRow);
 
-  // Charts
-  const pieCtx = document.getElementById(chartIdPie).getContext("2d");
-  const barCtx = document.getElementById(chartIdBar).getContext("2d");
-
-  const pieLabels = Object.keys(pieMap);
-  const pieValues = Object.values(pieMap);
-  const pieTotal = pieValues.reduce((sum, v) => sum + v, 0);
-
-  new Chart(pieCtx, {
+  new Chart(section.querySelector(`#${chartIdPie}`).getContext("2d"), {
     type: "pie",
     data: {
-      labels: pieLabels,
-      datasets: [{ data: pieValues, backgroundColor: colors }]
+      labels: Object.keys(pieMap),
+      datasets: [{ data: Object.values(pieMap), backgroundColor: colors }]
     },
     options: {
       plugins: {
@@ -242,7 +233,8 @@ function renderDetailSection(containerId, title, rows) {
           callbacks: {
             label: ctx => {
               const val = ctx.raw;
-              const pct = ((val / pieTotal) * 100).toFixed(1);
+              const total = Object.values(pieMap).reduce((a, b) => a + b, 0);
+              const pct = ((val / total) * 100).toFixed(1);
               return `${ctx.label}: ${formatCurrency(val)} (${pct}%)`;
             }
           }
@@ -251,18 +243,15 @@ function renderDetailSection(containerId, title, rows) {
     }
   });
 
-  const barLabels = ["FY24", "FY25", "FY26"];
-  const barDatasets = Object.entries(barMap).map(([label, values], i) => ({
-    label,
-    data: values,
-    backgroundColor: colors[i % colors.length]
-  }));
-
-  new Chart(barCtx, {
+  new Chart(section.querySelector(`#${chartIdBar}`).getContext("2d"), {
     type: "bar",
     data: {
-      labels: barLabels,
-      datasets: barDatasets
+      labels: ["FY24", "FY25", "FY26"],
+      datasets: Object.entries(barMap).map(([label, vals], i) => ({
+        label,
+        data: vals,
+        backgroundColor: colors[i % colors.length]
+      }))
     },
     options: {
       plugins: { legend: { position: "bottom" } },
@@ -271,7 +260,6 @@ function renderDetailSection(containerId, title, rows) {
   });
 }
 
-// Load and render everything
 Papa.parse(revenueDataUrl, {
   header: true,
   download: true,
@@ -280,9 +268,10 @@ Papa.parse(revenueDataUrl, {
     const filtered = revenueData.filter(r => (r["2026 BUDGET"] || "").trim() !== "");
     renderTopCharts(filtered);
 
+    const container = document.getElementById("revenueSections");
     const groups = groupDataByCategory1(filtered);
-    renderDetailSection("category-taxes", "Real and Personal Property Taxes", groups["Real and Personal Property Taxes"] || []);
-    renderDetailSection("category-aid", "State Aid and Assessments", groups["State Aid and Assessments"] || []);
-    renderDetailSection("category-local", "Local Receipts", groups["Local Receipts"] || []);
+    Object.entries(groups).forEach(([cat, rows]) => {
+      renderDetailSection(container, cat, rows);
+    });
   }
 });
