@@ -61,24 +61,24 @@ function populateSummaryTable(summaryMap) {
     totalFY26 += fy26;
 
     const row = `
-      <tr>
-        <td class="p-2">${func}</td>
-        <td class="p-2 text-right">${formatCurrency(fy25)}</td>
-        <td class="p-2 text-right">${formatCurrency(fy26)}</td>
-        <td class="p-2 text-right">${formatCurrency(change)}</td>
-        <td class="p-2 text-right">${pct.toFixed(1)}%</td>
-      </tr>`;
+  <tr>
+    <td class="p-2">${func}</td>
+    <td class="p-2 text-right whitespace-nowrap">${formatCurrency(fy25)}</td>
+    <td class="p-2 text-right whitespace-nowrap">${formatCurrency(fy26)}</td>
+    <td class="p-2 text-right whitespace-nowrap">${formatCurrency(change)}</td>
+    <td class="p-2 text-right whitespace-nowrap">${pct.toFixed(1)}%</td>
+  </tr>`;
     tbody.insertAdjacentHTML("beforeend", row);
   });
 
   const [totalChange, totalPct] = calculateChange(totalFY25, totalFY26);
   tfootRow.innerHTML = `
-    <td class="p-2 text-right">Total</td>
-    <td class="p-2 text-right">${formatCurrency(totalFY25)}</td>
-    <td class="p-2 text-right">${formatCurrency(totalFY26)}</td>
-    <td class="p-2 text-right">${formatCurrency(totalChange)}</td>
-    <td class="p-2 text-right">${totalPct.toFixed(1)}%</td>
-  `;
+  <td class="p-2 text-right font-semibold">Total</td>
+  <td class="p-2 text-right whitespace-nowrap">${formatCurrency(totalFY25)}</td>
+  <td class="p-2 text-right whitespace-nowrap">${formatCurrency(totalFY26)}</td>
+  <td class="p-2 text-right whitespace-nowrap">${formatCurrency(totalChange)}</td>
+  <td class="p-2 text-right whitespace-nowrap">${totalPct.toFixed(1)}%</td>
+`;
 }
 
 Papa.parse(chartOfAccountsUrl, {
