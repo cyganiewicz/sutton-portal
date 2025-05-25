@@ -1,5 +1,3 @@
-// revenues.js (updated to dynamically create per-category sections)
-
 const revenueDataUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1YaxCko649QeAXcYP83nDoDk7n_9FPX7vL7QwzcyDR9DMHBKsep5S-7tphpwlzQ-yZY5s-KOhYEPO/pub?output=csv";
 
 let revenueData = [];
@@ -60,21 +58,21 @@ function renderTopCharts(data) {
     }
   });
 
-  const labels = Object.keys(pieData);
-  const values = Object.values(pieData);
-  const pieTotal = values.reduce((sum, v) => sum + v, 0);
-
   const pieCtx = document.getElementById("revenueTotalPie").getContext("2d");
   const barCtx = document.getElementById("revenueTotalBar").getContext("2d");
 
   if (topChartInstance) topChartInstance.destroy();
   if (topBarInstance) topBarInstance.destroy();
 
+  const pieLabels = Object.keys(pieData);
+  const pieValues = Object.values(pieData);
+  const pieTotal = pieValues.reduce((sum, v) => sum + v, 0);
+
   topChartInstance = new Chart(pieCtx, {
     type: "pie",
     data: {
-      labels,
-      datasets: [{ data: values, backgroundColor: colors }]
+      labels: pieLabels,
+      datasets: [{ data: pieValues, backgroundColor: colors }]
     },
     options: {
       plugins: {
@@ -93,9 +91,9 @@ function renderTopCharts(data) {
   });
 
   const barLabels = ["FY24", "FY25", "FY26"];
-  const barDatasets = Object.entries(barData).map(([label, vals], i) => ({
+  const barDatasets = Object.entries(barData).map(([label, values], i) => ({
     label,
-    data: [vals[1], vals[2], vals[3]],
+    data: [values[1], values[2], values[3]],
     backgroundColor: colors[i % colors.length]
   }));
 
@@ -113,26 +111,28 @@ function renderTopCharts(data) {
   });
 }
 
-function renderDetailSection(parentEl, category, rows) {
-  const sectionId = category.replace(/\s+/g, '-').toLowerCase();
-  const chartIdPie = `${sectionId}-pie`;
-  const chartIdBar = `${sectionId}-bar`;
-  const tableId = `${sectionId}-table`;
+function renderDetailSection(containerId, title, rows) {
+  const container = document.createElement("section");
+  container.className = "mb-16";
+  container.id = containerId;
 
-  const section = document.createElement("section");
-  section.innerHTML = `
-    <h2 class="text-2xl font-bold mb-4 mt-12">${category}</h2>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+  const chartIdPie = `${containerId}-pie`;
+  const chartIdBar = `${containerId}-bar`;
+  const tableId = `${containerId}-table`;
+
+  container.innerHTML = `
+    <h2 class="text-2xl font-bold mb-4">${title}</h2>
+    <div class="chart-row">
       <div class="chart-tile">
         <h3 class="text-lg font-semibold text-center mb-2">FY26 Breakdown</h3>
-        <canvas id="${chartIdPie}"></canvas>
+        <canvas id="${chartIdPie}" height="240"></canvas>
       </div>
       <div class="chart-tile">
         <h3 class="text-lg font-semibold text-center mb-2">3-Year Trend</h3>
-        <canvas id="${chartIdBar}"></canvas>
+        <canvas id="${chartIdBar}" height="240"></canvas>
       </div>
     </div>
-    <div class="overflow-x-auto border rounded-lg shadow-md">
+    <div class="overflow-x-auto border rounded-lg shadow-md mt-4">
       <table class="min-w-full table-fixed text-sm text-gray-700">
         <thead>
           <tr>
@@ -148,14 +148,15 @@ function renderDetailSection(parentEl, category, rows) {
       </table>
     </div>
   `;
-  parentEl.appendChild(section);
+
+  document.getElementById("revenueSections").appendChild(container);
 
   const pieMap = {};
   const barMap = {};
-  const table = section.querySelector(`#${tableId}`);
   let grandTotals = [0, 0, 0];
 
   const grouped = groupByCategory2(rows);
+  const tbody = container.querySelector(`#${tableId}`);
 
   Object.entries(grouped).forEach(([subcat, items]) => {
     let subtotal = [0, 0, 0];
@@ -167,16 +168,16 @@ function renderDetailSection(parentEl, category, rows) {
       const fy26 = parseFloat(row["2026 BUDGET"].replace(/,/g, "")) || 0;
       const [chg, pct] = calculateChange(fy25, fy26);
 
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td class="p-3">${desc}</td>
-        <td class="p-3 text-right">${formatCurrency(fy24)}</td>
-        <td class="p-3 text-right">${formatCurrency(fy25)}</td>
-        <td class="p-3 text-right">${formatCurrency(fy26)}</td>
-        <td class="p-3 text-right">${formatCurrency(chg)}</td>
-        <td class="p-3 text-right">${pct.toFixed(1)}%</td>
+      tbody.innerHTML += `
+        <tr>
+          <td class="p-3">${desc}</td>
+          <td class="p-3 text-right">${formatCurrency(fy24)}</td>
+          <td class="p-3 text-right">${formatCurrency(fy25)}</td>
+          <td class="p-3 text-right">${formatCurrency(fy26)}</td>
+          <td class="p-3 text-right">${formatCurrency(chg)}</td>
+          <td class="p-3 text-right">${pct.toFixed(1)}%</td>
+        </tr>
       `;
-      table.appendChild(tr);
 
       subtotal[0] += fy24;
       subtotal[1] += fy25;
@@ -190,17 +191,16 @@ function renderDetailSection(parentEl, category, rows) {
     });
 
     const [chg, pct] = calculateChange(subtotal[1], subtotal[2]);
-    const subtr = document.createElement("tr");
-    subtr.className = "bg-gray-100 font-semibold";
-    subtr.innerHTML = `
-      <td class="p-3 text-right">Subtotal - ${subcat}</td>
-      <td class="p-3 text-right">${formatCurrency(subtotal[0])}</td>
-      <td class="p-3 text-right">${formatCurrency(subtotal[1])}</td>
-      <td class="p-3 text-right">${formatCurrency(subtotal[2])}</td>
-      <td class="p-3 text-right">${formatCurrency(chg)}</td>
-      <td class="p-3 text-right">${pct.toFixed(1)}%</td>
+    tbody.innerHTML += `
+      <tr class="bg-gray-100 font-semibold">
+        <td class="p-3 text-right">Subtotal - ${subcat}</td>
+        <td class="p-3 text-right">${formatCurrency(subtotal[0])}</td>
+        <td class="p-3 text-right">${formatCurrency(subtotal[1])}</td>
+        <td class="p-3 text-right">${formatCurrency(subtotal[2])}</td>
+        <td class="p-3 text-right">${formatCurrency(chg)}</td>
+        <td class="p-3 text-right">${pct.toFixed(1)}%</td>
+      </tr>
     `;
-    table.appendChild(subtr);
 
     grandTotals[0] += subtotal[0];
     grandTotals[1] += subtotal[1];
@@ -208,19 +208,19 @@ function renderDetailSection(parentEl, category, rows) {
   });
 
   const [totalChg, totalPct] = calculateChange(grandTotals[1], grandTotals[2]);
-  const totalRow = document.createElement("tr");
-  totalRow.className = "bg-gray-300 font-extrabold";
-  totalRow.innerHTML = `
-    <td class="p-3 text-right">Grand Total</td>
-    <td class="p-3 text-right">${formatCurrency(grandTotals[0])}</td>
-    <td class="p-3 text-right">${formatCurrency(grandTotals[1])}</td>
-    <td class="p-3 text-right">${formatCurrency(grandTotals[2])}</td>
-    <td class="p-3 text-right">${formatCurrency(totalChg)}</td>
-    <td class="p-3 text-right">${totalPct.toFixed(1)}%</td>
+  tbody.innerHTML += `
+    <tr class="bg-gray-300 font-extrabold">
+      <td class="p-3 text-right">Grand Total</td>
+      <td class="p-3 text-right">${formatCurrency(grandTotals[0])}</td>
+      <td class="p-3 text-right">${formatCurrency(grandTotals[1])}</td>
+      <td class="p-3 text-right">${formatCurrency(grandTotals[2])}</td>
+      <td class="p-3 text-right">${formatCurrency(totalChg)}</td>
+      <td class="p-3 text-right">${totalPct.toFixed(1)}%</td>
+    </tr>
   `;
-  table.appendChild(totalRow);
 
-  new Chart(section.querySelector(`#${chartIdPie}`).getContext("2d"), {
+  // Render Pie + Bar Charts
+  new Chart(document.getElementById(chartIdPie).getContext("2d"), {
     type: "pie",
     data: {
       labels: Object.keys(pieMap),
@@ -233,8 +233,7 @@ function renderDetailSection(parentEl, category, rows) {
           callbacks: {
             label: ctx => {
               const val = ctx.raw;
-              const total = Object.values(pieMap).reduce((a, b) => a + b, 0);
-              const pct = ((val / total) * 100).toFixed(1);
+              const pct = ((val / Object.values(pieMap).reduce((a,b)=>a+b,0)) * 100).toFixed(1);
               return `${ctx.label}: ${formatCurrency(val)} (${pct}%)`;
             }
           }
@@ -243,23 +242,36 @@ function renderDetailSection(parentEl, category, rows) {
     }
   });
 
-  new Chart(section.querySelector(`#${chartIdBar}`).getContext("2d"), {
+  new Chart(document.getElementById(chartIdBar).getContext("2d"), {
     type: "bar",
     data: {
       labels: ["FY24", "FY25", "FY26"],
-      datasets: Object.entries(barMap).map(([label, vals], i) => ({
+      datasets: Object.entries(barMap).map(([label, values], i) => ({
         label,
-        data: vals,
+        data: values,
         backgroundColor: colors[i % colors.length]
       }))
     },
     options: {
+      responsive: true,
       plugins: { legend: { position: "bottom" } },
       scales: { x: { stacked: true }, y: { stacked: true } }
     }
   });
 }
 
+function renderDetailSections(data) {
+  const container = document.getElementById("revenueSections");
+  const groups = groupDataByCategory1(data);
+  container.innerHTML = ""; // clear existing content if any
+
+  Object.entries(groups).forEach(([cat, rows], idx) => {
+    const id = `revenue-category-${idx}`;
+    renderDetailSection(id, cat, rows);
+  });
+}
+
+// Load and render everything
 Papa.parse(revenueDataUrl, {
   header: true,
   download: true,
@@ -267,11 +279,6 @@ Papa.parse(revenueDataUrl, {
     revenueData = results.data;
     const filtered = revenueData.filter(r => (r["2026 BUDGET"] || "").trim() !== "");
     renderTopCharts(filtered);
-
-    const container = document.getElementById("revenueSections");
-    const groups = groupDataByCategory1(filtered);
-    Object.entries(groups).forEach(([cat, rows]) => {
-      renderDetailSection(container, cat, rows);
-    });
+    renderDetailSections(filtered);
   }
 });
