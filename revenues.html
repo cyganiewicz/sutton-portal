@@ -10,11 +10,10 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
 </head>
 <body class="bg-gray-100">
-  <!-- Navbar -->
-  <header class="bg-green-700 text-white sticky top-0 z-50 shadow-md">
+  <header class="bg-[#3f6522] text-white shadow-md sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <img src="assets/logo.png" alt="Town Seal" class="h-10 w-10 object-contain" />
+      <div class="flex items-center gap-4">
+        <img src="assets/logo.png" alt="Town Logo" class="h-10 w-auto" />
         <h1 class="text-2xl font-bold">Sutton Budget Portal</h1>
       </div>
       <nav class="space-x-6 text-sm font-medium">
@@ -25,111 +24,25 @@
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-4 py-6">
-    <h2 class="text-3xl font-bold text-center mb-6">Town Revenues Overview</h2>
+  <main class="max-w-7xl mx-auto p-6">
+    <h2 class="text-3xl font-bold mb-6 text-center">Revenues Overview</h2>
 
     <!-- Top-Level Charts -->
-    <section class="chart-grid mb-10">
+    <div class="chart-grid mb-10">
       <div class="chart-tile">
-        <h3 class="text-lg font-semibold text-center mb-2">FY26 Revenue by Category</h3>
-        <canvas id="revenuePieTotal"></canvas>
+        <h3 class="text-lg font-semibold mb-2 text-center">FY26 Revenue by Category</h3>
+        <canvas id="totalRevenuePie"></canvas>
       </div>
       <div class="chart-tile">
-        <h3 class="text-lg font-semibold text-center mb-2">Multi-Year Revenue Comparison</h3>
-        <canvas id="revenueBarTotal"></canvas>
+        <h3 class="text-lg font-semibold mb-2 text-center">Revenue Comparison by Category</h3>
+        <canvas id="totalRevenueBar"></canvas>
       </div>
-    </section>
+    </div>
 
-    <!-- Real and Personal Property Taxes -->
-    <section class="mb-10">
-      <h3 class="text-2xl font-semibold mb-4 text-center text-green-800">Real and Personal Property Taxes</h3>
-      <div class="chart-grid mb-4">
-        <div class="chart-tile">
-          <h4 class="text-base font-medium text-center mb-2">FY26 by Type</h4>
-          <canvas id="revenuePie0"></canvas>
-        </div>
-        <div class="chart-tile">
-          <h4 class="text-base font-medium text-center mb-2">Multi-Year Comparison</h4>
-          <canvas id="revenueBar0"></canvas>
-        </div>
-      </div>
-      <div class="table-wrapper">
-        <table class="min-w-full text-sm text-gray-700">
-          <thead>
-            <tr>
-              <th>Description</th>
-              <th>2023 Actual</th>
-              <th>2024 Actual</th>
-              <th>2025 Actual</th>
-              <th>2026 Budget</th>
-            </tr>
-          </thead>
-          <tbody id="revenueTable0"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- State Aid and Assessments -->
-    <section class="mb-10">
-      <h3 class="text-2xl font-semibold mb-4 text-center text-green-800">State Aid and Assessments</h3>
-      <div class="chart-grid mb-4">
-        <div class="chart-tile">
-          <h4 class="text-base font-medium text-center mb-2">FY26 by Type</h4>
-          <canvas id="revenuePie1"></canvas>
-        </div>
-        <div class="chart-tile">
-          <h4 class="text-base font-medium text-center mb-2">Multi-Year Comparison</h4>
-          <canvas id="revenueBar1"></canvas>
-        </div>
-      </div>
-      <div class="table-wrapper">
-        <table class="min-w-full text-sm text-gray-700">
-          <thead>
-            <tr>
-              <th>Description</th>
-              <th>2023 Actual</th>
-              <th>2024 Actual</th>
-              <th>2025 Actual</th>
-              <th>2026 Budget</th>
-            </tr>
-          </thead>
-          <tbody id="revenueTable1"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Local Receipts -->
-    <section class="mb-10">
-      <h3 class="text-2xl font-semibold mb-4 text-center text-green-800">Local Receipts</h3>
-      <div class="chart-grid mb-4">
-        <div class="chart-tile">
-          <h4 class="text-base font-medium text-center mb-2">FY26 by Type</h4>
-          <canvas id="revenuePie2"></canvas>
-        </div>
-        <div class="chart-tile">
-          <h4 class="text-base font-medium text-center mb-2">Multi-Year Comparison</h4>
-          <canvas id="revenueBar2"></canvas>
-        </div>
-      </div>
-      <div class="table-wrapper">
-        <table class="min-w-full text-sm text-gray-700">
-          <thead>
-            <tr>
-              <th>Description</th>
-              <th>2023 Actual</th>
-              <th>2024 Actual</th>
-              <th>2025 Actual</th>
-              <th>2026 Budget</th>
-            </tr>
-          </thead>
-          <tbody id="revenueTable2"></tbody>
-        </table>
-      </div>
-    </section>
+    <!-- Category Sections -->
+    <div id="revenueSections" class="space-y-16"></div>
   </main>
 
-  <!-- JS -->
   <script src="script/revenues.js"></script>
 </body>
 </html>
