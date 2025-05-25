@@ -48,10 +48,18 @@ function drawPieChart(dataMap) {
 
 function populateSummaryTable(summaryMap) {
   const tbody = document.getElementById("homeSummaryTable");
+  const tfootRow = document.getElementById("homeSummaryTotalRow");
   tbody.innerHTML = "";
+  tfootRow.innerHTML = "";
+
+  let totalFY25 = 0;
+  let totalFY26 = 0;
 
   Object.entries(summaryMap).forEach(([func, [fy25, fy26]]) => {
     const [change, pct] = calculateChange(fy25, fy26);
+    totalFY25 += fy25;
+    totalFY26 += fy26;
+
     const row = `
       <tr>
         <td class="p-2">${func}</td>
@@ -62,6 +70,15 @@ function populateSummaryTable(summaryMap) {
       </tr>`;
     tbody.insertAdjacentHTML("beforeend", row);
   });
+
+  const [totalChange, totalPct] = calculateChange(totalFY25, totalFY26);
+  tfootRow.innerHTML = `
+    <td class="p-2 text-right">Total</td>
+    <td class="p-2 text-right">${formatCurrency(totalFY25)}</td>
+    <td class="p-2 text-right">${formatCurrency(totalFY26)}</td>
+    <td class="p-2 text-right">${formatCurrency(totalChange)}</td>
+    <td class="p-2 text-right">${totalPct.toFixed(1)}%</td>
+  `;
 }
 
 Papa.parse(chartOfAccountsUrl, {
