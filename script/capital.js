@@ -1,76 +1,76 @@
-const capitalDataUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdidCA9TjVUF9UrGHvavut7QMw0hXaRBNgN9J1FnPhB26XtOnsJ4Mupmr7KLKrq1d5aJDPobCXKvZX/pub?output=csv";
+const capitalDataUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdidCA9TjVUF9UrGHvavut7QMw0hXaRBNgN9J1FnPhB26XtOnsJ4Mupmr7KLKrq1d5aJDPobCXKvZX/pub?gid=0&single=true&output=csv";
 
 const formatCurrency = (val) => "$" + parseFloat(val).toLocaleString(undefined, { maximumFractionDigits: 0 });
-const formatAbbrCurrency = (val) => "$" + (parseFloat(val) / 1e6).toFixed(1) + "M";
-const titleCase = str => str.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+const abbreviateCurrency = (val) => {
+  const num = parseFloat(val);
+  if (num >= 1e9) return "$" + (num / 1e9).toFixed(1) + "B";
+  if (num >= 1e6) return "$" + (num / 1e6).toFixed(1) + "M";
+  if (num >= 1e3) return "$" + (num / 1e3).toFixed(1) + "K";
+  return "$" + num.toFixed(0);
+};
 
-let pieChartInstance = null;
-let barChartInstance = null;
+function titleCase(str) {
+  return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+}
 
-Papa.parse(capitalDataUrl, {
-  download: true,
-  header: true,
-  complete: (results) => {
-    const rows = results.data.filter(r => r["FISCAL YEAR"] && r["AMOUNT"]);
-    if (!rows.length) return;
+function updateSummaryTiles(data, latestFY) {
+  let total = 0;
+  let fyTotals = {};
+  let deptTotals = {};
+  let fundingCounts = {};
 
-    const totalsByYear = {};
-    const totalsByDept = {};
-    const totalsByFunding = {};
+  data.forEach(r => {
+    const amt = parseFloat(r["AMOUNT"]) || 0;
+    const fy = r["FISCAL YEAR"];
+    const dept = r["DEPARTMENT"];
+    const fund = r["FUNDING SOURCE"];
 
-    let mostRecentYear = Math.max(...rows.map(r => +r["FISCAL YEAR"]));
-    let recentTotal = 0;
-    let allTotal = 0;
+    total += amt;
+    fyTotals[fy] = (fyTotals[fy] || 0) + amt;
+    deptTotals[dept] = (deptTotals[dept] || 0) + amt;
+    fundingCounts[fund] = (fundingCounts[fund] || 0) + 1;
+  });
 
-    rows.forEach(row => {
-      const year = +row["FISCAL YEAR"];
-      const dept = titleCase(row["DEPARTMENT"]);
-      const source = row["FUNDING SOURCE"] || "Unknown";
-      const amount = parseFloat(row["AMOUNT"].replace(/,/g, "")) || 0;
+  const recentTotal = fyTotals[latestFY];
+  const topDept = Object.entries(deptTotals).sort((a, b) => b[1] - a[1])[0];
+  const topFunding = Object.entries(fundingCounts).sort((a, b) => b[1] - a[1])[0];
 
-      if (!totalsByYear[year]) totalsByYear[year] = [];
-      totalsByYear[year].push({ ...row, DEPARTMENT: dept, AMOUNT: amount });
+  document.getElementById("capRecentTotal").innerHTML = `<strong>${abbreviateCurrency(recentTotal)}</strong>`;
+  document.getElementById("capRecentTotalTile").querySelector(".tile-label").textContent = `Fiscal Year ${latestFY} Capital Budget`;
 
-      totalsByDept[dept] = (totalsByDept[dept] || 0) + amount;
-      totalsByFunding[source] = (totalsByFunding[source] || 0) + amount;
+  document.getElementById("capTotalSpend").innerHTML = `<strong>${abbreviateCurrency(total)}</strong>`;
+  document.getElementById("capAllYearsTotalTile").querySelector(".tile-label").textContent = "Total Capital to Date";
 
-      if (year === mostRecentYear) recentTotal += amount;
-      allTotal += amount;
-    });
+  document.getElementById("capTopDept").innerHTML = `<strong>${titleCase(topDept[0])} (${abbreviateCurrency(topDept[1])})</strong>`;
+  document.getElementById("capTopFunding").innerHTML = `<strong>${titleCase(topFunding[0])}</strong>`;
+}
 
-    const topDept = Object.entries(totalsByDept).sort((a,b) => b[1] - a[1])[0];
-    const topFunding = Object.entries(totalsByFunding).sort((a,b) => b[1] - a[1])[0];
-
-    document.getElementById("capRecentTotal").textContent = `Fiscal Year ${mostRecentYear} Capital Budget`;
-    document.getElementById("capRecentTotalTile").querySelector(".tile-value").textContent = formatAbbrCurrency(recentTotal);
-    document.getElementById("capTotalSpend").textContent = "Total Capital to Date";
-    document.getElementById("capAllYearsTotalTile").querySelector(".tile-value").textContent = formatAbbrCurrency(allTotal);
-    document.getElementById("capTopDept").textContent = `${topDept[0]} (${formatCurrency(topDept[1])})`;
-    document.getElementById("capTopFunding").textContent = `${topFunding[0]}`;
-
-    renderCharts(totalsByYear[mostRecentYear], totalsByYear);
-    renderYearTiles(totalsByYear);
-  }
-});
-
-function renderCharts(recentData, allData) {
+function drawCapitalCharts(data, latestFY) {
   const pieCtx = document.getElementById("capitalPieChart").getContext("2d");
   const barCtx = document.getElementById("capitalStackedBar").getContext("2d");
 
-  const deptMap = {};
-  recentData.forEach(row => {
-    deptMap[row.DEPARTMENT] = (deptMap[row.DEPARTMENT] || 0) + row.AMOUNT;
+  const pieMap = {};
+  const barMap = {};
+
+  data.forEach(row => {
+    const amt = parseFloat(row["AMOUNT"]) || 0;
+    const fy = row["FISCAL YEAR"];
+    const dept = titleCase(row["DEPARTMENT"]);
+
+    if (fy === latestFY) pieMap[dept] = (pieMap[dept] || 0) + amt;
+    if (!barMap[dept]) barMap[dept] = {};
+    barMap[dept][fy] = (barMap[dept][fy] || 0) + amt;
   });
 
-  const labels = Object.keys(deptMap);
-  const data = Object.values(deptMap);
+  const pieLabels = Object.keys(pieMap);
+  const pieValues = Object.values(pieMap);
+  const pieColors = pieLabels.map((_, i) => `hsl(${i * 360 / pieLabels.length}, 70%, 60%)`);
 
-  if (pieChartInstance) pieChartInstance.destroy();
-  pieChartInstance = new Chart(pieCtx, {
+  new Chart(pieCtx, {
     type: "pie",
     data: {
-      labels,
-      datasets: [{ data, backgroundColor: labels.map((_, i) => `hsl(${i * 50 % 360}, 70%, 60%)`) }]
+      labels: pieLabels,
+      datasets: [{ data: pieValues, backgroundColor: pieColors }]
     },
     options: {
       plugins: {
@@ -84,25 +84,20 @@ function renderCharts(recentData, allData) {
     }
   });
 
-  const barLabels = Array.from(new Set(Object.keys(allData))).sort();
-  const depts = Array.from(new Set([].concat(...Object.values(allData)).map(r => r.DEPARTMENT)));
-  const datasets = depts.map((dept, i) => {
-    return {
-      label: dept,
-      data: barLabels.map(y => {
-        const rows = allData[y] || [];
-        return rows.filter(r => r.DEPARTMENT === dept).reduce((sum, r) => sum + r.AMOUNT, 0);
-      }),
-      backgroundColor: `hsl(${i * 50 % 360}, 70%, 60%)`
-    };
-  });
+  document.querySelector(".chart-tile h3").textContent = `Fiscal Year ${latestFY} Capital Plan by Department`;
 
-  if (barChartInstance) barChartInstance.destroy();
-  barChartInstance = new Chart(barCtx, {
+  const fiscalYears = [...new Set(data.map(r => r["FISCAL YEAR"]))].sort();
+  const barDatasets = Object.entries(barMap).map(([dept, vals], i) => ({
+    label: dept,
+    data: fiscalYears.map(fy => vals[fy] || 0),
+    backgroundColor: pieColors[i % pieColors.length]
+  }));
+
+  new Chart(barCtx, {
     type: "bar",
     data: {
-      labels: barLabels,
-      datasets
+      labels: fiscalYears,
+      datasets: barDatasets
     },
     options: {
       responsive: true,
@@ -112,48 +107,77 @@ function renderCharts(recentData, allData) {
   });
 }
 
-function renderYearTiles(dataByYear) {
-  const container = document.getElementById("capitalYearTiles");
+function createYearTiles(data) {
+  const yearContainer = document.getElementById("capitalYearTiles");
   const tableContainer = document.getElementById("capitalYearTables");
 
-  Object.entries(dataByYear).sort(([a], [b]) => b - a).forEach(([year, rows]) => {
-    const total = rows.reduce((sum, r) => sum + r.AMOUNT, 0);
-    const tile = document.createElement("div");
-    tile.className = "year-tile";
-    tile.innerHTML = `<div class="icon">📅</div><div>FY ${year}</div><div>${formatAbbrCurrency(total)}</div>`;
-    container.appendChild(tile);
+  const grouped = {};
+  data.forEach(row => {
+    const fy = row["FISCAL YEAR"];
+    if (!grouped[fy]) grouped[fy] = [];
+    grouped[fy].push(row);
+  });
 
-    const tableId = `table-${year}`;
-    const tableWrapper = document.createElement("div");
-    tableWrapper.id = tableId;
-    tableWrapper.className = "hidden";
+  Object.entries(grouped).sort((a, b) => b[0] - a[0]).forEach(([fy, items]) => {
+    const total = items.reduce((sum, r) => sum + parseFloat(r["AMOUNT"] || 0), 0);
+    const card = document.createElement("div");
+    card.className = "fy-card";
+    card.innerHTML = `
+      <div class="fy-card-inner">
+        <div class="fy-card-front">
+          <h4>FY ${fy}</h4>
+          <p>${abbreviateCurrency(total)}</p>
+        </div>
+        <div class="fy-card-back">
+          <div class="fy-table-container" id="table-${fy}"></div>
+        </div>
+      </div>
+    `;
+    yearContainer.appendChild(card);
 
+    // Table
     const table = document.createElement("table");
-    table.className = "min-w-full text-sm mt-4";
+    table.className = "capital-table";
     table.innerHTML = `
-      <thead><tr>
-        <th class="text-left p-3">Department</th>
-        <th class="text-left p-3">Purpose</th>
-        <th class="text-right p-3">Amount</th>
-        <th class="text-left p-3">Funding Source</th>
-      </tr></thead>
-      <tbody class="bg-white divide-y divide-gray-200">
-        ${rows.map(r => `
+      <thead>
+        <tr>
+          <th>Department</th>
+          <th>Purpose</th>
+          <th>Amount</th>
+          <th>Funding Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${items.map(r => `
           <tr>
-            <td class="p-3">${r.DEPARTMENT}</td>
-            <td class="p-3">${r.PURPOSE}</td>
-            <td class="p-3 text-right">${formatCurrency(r.AMOUNT)}</td>
-            <td class="p-3">${r["FUNDING SOURCE"]}</td>
-          </tr>`).join("")}
+            <td>${titleCase(r["DEPARTMENT"])}</td>
+            <td>${r["PURPOSE"]}</td>
+            <td class="text-right">${formatCurrency(r["AMOUNT"])}</td>
+            <td>${titleCase(r["FUNDING SOURCE"])}</td>
+          </tr>
+        `).join("")}
       </tbody>
     `;
-    tableWrapper.appendChild(table);
-    tableContainer.appendChild(tableWrapper);
+    document.getElementById(`table-${fy}`).appendChild(table);
 
-    tile.addEventListener("click", () => {
-      document.querySelectorAll("#capitalYearTables > div").forEach(div => div.classList.add("hidden"));
-      tableWrapper.classList.remove("hidden");
-      tableWrapper.scrollIntoView({ behavior: "smooth" });
+    // Flip animation
+    card.addEventListener("click", () => {
+      card.classList.toggle("flipped");
     });
   });
 }
+
+// Load the data
+Papa.parse(capitalDataUrl, {
+  header: true,
+  download: true,
+  complete: (results) => {
+    const data = results.data.filter(r => r["FISCAL YEAR"] && r["AMOUNT"]);
+    const fiscalYears = [...new Set(data.map(r => r["FISCAL YEAR"]))].sort();
+    const latestFY = fiscalYears[fiscalYears.length - 1];
+
+    updateSummaryTiles(data, latestFY);
+    drawCapitalCharts(data, latestFY);
+    createYearTiles(data);
+  }
+});
