@@ -34,27 +34,27 @@
     <!-- Summary Tiles -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10" id="capitalSummaryTiles">
       <div class="summary-tile" id="capRecentTotalTile">
-        <div class="tile-label">Latest Fiscal Year Capital</div>
-        <div class="tile-value" id="capRecentTotal">–</div>
+        <div class="tile-label">Fiscal Year <span id="capRecentYear">----</span> Capital Budget</div>
+        <div class="tile-value font-bold" id="capRecentTotal">–</div>
       </div>
       <div class="summary-tile" id="capAllYearsTotalTile">
-        <div class="tile-label">Total Capital Spend</div>
-        <div class="tile-value" id="capTotalSpend">–</div>
+        <div class="tile-label">Total Capital to Date</div>
+        <div class="tile-value font-bold" id="capTotalSpend">–</div>
       </div>
       <div class="summary-tile" id="capTopDeptTile">
         <div class="tile-label">Top Department</div>
-        <div class="tile-value" id="capTopDept">–</div>
+        <div class="tile-value font-bold" id="capTopDept">–</div>
       </div>
       <div class="summary-tile" id="capTopFundingTile">
         <div class="tile-label">Most Used Funding Source</div>
-        <div class="tile-value" id="capTopFunding">–</div>
+        <div class="tile-value font-bold" id="capTopFunding">–</div>
       </div>
     </div>
 
     <!-- Chart Row -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
       <div class="chart-tile h-[460px]">
-        <h3 class="text-lg font-semibold text-center mb-2">Most Recent Year by Department</h3>
+        <h3 class="text-lg font-semibold text-center mb-2" id="capPieChartTitle">Fiscal Year XXX Capital Plan by Department</h3>
         <canvas id="capitalPieChart" width="400" height="400"></canvas>
       </div>
       <div class="chart-tile h-[460px]">
