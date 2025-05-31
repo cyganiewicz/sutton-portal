@@ -1,101 +1,104 @@
+/* General Reset and Base */
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
 /* Summary Tiles */
 .summary-tile {
-  background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  background: white;
+  border-radius: 0.75rem;
   padding: 1.25rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   text-align: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.summary-tile:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: background 0.3s ease;
 }
 .tile-label {
-  font-size: 0.875rem;
-  color: #4B5563;
-  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
 }
 .tile-value {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #1F2937;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #111827;
 }
 
-/* Chart Container */
+/* Chart Containers */
 .chart-tile {
-  background-color: white;
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  height: auto;
 }
 
-/* Capital Table */
-.capital-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875rem;
-  border: 1px solid #E5E7EB;
-}
-.capital-table thead {
-  background-color: #F3F4F6;
-  font-weight: bold;
-}
-.capital-table th, .capital-table td {
-  padding: 0.75rem;
-  border-bottom: 1px solid #E5E7EB;
-  text-align: left;
-}
-.capital-table td.text-right {
-  text-align: right;
-}
-.capital-table tbody tr:hover {
-  background-color: #F9FAFB;
-}
-
-/* Fiscal Year Tiles */
+/* Fiscal Year Cards */
 .fy-card {
-  width: 200px;
-  height: 120px;
-  border-radius: 0.5rem;
-  background-color: white;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  background: white;
+  border: 2px solid #d1d5db;
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
+  min-width: 160px;
+  transition: background 0.3s, transform 0.2s, border-color 0.3s;
   text-align: center;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 .fy-card:hover {
+  background: #3f6522;
+  color: white;
+  border-color: #2f4f17;
   transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+.fy-card.active {
+  background: #34541c;
+  color: white;
+  border-color: #2f4f17;
 }
 .fy-card h4 {
-  font-size: 1.125rem;
-  font-weight: bold;
-  color: #1F2937;
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
 }
 .fy-card p {
   font-size: 1rem;
-  color: #374151;
-  margin-top: 0.25rem;
 }
 
-/* Revealable Tables Below Tiles */
+/* Table Styling */
 .capital-fy-table {
-  display: none;
-  padding: 1rem 0;
+  margin-top: 1rem;
 }
-.capital-fy-table.active {
-  display: block;
+.capital-fy-table table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+}
+.capital-fy-table th,
+.capital-fy-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+.capital-fy-table th {
+  background-color: #f3f4f6;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+}
+.capital-fy-table td {
+  color: #374151;
+}
+.capital-fy-table tr:hover {
+  background-color: #f9fafb;
 }
 
-/* Responsive layout for FY tiles */
-@media (max-width: 768px) {
+/* Responsive Layout */
+@media (max-width: 640px) {
   .fy-card {
     width: 100%;
-    height: auto;
+  }
+  .chart-tile {
+    padding: 0.75rem;
   }
 }
