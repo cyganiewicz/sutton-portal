@@ -115,10 +115,10 @@ function createYearTiles(data) {
     table.innerHTML = `
       <thead>
         <tr>
-          <th>Department</th>
-          <th>Purpose</th>
-          <th>Amount</th>
-          <th>Funding Source</th>
+          <th class="text-left p-3">Department</th>
+          <th class="text-left p-3">Purpose</th>
+          <th class="text-left p-3">Amount</th>
+          <th class="text-left p-3">Funding Source</th>
         </tr>
       </thead>
       <tbody>
