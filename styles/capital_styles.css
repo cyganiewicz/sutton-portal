@@ -1,7 +1,14 @@
+/* Base layout and header colors */
 :root {
   --navbar-height: 104px;
-  --navbar-bg: #3f6522; /* Sutton green */
+  --navbar-bg: #3f6522; /* Forest green to match Sutton site */
   --header-text: #ffffff;
+}
+
+/* Header override */
+header {
+  background-color: var(--navbar-bg);
+  color: var(--header-text);
 }
 
 body {
