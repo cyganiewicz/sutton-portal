@@ -70,10 +70,10 @@ body {
 
 /* Expandable Table Container */
 .capital-fy-table {
-  max-height: 0;
   overflow: hidden;
-  transition: max-height 0.4s ease, opacity 0.4s ease, margin 0.4s ease;
   opacity: 0;
+  height: 0;
+  transition: height 0.4s ease, opacity 0.4s ease;
   margin-top: 0;
   margin-bottom: 0;
 }
