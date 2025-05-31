@@ -39,13 +39,14 @@ body {
   background: white;
   border: 2px solid #d1d5db;
   border-radius: 1rem;
-  padding: 1.25rem 1.5rem;
+  padding: 1.5rem 1rem;
   cursor: pointer;
   min-width: 160px;
-  transition: background 0.3s, transform 0.2s, border-color 0.3s;
+  transition: all 0.3s ease;
   text-align: center;
   font-weight: 600;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: relative;
 }
 .fy-card:hover {
   background: #3f6522;
@@ -59,17 +60,37 @@ body {
   border-color: #2f4f17;
 }
 .fy-card h4 {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.fy-card h4::before {
+  content: "📅";
+  font-size: 1.1rem;
 }
 .fy-card p {
   font-size: 1rem;
+  margin-top: 0.25rem;
+}
+
+/* Expandable Table Container */
+.capital-fy-table {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease, opacity 0.5s ease;
+  opacity: 0;
+  margin-top: 0;
+}
+.capital-fy-table.expanded {
+  max-height: 1000px; /* Safe large value */
+  opacity: 1;
+  margin-top: 1rem;
 }
 
 /* Table Styling */
-.capital-fy-table {
-  margin-top: 1rem;
-}
 .capital-fy-table table {
   width: 100%;
   border-collapse: collapse;
