@@ -35,7 +35,7 @@ function drawPieChart(ctxId, dataMap) {
     top: 70, // or more if needed
     bottom: 20
   }
-}
+},
       responsive: true,
       plugins: {
         legend: { position: "bottom" },
