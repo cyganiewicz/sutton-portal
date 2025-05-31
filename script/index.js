@@ -43,16 +43,21 @@ function drawPieChart(ctxId, dataMap) {
           }
         },
         datalabels: {
-          color: "#fff",
-          font: {
-            weight: "bold",
-            size: 14
-          },
-          formatter: (value) => {
-            const pct = ((value / total) * 100).toFixed(1);
-            return `${pct}%`;
-          }
-        }
+  color: "#000", // Darker color works better outside
+  font: {
+    weight: "bold",
+    size: 12
+  },
+  align: 'end',      // Position label outside the slice
+  anchor: 'end',     // Anchor the label to the edge
+  offset: 10,        // Distance from the slice
+  formatter: (value) => {
+    const pct = ((value / total) * 100).toFixed(1);
+    return `${pct}%`;
+  },
+  clamp: true,       // Ensures label stays within chart area
+  display: (context) => context.dataset.data[context.dataIndex] > 0  // Hide labels for 0 values
+}
       }
     },
     plugins: [ChartDataLabels]
