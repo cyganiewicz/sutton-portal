@@ -30,6 +30,12 @@ function drawPieChart(ctxId, dataMap) {
       datasets: [{ data: values, backgroundColor: colors }]
     },
     options: {
+      layout: {
+  padding: {
+    top: 40, // or more if needed
+    bottom: 20
+  }
+}
       responsive: true,
       plugins: {
         legend: { position: "bottom" },
