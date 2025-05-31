@@ -1,3 +1,9 @@
+:root {
+  --navbar-height: 104px;
+  --navbar-bg: #3f6522; /* Sutton green */
+  --header-text: #ffffff;
+}
+
 body {
   font-family: 'Inter', sans-serif;
   background-color: #f3f4f6;
