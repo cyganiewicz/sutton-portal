@@ -122,53 +122,63 @@ function createYearTiles(data) {
   Object.entries(grouped).sort((a, b) => b[0] - a[0]).forEach(([fy, items]) => {
     const total = items.reduce((sum, r) => sum + parseFloat(r["AMOUNT"] || 0), 0);
 
+    // Tile
     const card = document.createElement("div");
     card.className = "fy-card";
-    card.setAttribute("data-fy", fy);
-    card.innerHTML = `<h4>FY ${fy}</h4><p>${abbreviateCurrency(total)}</p>`;
+    card.innerHTML = `
+      <h4>FY ${fy}</h4>
+      <p>${abbreviateCurrency(total)}</p>
+    `;
     yearContainer.appendChild(card);
 
-    const tableWrapper = document.createElement("div");
-    tableWrapper.className = "capital-fy-table";
-    tableWrapper.id = `fy-table-${fy}`;
-    tableWrapper.style.display = "none";
-    tableWrapper.innerHTML = `
-      <div class="overflow-x-auto border rounded-lg shadow-md mt-4">
-        <table class="min-w-full table-fixed text-sm text-gray-700">
-          <thead>
-            <tr class="bg-gray-100">
-              <th class="text-left p-3">Department</th>
-              <th class="text-left p-3">Purpose</th>
-              <th class="text-right p-3">Amount</th>
-              <th class="text-left p-3">Funding Source</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${items.map(r => `
-              <tr>
-                <td class="p-3">${titleCase(r["DEPARTMENT"])}</td>
-                <td class="p-3">${r["PURPOSE"]}</td>
-                <td class="p-3 text-right">${formatCurrency(r["AMOUNT"])}</td>
-                <td class="p-3">${titleCase(r["FUNDING SOURCE"])}</td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      </div>
+    // Table container
+    const container = document.createElement("div");
+    container.className = "capital-fy-table";
+    container.id = `table-${fy}`;
+    tableContainer.appendChild(container);
+
+    // Table content
+    const table = document.createElement("table");
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>Department</th>
+          <th>Purpose</th>
+          <th>Amount</th>
+          <th>Funding Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${items.map(r => `
+          <tr>
+            <td>${titleCase(r["DEPARTMENT"])}</td>
+            <td>${r["PURPOSE"]}</td>
+            <td class="text-right">${formatCurrency(r["AMOUNT"])}</td>
+            <td>${titleCase(r["FUNDING SOURCE"])}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="2" class="text-right">Total</td>
+          <td class="text-right">${formatCurrency(total)}</td>
+          <td></td>
+        </tr>
+      </tfoot>
     `;
-    tableContainer.appendChild(tableWrapper);
+    container.appendChild(table);
 
+    // Click to show only one table
     card.addEventListener("click", () => {
-      // Hide all others
-      document.querySelectorAll(".capital-fy-table").forEach(t => (t.style.display = "none"));
-      document.querySelectorAll(".fy-card").forEach(c => c.classList.remove("active"));
+      document.querySelectorAll(".capital-fy-table").forEach(el => {
+        if (el !== container) el.classList.remove("expanded");
+      });
+      document.querySelectorAll(".fy-card").forEach(el => {
+        if (el !== card) el.classList.remove("active");
+      });
 
-      const target = document.getElementById(`fy-table-${fy}`);
-      if (target.style.display === "none") {
-        target.style.display = "block";
-        card.classList.add("active");
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+      container.classList.toggle("expanded");
+      card.classList.toggle("active");
     });
   });
 }
