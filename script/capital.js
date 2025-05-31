@@ -124,15 +124,14 @@ function createYearTiles(data) {
 
     const card = document.createElement("div");
     card.className = "fy-card";
-    card.innerHTML = `
-      <h4>FY ${fy}</h4>
-      <p>${abbreviateCurrency(total)}</p>
-    `;
+    card.setAttribute("data-fy", fy);
+    card.innerHTML = `<h4>FY ${fy}</h4><p>${abbreviateCurrency(total)}</p>`;
     yearContainer.appendChild(card);
 
     const tableWrapper = document.createElement("div");
     tableWrapper.className = "capital-fy-table";
     tableWrapper.id = `fy-table-${fy}`;
+    tableWrapper.style.display = "none";
     tableWrapper.innerHTML = `
       <div class="overflow-x-auto border rounded-lg shadow-md mt-4">
         <table class="min-w-full table-fixed text-sm text-gray-700">
@@ -160,15 +159,21 @@ function createYearTiles(data) {
     tableContainer.appendChild(tableWrapper);
 
     card.addEventListener("click", () => {
-      tableWrapper.classList.toggle("active");
-      if (tableWrapper.classList.contains("active")) {
-        tableWrapper.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Hide all others
+      document.querySelectorAll(".capital-fy-table").forEach(t => (t.style.display = "none"));
+      document.querySelectorAll(".fy-card").forEach(c => c.classList.remove("active"));
+
+      const target = document.getElementById(`fy-table-${fy}`);
+      if (target.style.display === "none") {
+        target.style.display = "block";
+        card.classList.add("active");
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     });
   });
 }
 
-// Load the data
+// Load and initialize
 Papa.parse(capitalDataUrl, {
   header: true,
   download: true,
