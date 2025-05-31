@@ -167,6 +167,16 @@ function abbreviateCurrency(val) {
   return "$" + num.toFixed(0);
 }
 
+const capitalDataUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdidCA9TjVUF9UrGHvavut7QMw0hXaRBNgN9J1FnPhB26XtOnsJ4Mupmr7KLKrq1d5aJDPobCXKvZX/pub?gid=0&single=true&output=csv";
+
+function abbreviateCurrency(val) {
+  const num = parseFloat(val);
+  if (num >= 1e9) return "$" + (num / 1e9).toFixed(1) + "B";
+  if (num >= 1e6) return "$" + (num / 1e6).toFixed(1) + "M";
+  if (num >= 1e3) return "$" + (num / 1e3).toFixed(1) + "K";
+  return "$" + num.toFixed(0);
+}
+
 // Load Capital Data for Homepage Tile
 Papa.parse(capitalDataUrl, {
   header: true,
@@ -176,16 +186,20 @@ Papa.parse(capitalDataUrl, {
     const yearMap = {};
 
     rows.forEach(r => {
-      const year = r["FISCAL YEAR"];
+      const year = r["FISCAL YEAR"].trim();
       const amt = parseFloat(r["AMOUNT"]) || 0;
       yearMap[year] = (yearMap[year] || 0) + amt;
     });
 
-    const sortedYears = Object.keys(yearMap).sort();
+    const sortedYears = Object.keys(yearMap).sort((a, b) => parseInt(a) - parseInt(b));
     const latestFY = sortedYears[sortedYears.length - 1];
     const latestTotal = yearMap[latestFY];
 
-    document.getElementById("capitalFYLabel").textContent = latestFY;
-    document.getElementById("capitalTotal").textContent = abbreviateCurrency(latestTotal);
+    if (document.getElementById("capitalFYLabel")) {
+      document.getElementById("capitalFYLabel").textContent = latestFY;
+    }
+    if (document.getElementById("capitalTotal")) {
+      document.getElementById("capitalTotal").textContent = abbreviateCurrency(latestTotal);
+    }
   }
 });
