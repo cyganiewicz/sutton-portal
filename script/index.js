@@ -32,7 +32,7 @@ function drawPieChart(ctxId, dataMap) {
     options: {
       layout: {
   padding: {
-    top: 40, // or more if needed
+    top: 70, // or more if needed
     bottom: 20
   }
 }
