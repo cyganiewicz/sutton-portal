@@ -90,6 +90,7 @@ function createYearTiles(data) {
   const yearContainer = document.getElementById("capitalYearTiles");
   const tableContainer = document.getElementById("capitalYearTables");
   const grouped = {};
+
   data.forEach(row => {
     const fy = row["FISCAL YEAR"];
     if (!grouped[fy]) grouped[fy] = [];
@@ -100,10 +101,7 @@ function createYearTiles(data) {
     const total = items.reduce((sum, r) => sum + parseFloat(r["AMOUNT"] || 0), 0);
     const card = document.createElement("div");
     card.className = "fy-card";
-    card.innerHTML = `
-      <h4>FY ${fy}</h4>
-      <p>${abbreviateCurrency(total)}</p>
-    `;
+    card.innerHTML = `<h4>FY ${fy}</h4><p>${abbreviateCurrency(total)}</p>`;
     yearContainer.appendChild(card);
 
     const container = document.createElement("div");
@@ -144,18 +142,26 @@ function createYearTiles(data) {
     container.appendChild(table);
 
     card.addEventListener("click", () => {
-      document.querySelectorAll(".capital-fy-table").forEach(el => {
-        el.style.display = "none";
-        el.classList.remove("expanded");
+      // Close all other tables
+      document.querySelectorAll(".capital-fy-table").forEach(div => {
+        if (div !== container) {
+          div.style.display = "none";
+          div.classList.remove("expanded");
+        }
       });
-      document.querySelectorAll(".fy-card").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".fy-card").forEach(div => {
+        if (div !== card) div.classList.remove("active");
+      });
 
-      const target = document.getElementById(`table-${fy}`);
-      const isVisible = target.classList.contains("expanded");
+      const isVisible = container.style.display === "block";
       if (!isVisible) {
-        target.style.display = "block";
-        target.classList.add("expanded");
+        container.style.display = "block";
+        container.classList.add("expanded");
         card.classList.add("active");
+      } else {
+        container.style.display = "none";
+        container.classList.remove("expanded");
+        card.classList.remove("active");
       }
     });
   });
