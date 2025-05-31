@@ -167,16 +167,6 @@ function abbreviateCurrency(val) {
   return "$" + num.toFixed(0);
 }
 
-const capitalDataUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdidCA9TjVUF9UrGHvavut7QMw0hXaRBNgN9J1FnPhB26XtOnsJ4Mupmr7KLKrq1d5aJDPobCXKvZX/pub?gid=0&single=true&output=csv";
-
-function abbreviateCurrency(val) {
-  const num = parseFloat(val);
-  if (num >= 1e9) return "$" + (num / 1e9).toFixed(1) + "B";
-  if (num >= 1e6) return "$" + (num / 1e6).toFixed(1) + "M";
-  if (num >= 1e3) return "$" + (num / 1e3).toFixed(1) + "K";
-  return "$" + num.toFixed(0);
-}
-
 // Load Capital Data for Homepage Tile
 Papa.parse(capitalDataUrl, {
   header: true,
