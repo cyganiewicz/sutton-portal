@@ -84,8 +84,7 @@ function drawCapitalCharts(data, latestFY) {
     }
   });
 
-  document.querySelector("#capitalPieChart").closest(".chart-tile").querySelector("h3").textContent =
-    `Fiscal Year ${latestFY} Capital Plan by Department`;
+  document.querySelector(".chart-tile h3").textContent = `Fiscal Year ${latestFY} Capital Plan by Department`;
 
   const fiscalYears = [...new Set(data.map(r => r["FISCAL YEAR"]))].sort();
   const barDatasets = Object.entries(barMap).map(([dept, vals], i) => ({
@@ -122,7 +121,7 @@ function createYearTiles(data) {
   Object.entries(grouped).sort((a, b) => b[0] - a[0]).forEach(([fy, items]) => {
     const total = items.reduce((sum, r) => sum + parseFloat(r["AMOUNT"] || 0), 0);
 
-    // Tile
+    // Create the tile
     const card = document.createElement("div");
     card.className = "fy-card";
     card.innerHTML = `
@@ -131,14 +130,13 @@ function createYearTiles(data) {
     `;
     yearContainer.appendChild(card);
 
-    // Table container
-    const container = document.createElement("div");
-    container.className = "capital-fy-table";
-    container.id = `table-${fy}`;
-    tableContainer.appendChild(container);
+    // Create the table (initially hidden)
+    const wrapper = document.createElement("div");
+    wrapper.id = `wrapper-${fy}`;
+    wrapper.className = "capital-fy-table";
 
-    // Table content
     const table = document.createElement("table");
+    table.className = "capital-table";
     table.innerHTML = `
       <thead>
         <tr>
@@ -157,33 +155,43 @@ function createYearTiles(data) {
             <td>${titleCase(r["FUNDING SOURCE"])}</td>
           </tr>
         `).join("")}
-      </tbody>
-      <tfoot>
-        <tr>
+        <tr class="font-semibold bg-gray-100">
           <td colspan="2" class="text-right">Total</td>
           <td class="text-right">${formatCurrency(total)}</td>
           <td></td>
         </tr>
-      </tfoot>
+      </tbody>
     `;
-    container.appendChild(table);
+    wrapper.appendChild(table);
+    tableContainer.appendChild(wrapper);
 
-    // Click to show only one table
+    // Toggle logic
     card.addEventListener("click", () => {
-      document.querySelectorAll(".capital-fy-table").forEach(el => {
-        if (el !== container) el.classList.remove("expanded");
-      });
-      document.querySelectorAll(".fy-card").forEach(el => {
-        if (el !== card) el.classList.remove("active");
+      document.querySelectorAll(".fy-card").forEach(c => c.classList.remove("active"));
+      document.querySelectorAll(".capital-fy-table").forEach(t => {
+        t.style.height = "0px";
+        t.classList.remove("expanded");
       });
 
-      container.classList.toggle("expanded");
-      card.classList.toggle("active");
+      const section = document.getElementById(`wrapper-${fy}`);
+      const isOpen = section.classList.contains("expanded");
+
+      if (!isOpen) {
+        card.classList.add("active");
+        section.classList.add("expanded");
+        section.style.height = section.scrollHeight + "px";
+      }
+    });
+
+    wrapper.addEventListener("transitionend", () => {
+      if (wrapper.classList.contains("expanded")) {
+        wrapper.style.height = "auto";
+      }
     });
   });
 }
 
-// Load and initialize
+// Load the data
 Papa.parse(capitalDataUrl, {
   header: true,
   download: true,
