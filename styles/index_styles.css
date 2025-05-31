@@ -77,14 +77,14 @@ tbody tr:hover {
 }
 
 .material-icons {
-  font-size: 36px;
+  font-size: 50px;
   color: gray;
   transition: color 0.3s ease;
   cursor: pointer;
 }
 
 .material-icons:hover {
-  color: #4CAF50; /* Replace with your navbar green */
+  color: #3f6522; /* Replace with your navbar green */
 }
 
 /* Responsive grid/tile adjustments */
