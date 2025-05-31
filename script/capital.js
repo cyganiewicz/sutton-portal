@@ -1,7 +1,6 @@
 const capitalDataUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdidCA9TjVUF9UrGHvavut7QMw0hXaRBNgN9J1FnPhB26XtOnsJ4Mupmr7KLKrq1d5aJDPobCXKvZX/pub?gid=0&single=true&output=csv";
 
 const formatCurrency = val => "$" + parseFloat(val).toLocaleString(undefined, { maximumFractionDigits: 0 });
-
 const abbreviateCurrency = val => {
   const num = parseFloat(val);
   if (num >= 1e9) return "$" + (num / 1e9).toFixed(1) + "B";
@@ -9,19 +8,13 @@ const abbreviateCurrency = val => {
   if (num >= 1e3) return "$" + (num / 1e3).toFixed(1) + "K";
   return "$" + num.toFixed(0);
 };
-
 const titleCase = str => str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
 
 function updateSummaryTiles(data, latestFY) {
-  let total = 0;
-  let fyTotals = {}, deptTotals = {}, fundingCounts = {};
-
+  let total = 0, fyTotals = {}, deptTotals = {}, fundingCounts = {};
   data.forEach(r => {
     const amt = parseFloat(r["AMOUNT"]) || 0;
-    const fy = r["FISCAL YEAR"];
-    const dept = r["DEPARTMENT"];
-    const fund = r["FUNDING SOURCE"];
-
+    const fy = r["FISCAL YEAR"], dept = r["DEPARTMENT"], fund = r["FUNDING SOURCE"];
     total += amt;
     fyTotals[fy] = (fyTotals[fy] || 0) + amt;
     deptTotals[dept] = (deptTotals[dept] || 0) + amt;
@@ -51,7 +44,6 @@ function drawCapitalCharts(data, latestFY) {
     const amt = parseFloat(row["AMOUNT"]) || 0;
     const fy = row["FISCAL YEAR"];
     const dept = titleCase(row["DEPARTMENT"]);
-
     if (fy === latestFY) pieMap[dept] = (pieMap[dept] || 0) + amt;
     if (!barMap[dept]) barMap[dept] = {};
     barMap[dept][fy] = (barMap[dept][fy] || 0) + amt;
@@ -63,17 +55,12 @@ function drawCapitalCharts(data, latestFY) {
 
   new Chart(pieCtx, {
     type: "pie",
-    data: {
-      labels: pieLabels,
-      datasets: [{ data: pieValues, backgroundColor: pieColors }]
-    },
+    data: { labels: pieLabels, datasets: [{ data: pieValues, backgroundColor: pieColors }] },
     options: {
       plugins: {
         legend: { position: "bottom" },
         tooltip: {
-          callbacks: {
-            label: ctx => `${ctx.label}: ${formatCurrency(ctx.raw)}`
-          }
+          callbacks: { label: ctx => `${ctx.label}: ${formatCurrency(ctx.raw)}` }
         }
       }
     }
@@ -90,10 +77,7 @@ function drawCapitalCharts(data, latestFY) {
 
   new Chart(barCtx, {
     type: "bar",
-    data: {
-      labels: fiscalYears,
-      datasets: barDatasets
-    },
+    data: { labels: fiscalYears, datasets: barDatasets },
     options: {
       responsive: true,
       plugins: { legend: { position: "bottom" } },
@@ -105,8 +89,6 @@ function drawCapitalCharts(data, latestFY) {
 function createYearTiles(data) {
   const yearContainer = document.getElementById("capitalYearTiles");
   const tableContainer = document.getElementById("capitalYearTables");
-  let currentlyOpen = null;
-
   const grouped = {};
   data.forEach(row => {
     const fy = row["FISCAL YEAR"];
@@ -114,82 +96,78 @@ function createYearTiles(data) {
     grouped[fy].push(row);
   });
 
-  Object.entries(grouped)
-    .sort((a, b) => b[0] < a[0] ? 1 : -1)
-    .forEach(([fy, items]) => {
-      const total = items.reduce((sum, r) => sum + parseFloat(r["AMOUNT"] || 0), 0);
+  Object.entries(grouped).sort((a, b) => b[0] - a[0]).forEach(([fy, items]) => {
+    const total = items.reduce((sum, r) => sum + parseFloat(r["AMOUNT"] || 0), 0);
+    const card = document.createElement("div");
+    card.className = "fy-card";
+    card.innerHTML = `
+      <h4>FY ${fy}</h4>
+      <p>${abbreviateCurrency(total)}</p>
+    `;
+    yearContainer.appendChild(card);
 
-      // Tile
-      const card = document.createElement("button");
-      card.className = "fy-card";
-      card.textContent = `FY ${fy} – ${abbreviateCurrency(total)}`;
-      card.setAttribute("data-fy", fy);
-      yearContainer.appendChild(card);
+    const container = document.createElement("div");
+    container.className = "capital-fy-table";
+    container.id = `table-${fy}`;
+    container.style.display = "none";
+    tableContainer.appendChild(container);
 
-      // Table
-      const wrapper = document.createElement("div");
-      wrapper.className = "capital-fy-table";
-      wrapper.id = `table-${fy}`;
-      wrapper.style.display = "none";
-
-      const table = document.createElement("table");
-      table.className = "capital-table";
-      const rows = items.map(r => `
+    const table = document.createElement("table");
+    table.className = "capital-table";
+    table.innerHTML = `
+      <thead>
         <tr>
-          <td>${titleCase(r["DEPARTMENT"])}</td>
-          <td>${r["PURPOSE"]}</td>
-          <td class="text-right">${formatCurrency(r["AMOUNT"])}</td>
-          <td>${titleCase(r["FUNDING SOURCE"])}</td>
+          <th>Department</th>
+          <th>Purpose</th>
+          <th>Amount</th>
+          <th>Funding Source</th>
         </tr>
-      `).join("");
-
-      const totalRow = `
-        <tr class="font-semibold bg-gray-100">
-          <td class="text-right" colspan="2">Total</td>
-          <td class="text-right">${formatCurrency(total)}</td>
+      </thead>
+      <tbody>
+        ${items.map(r => `
+          <tr>
+            <td>${titleCase(r["DEPARTMENT"])}</td>
+            <td>${r["PURPOSE"]}</td>
+            <td class="text-right">${formatCurrency(r["AMOUNT"])}</td>
+            <td>${titleCase(r["FUNDING SOURCE"])}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="2"><strong>Total</strong></td>
+          <td class="text-right"><strong>${formatCurrency(total)}</strong></td>
           <td></td>
         </tr>
-      `;
+      </tfoot>
+    `;
+    container.appendChild(table);
 
-      table.innerHTML = `
-        <thead>
-          <tr>
-            <th>Department</th>
-            <th>Purpose</th>
-            <th>Amount</th>
-            <th>Funding Source</th>
-          </tr>
-        </thead>
-        <tbody>${rows + totalRow}</tbody>
-      `;
-      wrapper.appendChild(table);
-      tableContainer.appendChild(wrapper);
-
-      // Toggle logic
-      card.addEventListener("click", () => {
-        document.querySelectorAll(".fy-card").forEach(btn => btn.classList.remove("active"));
-        document.querySelectorAll(".capital-fy-table").forEach(div => div.style.display = "none");
-
-        if (currentlyOpen !== fy) {
-          card.classList.add("active");
-          wrapper.style.display = "block";
-          currentlyOpen = fy;
-        } else {
-          currentlyOpen = null;
-        }
+    card.addEventListener("click", () => {
+      document.querySelectorAll(".capital-fy-table").forEach(el => {
+        el.style.display = "none";
+        el.classList.remove("expanded");
       });
+      document.querySelectorAll(".fy-card").forEach(el => el.classList.remove("active"));
+
+      const target = document.getElementById(`table-${fy}`);
+      const isVisible = target.classList.contains("expanded");
+      if (!isVisible) {
+        target.style.display = "block";
+        target.classList.add("expanded");
+        card.classList.add("active");
+      }
     });
+  });
 }
 
-// Load and render
 Papa.parse(capitalDataUrl, {
   header: true,
   download: true,
-  complete: results => {
+  complete: (results) => {
     const data = results.data.filter(r => r["FISCAL YEAR"] && r["AMOUNT"]);
     const fiscalYears = [...new Set(data.map(r => r["FISCAL YEAR"]))].sort();
     const latestFY = fiscalYears[fiscalYears.length - 1];
-
     updateSummaryTiles(data, latestFY);
     drawCapitalCharts(data, latestFY);
     createYearTiles(data);
