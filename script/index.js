@@ -41,9 +41,21 @@ function drawPieChart(ctxId, dataMap) {
               return `${ctx.label}: ${formatCurrency(val)} (${pct}%)`;
             }
           }
+        },
+        datalabels: {
+          color: "#fff",
+          font: {
+            weight: "bold",
+            size: 14
+          },
+          formatter: (value) => {
+            const pct = ((value / total) * 100).toFixed(1);
+            return `${pct}%`;
+          }
         }
       }
-    }
+    },
+    plugins: [ChartDataLabels]
   });
 }
 
