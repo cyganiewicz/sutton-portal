@@ -80,6 +80,8 @@ tbody tr:hover {
 .info-tile .material-icons {
   font-size: 48px;
   color: gray;
+  display: block;
+  line-height: 1;
   transition: color 0.3s ease;
 }
 
