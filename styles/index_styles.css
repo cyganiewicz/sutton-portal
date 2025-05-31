@@ -76,15 +76,16 @@ tbody tr:hover {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
-.material-icons {
-  font-size: 50px;
+/* Default icon styling */
+.info-tile .material-icons {
+  font-size: 48px;
   color: gray;
   transition: color 0.3s ease;
-  cursor: pointer;
 }
 
-.material-icons:hover {
-  color: #3f6522; /* Replace with your navbar green */
+/* On hover, change color */
+.info-tile:hover .material-icons {
+  color: #3f6522; /* Sutton navbar green */
 }
 
 /* Responsive grid/tile adjustments */
