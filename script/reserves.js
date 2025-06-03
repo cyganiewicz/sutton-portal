@@ -23,7 +23,7 @@ function drawComboChart(canvasId, labels, amounts, percents, labelName) {
   new Chart(ctx, {
     type: "bar",
     data: {
-      labels: labels,
+      labels,
       datasets: [
         {
           type: "bar",
@@ -112,7 +112,7 @@ function createReserveSection(label, canvasId, tableId) {
   `;
   const toggleBtn = document.createElement("button");
   toggleBtn.id = `${tableId}-toggle`;
-  toggleBtn.className = "show-toggle";
+  toggleBtn.className = "mt-4 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm transition duration-200";
   toggleBtn.textContent = "Show More";
 
   tableWrap.appendChild(table);
@@ -128,9 +128,11 @@ function createReserveSection(label, canvasId, tableId) {
 function populateTable(tableId, rows, maxRows = 10) {
   const tbody = document.getElementById(tableId);
   const toggleBtn = document.getElementById(`${tableId}-toggle`);
+  if (!tbody || !toggleBtn) return;
+
   let expanded = false;
 
-  const sorted = [...rows].sort((a, b) => b.fy - a.fy).reverse();
+  const sorted = [...rows].sort((a, b) => b.fy - a.fy); // descending
   const htmlRows = sorted.map(r => `
     <tr>
       <td class="text-center">${r.fy}</td>
@@ -187,11 +189,11 @@ Papa.parse(reservesDataUrl, {
 
         createReserveSection(label, canvasId, tableId);
 
-        // Delay rendering of chart until canvas is in DOM
-        setTimeout(() => {
+        // Wait until canvas is rendered in DOM before drawing
+        requestAnimationFrame(() => {
           const last10 = rows.sort((a, b) => a.fy - b.fy).slice(-10);
           drawComboChart(canvasId, last10.map(r => r.fy), last10.map(r => r.amount), last10.map(r => r.percent * 100), toTitleCase(label));
-        }, 100);
+        });
 
         populateTable(tableId, rows);
       }
