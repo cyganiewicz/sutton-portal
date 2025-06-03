@@ -1,88 +1,103 @@
 /* reserves_styles.css */
 
-/* Base and Layout */
+:root {
+  --green-main: #3f6522;
+  --gray-bg: #f9fafb;
+  --gray-line: #e5e7eb;
+  --text-muted: #6b7280;
+}
+
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: #f3f4f6;
+  font-family: system-ui, sans-serif;
+  background-color: var(--gray-bg);
   color: #1f2937;
 }
 
-/* Chart Containers */
-.chart-tile {
-  background-color: white;
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+/* Chart and Table Layout */
+.chart-table-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
 }
 
-/* Table Styling */
+.chart-tile {
+  flex: 1;
+  min-width: 300px;
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.chart-tile.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Table Styles */
 .reserves-table {
   width: 100%;
   border-collapse: collapse;
   background-color: white;
   border-radius: 0.5rem;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  margin-bottom: 1rem;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
 }
 
 .reserves-table th,
 .reserves-table td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid #e5e7eb;
-  font-size: 0.875rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--gray-line);
+  text-align: right;
 }
 
-.reserves-table th {
+.reserves-table th:first-child,
+.reserves-table td:first-child {
+  text-align: center;
+}
+
+.reserves-table thead {
   background-color: #f3f4f6;
   font-weight: 600;
   color: #374151;
 }
 
-.reserves-table td {
-  color: #374151;
-}
-
-.reserves-table tr:hover td {
+.reserves-table tbody tr:hover {
   background-color: #f9fafb;
 }
 
-.reserves-table tfoot td {
-  font-weight: 700;
-  background-color: #e5e7eb;
-  border-top: 2px solid #d1d5db;
-}
-
-/* Toggle Button Styling */
-button#toggleFreeCashTable,
-button#toggleStabilizationTable {
-  background: none;
-  border: none;
-  color: #2563eb;
-  cursor: pointer;
+/* Show More / Fewer Button */
+.toggle-btn {
+  display: inline-block;
+  background-color: white;
+  color: var(--green-main);
+  border: 1px solid var(--green-main);
+  padding: 0.4rem 0.75rem;
+  margin-top: 0.5rem;
+  border-radius: 9999px;
   font-size: 0.875rem;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease-in-out;
 }
 
-button#toggleFreeCashTable:hover,
-button#toggleStabilizationTable:hover {
-  color: #1d4ed8;
-  text-decoration: underline;
+.toggle-btn:hover {
+  background-color: var(--green-main);
+  color: white;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .chart-tile {
-    padding: 1rem;
-  }
-
-  .reserves-table th,
-  .reserves-table td {
-    font-size: 0.8rem;
-  }
-
-  button {
-    font-size: 0.8rem;
+  .chart-table-wrapper {
+    flex-direction: column;
   }
 }
