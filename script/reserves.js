@@ -1,3 +1,4 @@
+// reserves.js
 const reservesDataUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTJcnqu3eiVpo6TWbbCtptfBwAgM5XXM1hP4t94MuhxvDW2Hb2tOhG-Cxei4WGDJ9G66DgfnLttzlwO/pub?gid=0&single=true&output=csv";
 
 function formatCurrency(val) {
@@ -17,14 +18,14 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
       datasets: [
         {
           type: "bar",
-          label: `${labelName} ($)`,
+          label: `${labelName} ($)` ,
           data: amounts,
           backgroundColor: "#3f6522",
           yAxisID: "y",
         },
         {
           type: "line",
-          label: `${labelName} (% of Prior Budget)`,
+          label: `${labelName} (% of Prior Budget)` ,
           data: percents,
           borderColor: "#9ca3af",
           backgroundColor: "#9ca3af",
@@ -41,9 +42,7 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
       },
       stacked: false,
       plugins: {
-        legend: {
-          position: "bottom",
-        },
+        legend: { position: "bottom" },
         tooltip: {
           callbacks: {
             label: function(ctx) {
@@ -71,31 +70,29 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
   });
 }
 
-function populateTable(tableId, data, labelName) {
-  const tbody = document.getElementById(tableId);
-  const toggleBtn = document.getElementById(`${tableId}-toggle`);
+function populateTable(tableId, buttonId, data, maxRows = 10) {
+  const tableBody = document.getElementById(tableId);
+  const toggleBtn = document.getElementById(buttonId);
   let expanded = false;
 
-  const rows = data.map(row => `
+  const rows = data.map(r => `
     <tr>
-      <td class="text-center">${row.fy}</td>
-      <td class="text-right">${formatCurrency(row.priorBudget)}</td>
-      <td class="text-right">${formatCurrency(row.amount)}</td>
-      <td class="text-right">${formatPercent(row.percent)}</td>
-    </tr>
-  `);
+      <td class="p-2">${r.fy}</td>
+      <td class="p-2 text-right">${formatCurrency(r.amount)}</td>
+      <td class="p-2 text-right">${formatPercent(r.percent)}</td>
+    </tr>`);
 
-  const renderRows = () => {
-    tbody.innerHTML = expanded ? rows.join("") : rows.slice(-10).join("");
+  const render = () => {
+    tableBody.innerHTML = expanded ? rows.join("") : rows.slice(-maxRows).join("");
     toggleBtn.textContent = expanded ? "Show Fewer" : "Show More";
   };
 
   toggleBtn.onclick = () => {
     expanded = !expanded;
-    renderRows();
+    render();
   };
 
-  renderRows();
+  render();
 }
 
 Papa.parse(reservesDataUrl, {
@@ -104,7 +101,7 @@ Papa.parse(reservesDataUrl, {
   complete: function(results) {
     const raw = results.data.filter(r => r["FISCAL YEAR"]);
 
-    const processSection = (field, chartId, tableId, label) => {
+    const processSection = (field, chartId, tableBodyId, toggleBtnId, label) => {
       const rows = raw
         .map(r => ({
           fy: r["FISCAL YEAR"],
@@ -119,10 +116,10 @@ Papa.parse(reservesDataUrl, {
 
       const last10 = rows.slice(-10);
       drawComboChart(chartId, last10.map(r => r.fy), last10.map(r => r.amount), last10.map(r => r.percent * 100), label);
-      populateTable(tableId, rows, label);
+      populateTable(tableBodyId, toggleBtnId, rows);
     };
 
-    processSection("CERTIFIED FREE CASH", "freeCashChart", "freeCashTableBody", "Free Cash");
-    processSection("GENERAL STABILIZATION", "stabilizationChart", "stabilizationTableBody", "General Stabilization");
+    processSection("CERTIFIED FREE CASH", "freeCashChart", "freeCashTableBody", "toggleFreeCashTable", "Free Cash");
+    processSection("GENERAL STABILIZATION", "stabilizationChart", "stabilizationTableBody", "toggleStabilizationTable", "General Stabilization");
   }
 });
