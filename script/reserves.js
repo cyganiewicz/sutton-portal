@@ -8,6 +8,13 @@ function formatPercent(val) {
   return (val * 100).toFixed(1) + "%";
 }
 
+function toTitleCase(str) {
+  return str
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
 function drawComboChart(ctx, labels, amounts, percents, labelName) {
   return new Chart(ctx, {
     type: "bar",
@@ -34,19 +41,16 @@ function drawComboChart(ctx, labels, amounts, percents, labelName) {
     },
     options: {
       responsive: true,
-      interaction: {
-        mode: "index",
-        intersect: false
-      },
+      interaction: { mode: "index", intersect: false },
       stacked: false,
       plugins: {
-        legend: {
-          position: "bottom",
-        },
+        legend: { position: "bottom" },
         tooltip: {
           callbacks: {
             label: function(ctx) {
-              return ctx.dataset.label.includes('%') ? formatPercent(ctx.raw / 100) : formatCurrency(ctx.raw);
+              return ctx.dataset.label.includes('%')
+                ? formatPercent(ctx.raw / 100)
+                : formatCurrency(ctx.raw);
             }
           }
         }
@@ -76,7 +80,7 @@ function createReserveSection(label, chartId, tableId) {
 
   const header = document.createElement("h3");
   header.className = "text-2xl font-semibold mb-4";
-  header.textContent = label;
+  header.textContent = toTitleCase(label);
   section.appendChild(header);
 
   const container = document.createElement("div");
@@ -98,12 +102,13 @@ function createReserveSection(label, chartId, tableId) {
     <thead>
       <tr>
         <th>Fiscal Year</th>
-        <th>${label}</th>
+        <th>Amount</th>
         <th>% of Prior Budget</th>
       </tr>
     </thead>
     <tbody id="${tableId}"></tbody>
   `;
+
   const toggleBtn = document.createElement("button");
   toggleBtn.className = "show-toggle";
   toggleBtn.id = `${tableId}-toggle`;
@@ -159,7 +164,7 @@ Papa.parse(reservesDataUrl, {
 
     Object.keys(raw[0])
       .filter(col => col !== "FISCAL YEAR" && col !== "PRIOR YEAR OPERATING BUDGET")
-      .forEach((col, i) => {
+      .forEach(col => {
         const rows = raw.map(r => {
           const fy = r["FISCAL YEAR"];
           const amount = parseFloat(r[col]) || 0;
@@ -171,10 +176,16 @@ Papa.parse(reservesDataUrl, {
           const slug = col.toLowerCase().replace(/[^a-z0-9]+/g, "-");
           const chartId = `${slug}-chart`;
           const tableId = `${slug}-table`;
+
           createReserveSection(col, chartId, tableId);
-          const last10 = rows.slice(-10);
-          const ctx = document.getElementById(chartId).getContext("2d");
-          drawComboChart(ctx, last10.map(r => r.fy), last10.map(r => r.amount), last10.map(r => r.percent * 100), col);
+
+          // Wait until DOM has rendered the canvas
+          setTimeout(() => {
+            const ctx = document.getElementById(chartId).getContext("2d");
+            const last10 = rows.slice(-10);
+            drawComboChart(ctx, last10.map(r => r.fy), last10.map(r => r.amount), last10.map(r => r.percent * 100), toTitleCase(col));
+          }, 50);
+
           populateTable(tableId, rows);
         }
       });
