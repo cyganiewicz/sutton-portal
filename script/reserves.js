@@ -47,7 +47,7 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
         tooltip: {
           callbacks: {
             label: function(ctx) {
-              return ctx.dataset.label.includes('%') ? formatPercent(ctx.raw) : formatCurrency(ctx.raw);
+              return ctx.dataset.label.includes('%') ? formatPercent(ctx.raw / 100) : formatCurrency(ctx.raw);
             }
           }
         }
@@ -74,12 +74,13 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
 function populateTable(tableId, data, labelName, maxRows = 10) {
   const table = document.getElementById(tableId);
   const tbody = table.querySelector("tbody");
-  const toggleBtn = document.getElementById(`${tableId}-toggle`);
+  const toggleBtn = document.getElementById(`toggle${tableId.charAt(0).toUpperCase() + tableId.slice(1)}`);
 
   let expanded = false;
   const rows = data.map(row => `
     <tr>
       <td class="text-center">${row.fy}</td>
+      <td class="text-right">${formatCurrency(row.priorBudget)}</td>
       <td class="text-right">${formatCurrency(row.amount)}</td>
       <td class="text-right">${formatPercent(row.percent)}</td>
     </tr>
@@ -122,7 +123,7 @@ Papa.parse(reservesDataUrl, {
       populateTable(tableId, rows, label);
     };
 
-    processSection("CERTIFIED FREE CASH", "freeCashChart", "freeCashTable", "Free Cash");
-    processSection("GENERAL STABILIZATION", "genStabChart", "genStabTable", "General Stabilization");
+    processSection("CERTIFIED FREE CASH", "freeCashChart", "freeCashTableBody", "Free Cash");
+    processSection("GENERAL STABILIZATION", "stabilizationChart", "stabilizationTableBody", "General Stabilization");
   }
 });
