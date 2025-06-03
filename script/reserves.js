@@ -71,12 +71,11 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
   });
 }
 
-function populateTable(tableId, data, labelName, maxRows = 10) {
-  const table = document.getElementById(tableId);
-  const tbody = table.querySelector("tbody");
-  const toggleBtn = document.getElementById(`toggle${tableId.charAt(0).toUpperCase() + tableId.slice(1)}`);
-
+function populateTable(tableId, data, labelName) {
+  const tbody = document.getElementById(tableId);
+  const toggleBtn = document.getElementById(`${tableId}-toggle`);
   let expanded = false;
+
   const rows = data.map(row => `
     <tr>
       <td class="text-center">${row.fy}</td>
@@ -87,7 +86,7 @@ function populateTable(tableId, data, labelName, maxRows = 10) {
   `);
 
   const renderRows = () => {
-    tbody.innerHTML = expanded ? rows.join("") : rows.slice(-maxRows).join("");
+    tbody.innerHTML = expanded ? rows.join("") : rows.slice(-10).join("");
     toggleBtn.textContent = expanded ? "Show Fewer" : "Show More";
   };
 
