@@ -39,51 +39,48 @@
     <!-- Free Cash Section -->
     <section class="mb-12">
       <h3 class="text-2xl font-semibold mb-4">Certified Free Cash</h3>
-      <div class="chart-tile mb-6">
-        <canvas id="freeCashChart" height="400"></canvas>
-      </div>
-      <div class="overflow-x-auto">
-        <table id="freeCashTable" class="reserves-table w-full">
-          <thead>
-            <tr>
-              <th>Fiscal Year</th>
-              <th>Amount</th>
-              <th>% of Prior Budget</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-        <div class="text-center mt-2">
-          <button id="freeCashTable-toggle" class="text-green-700 font-medium hover:underline">Show More</button>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="chart-tile"><canvas id="freeCashChart" height="300"></canvas></div>
+        <div>
+          <table class="reserves-table w-full">
+            <thead>
+              <tr>
+                <th>Fiscal Year</th>
+                <th>Certified Free Cash</th>
+                <th>% of Prior Budget</th>
+              </tr>
+            </thead>
+            <tbody id="freeCashTableBody"></tbody>
+          </table>
+          <div class="text-center mt-2">
+            <button id="toggleFreeCashTable" class="text-sm text-blue-600 hover:underline">Show More</button>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- General Stabilization Section -->
-<section class="mb-12">
-  <h3 class="text-2xl font-semibold mb-4">General Stabilization Fund</h3>
-  <div class="lg:flex lg:space-x-6">
-    <div class="chart-tile mb-6 lg:w-1/2">
-      <canvas id="genStabChart" height="300"></canvas>
-    </div>
-    <div id="genStabTableContainer" class="overflow-x-auto lg:w-1/2">
-      <table class="reserves-table">
-        <thead>
-          <tr>
-            <th>Fiscal Year</th>
-            <th>Prior Year Operating Budget</th>
-            <th>General Stabilization</th>
-            <th>% of Operating Budget</th>
-          </tr>
-        </thead>
-        <tbody id="genStabTable"></tbody>
-      </table>
-      <div class="text-center mt-4">
-        <button id="genStabTable-toggle" class="text-sm text-blue-600 hover:underline">Show More</button>
+    <section class="mb-12">
+      <h3 class="text-2xl font-semibold mb-4">General Stabilization Fund</h3>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="chart-tile"><canvas id="stabilizationChart" height="300"></canvas></div>
+        <div>
+          <table class="reserves-table w-full">
+            <thead>
+              <tr>
+                <th>Fiscal Year</th>
+                <th>General Stabilization</th>
+                <th>% of Prior Budget</th>
+              </tr>
+            </thead>
+            <tbody id="stabilizationTableBody"></tbody>
+          </table>
+          <div class="text-center mt-2">
+            <button id="toggleStabilizationTable" class="text-sm text-blue-600 hover:underline">Show More</button>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
 
     <!-- Placeholder for Additional Reserves -->
     <section class="mb-12">
@@ -94,7 +91,6 @@
     </section>
   </main>
 
-  <!-- JS Script -->
   <script src="script/reserves.js"></script>
 </body>
 </html>
