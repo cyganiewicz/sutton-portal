@@ -5,37 +5,39 @@ function formatCurrency(val) {
 }
 
 function formatPercent(val) {
-  return (val * 100).toFixed(1) + "%";
+  return val.toFixed(1) + "%";
 }
 
-function toTitleCase(str) {
-  return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+function titleCase(str) {
+  return str.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 }
 
-function drawComboChart(ctxId, labels, amounts, percents, labelName) {
-  const ctx = document.getElementById(ctxId).getContext("2d");
+function drawComboChart(canvasId, labels, amounts, percents, reserveLabel) {
+  const ctx = document.getElementById(canvasId)?.getContext("2d");
+  if (!ctx) return;
+
   new Chart(ctx, {
     type: "bar",
     data: {
-      labels: labels,
+      labels,
       datasets: [
         {
           type: "bar",
-          label: `${labelName} ($)`,
+          label: `${reserveLabel} ($)`,
           data: amounts,
           backgroundColor: "#3f6522",
           yAxisID: "y",
         },
         {
           type: "line",
-          label: `${labelName} (% of Prior Budget)`,
+          label: `${reserveLabel} (% of Prior Budget)`,
           data: percents,
           borderColor: "#9ca3af",
           backgroundColor: "#9ca3af",
           yAxisID: "y1",
-          tension: 0.3,
-        },
-      ],
+          tension: 0.4,
+        }
+      ]
     },
     options: {
       responsive: true,
@@ -47,7 +49,7 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
           callbacks: {
             label: function(ctx) {
               return ctx.dataset.label.includes('%')
-                ? formatPercent(ctx.raw / 100)
+                ? formatPercent(ctx.raw)
                 : formatCurrency(ctx.raw);
             }
           }
@@ -55,33 +57,34 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
       },
       scales: {
         y: {
-          title: { display: true, text: "$ Amount" },
-          ticks: { callback: value => "$" + value.toLocaleString() }
+          title: { display: true, text: "Amount ($)" },
+          ticks: { callback: v => "$" + v.toLocaleString() }
         },
         y1: {
           position: "right",
-          title: { display: true, text: "% of Prior Budget" },
           grid: { drawOnChartArea: false },
-          ticks: { callback: value => value + "%" }
+          title: { display: true, text: "% of Prior Budget" },
+          ticks: { callback: v => v + "%" }
         }
       }
     }
   });
 }
 
-function renderReserveSection(container, label, rows) {
+function renderReserveSection(key, entries) {
+  const container = document.querySelector("main");
+  const canvasId = `chart-${key}`;
+  const tableId = `table-${key}`;
+  const toggleId = `toggle-${key}`;
+
+  // Create Section
   const section = document.createElement("section");
-  section.className = "reserves-section";
-
-  const sectionId = label.toLowerCase().replace(/\s+/g, "-");
-
+  section.className = "mb-16 animate-fade-in";
   section.innerHTML = `
-    <h3 class="reserves-title">${toTitleCase(label)}</h3>
-    <div class="chart-table-grid">
-      <div class="chart-container">
-        <canvas id="${sectionId}-chart" height="300"></canvas>
-      </div>
-      <div>
+    <h3 class="text-2xl font-semibold mb-4">${titleCase(key)}</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+      <div class="chart-tile"><canvas id="${canvasId}" height="300"></canvas></div>
+      <div class="overflow-x-auto shadow bg-white rounded-lg">
         <table class="reserves-table">
           <thead>
             <tr>
@@ -90,76 +93,80 @@ function renderReserveSection(container, label, rows) {
               <th>% of Prior Budget</th>
             </tr>
           </thead>
-          <tbody id="${sectionId}-table-body"></tbody>
+          <tbody id="${tableId}"></tbody>
         </table>
-        <div class="text-center">
-          <button class="toggle-button" id="${sectionId}-toggle">Show More</button>
+        <div class="text-center p-4">
+          <button id="${toggleId}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded text-sm transition">Show More</button>
         </div>
       </div>
     </div>
   `;
   container.appendChild(section);
 
-  const sorted = rows.sort((a, b) => b.fy - a.fy);
-  const last10 = sorted.slice(0, 10);
-  const labels = last10.map(r => r.fy).reverse();
-  const amounts = last10.map(r => r.amount).reverse();
-  const percents = last10.map(r => r.percent * 100).reverse();
+  const sorted = entries.sort((a, b) => b.fy - a.fy);
+  const latest10 = sorted.slice(0, 10);
 
-  drawComboChart(`${sectionId}-chart`, labels, amounts, percents, toTitleCase(label));
-  setupTableToggle(`${sectionId}-table-body`, `${sectionId}-toggle`, sorted);
-}
+  // Chart
+  drawComboChart(
+    canvasId,
+    latest10.map(r => r.fy),
+    latest10.map(r => r.amount),
+    latest10.map(r => r.percent * 100),
+    titleCase(key)
+  );
 
-function setupTableToggle(tbodyId, toggleBtnId, dataRows) {
-  const tbody = document.getElementById(tbodyId);
-  const toggleBtn = document.getElementById(toggleBtnId);
+  // Table
+  const tbody = section.querySelector(`#${tableId}`);
   let expanded = false;
 
-  const render = () => {
-    const rows = (expanded ? dataRows : dataRows.slice(0, 10)).map(row => `
+  const renderTable = () => {
+    const display = expanded ? sorted : latest10;
+    tbody.innerHTML = display.map(r => `
       <tr>
-        <td>${row.fy}</td>
-        <td class="text-right">${formatCurrency(row.amount)}</td>
-        <td class="text-right">${formatPercent(row.percent)}</td>
+        <td class="text-center">${r.fy}</td>
+        <td class="text-right">${formatCurrency(r.amount)}</td>
+        <td class="text-right">${formatPercent(r.percent * 100)}</td>
       </tr>
     `).join("");
-    tbody.innerHTML = rows;
-    toggleBtn.textContent = expanded ? "Show Fewer" : "Show More";
+    section.querySelector(`#${toggleId}`).textContent = expanded ? "Show Fewer" : "Show More";
   };
 
-  toggleBtn.onclick = () => {
+  renderTable();
+  section.querySelector(`#${toggleId}`).onclick = () => {
     expanded = !expanded;
-    render();
+    renderTable();
   };
-
-  render();
 }
 
+// Load and process data
 Papa.parse(reservesDataUrl, {
   header: true,
   download: true,
-  complete: (results) => {
-    const data = results.data.filter(r => r["FISCAL YEAR"] && r["PRIOR YEAR OPERATING BUDGET"]);
-    const container = document.querySelector("main");
+  complete: function(results) {
+    const rows = results.data.filter(r => r["FISCAL YEAR"] && r["PRIOR YEAR OPERATING BUDGET"]);
+    const reserves = {};
 
-    const fields = Object.keys(data[0]).filter(key =>
-      !["FISCAL YEAR", "PRIOR YEAR OPERATING BUDGET"].includes(key)
-    );
+    rows.forEach(r => {
+      const fy = r["FISCAL YEAR"];
+      const prior = parseFloat(r["PRIOR YEAR OPERATING BUDGET"].replace(/,/g, "")) || 0;
 
-    fields.forEach(field => {
-      const rows = data.map(r => {
-        const amount = parseFloat(r[field]) || 0;
-        const prior = parseFloat(r["PRIOR YEAR OPERATING BUDGET"]) || 1;
-        return {
-          fy: r["FISCAL YEAR"],
-          amount,
-          percent: amount / prior
-        };
-      }).filter(r => r.amount > 0 && r.percent > 0);
+      Object.keys(r).forEach(key => {
+        if (["FISCAL YEAR", "PRIOR YEAR OPERATING BUDGET"].includes(key)) return;
+        const val = parseFloat(r[key].replace(/,/g, "")) || 0;
+        if (val && prior) {
+          if (!reserves[key]) reserves[key] = [];
+          reserves[key].push({
+            fy,
+            amount: val,
+            percent: val / prior
+          });
+        }
+      });
+    });
 
-      if (rows.length > 0) {
-        renderReserveSection(container, field, rows);
-      }
+    // Render each reserve section
+    Object.entries(reserves).forEach(([key, values]) => {
+      if (values.length) renderReserveSection(key, values);
     });
   }
 });
