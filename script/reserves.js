@@ -1,4 +1,3 @@
-<script>
 const reservesDataUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTJcnqu3eiVpo6TWbbCtptfBwAgM5XXM1hP4t94MuhxvDW2Hb2tOhG-Cxei4WGDJ9G66DgfnLttzlwO/pub?gid=0&single=true&output=csv";
 
 function formatCurrency(val) {
@@ -127,4 +126,3 @@ Papa.parse(reservesDataUrl, {
     processSection("GENERAL STABILIZATION", "genStabChart", "genStabTable", "General Stabilization");
   }
 });
-</script>
