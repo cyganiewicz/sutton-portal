@@ -1,4 +1,3 @@
-// reserves.js
 const reservesDataUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTJcnqu3eiVpo6TWbbCtptfBwAgM5XXM1hP4t94MuhxvDW2Hb2tOhG-Cxei4WGDJ9G66DgfnLttzlwO/pub?gid=0&single=true&output=csv";
 
 function formatCurrency(val) {
@@ -9,23 +8,22 @@ function formatPercent(val) {
   return (val * 100).toFixed(1) + "%";
 }
 
-function drawComboChart(ctxId, labels, amounts, percents, labelName) {
-  const ctx = document.getElementById(ctxId).getContext("2d");
-  new Chart(ctx, {
+function drawComboChart(ctx, labels, amounts, percents, labelName) {
+  return new Chart(ctx, {
     type: "bar",
     data: {
-      labels: labels,
+      labels,
       datasets: [
         {
           type: "bar",
-          label: `${labelName} ($)` ,
+          label: `${labelName} ($)`,
           data: amounts,
           backgroundColor: "#3f6522",
           yAxisID: "y",
         },
         {
           type: "line",
-          label: `${labelName} (% of Prior Budget)` ,
+          label: `${labelName} (% of Prior Budget)`,
           data: percents,
           borderColor: "#9ca3af",
           backgroundColor: "#9ca3af",
@@ -36,10 +34,7 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
     },
     options: {
       responsive: true,
-      interaction: {
-        mode: "index",
-        intersect: false
-      },
+      interaction: { mode: "index", intersect: false },
       stacked: false,
       plugins: {
         legend: { position: "bottom" },
@@ -70,29 +65,62 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
   });
 }
 
-function populateTable(tableId, buttonId, data, maxRows = 10) {
-  const tableBody = document.getElementById(tableId);
-  const toggleBtn = document.getElementById(buttonId);
-  let expanded = false;
+function createSection(field, rows, container) {
+  const label = field.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
 
-  const rows = data.map(r => `
+  const section = document.createElement("section");
+  section.className = "mb-12";
+  section.innerHTML = `
+    <h3 class="text-2xl font-semibold mb-4">${label}</h3>
+    <div class="grid md:grid-cols-2 gap-6 items-start">
+      <div class="chart-tile">
+        <canvas id="${field}-chart" height="320"></canvas>
+      </div>
+      <div>
+        <table class="reserves-table w-full mb-4">
+          <thead>
+            <tr>
+              <th>Fiscal Year</th>
+              <th class="text-right">$ Amount</th>
+              <th class="text-right">% of Prior Budget</th>
+            </tr>
+          </thead>
+          <tbody id="${field}-table-body"></tbody>
+        </table>
+        <div class="text-center">
+          <button id="${field}-toggle" class="text-sm text-blue-600 hover:underline">Show More</button>
+        </div>
+      </div>
+    </div>
+  `;
+  container.appendChild(section);
+
+  // Populate chart
+  const last10 = rows.slice(-10);
+  const ctx = document.getElementById(`${field}-chart`).getContext("2d");
+  drawComboChart(ctx, last10.map(r => r.fy), last10.map(r => r.amount), last10.map(r => r.percent * 100), label);
+
+  // Populate table
+  const tbody = document.getElementById(`${field}-table-body`);
+  const toggleBtn = document.getElementById(`${field}-toggle`);
+  const tableRows = rows.map(r => `
     <tr>
-      <td class="p-2">${r.fy}</td>
-      <td class="p-2 text-right">${formatCurrency(r.amount)}</td>
-      <td class="p-2 text-right">${formatPercent(r.percent)}</td>
-    </tr>`);
+      <td class="text-center">${r.fy}</td>
+      <td class="text-right">${formatCurrency(r.amount)}</td>
+      <td class="text-right">${formatPercent(r.percent)}</td>
+    </tr>
+  `);
 
-  const render = () => {
-    tableBody.innerHTML = expanded ? rows.join("") : rows.slice(-maxRows).join("");
+  let expanded = false;
+  const renderRows = () => {
+    tbody.innerHTML = expanded ? tableRows.join("") : tableRows.slice(-10).join("");
     toggleBtn.textContent = expanded ? "Show Fewer" : "Show More";
   };
-
   toggleBtn.onclick = () => {
     expanded = !expanded;
-    render();
+    renderRows();
   };
-
-  render();
+  renderRows();
 }
 
 Papa.parse(reservesDataUrl, {
@@ -100,8 +128,13 @@ Papa.parse(reservesDataUrl, {
   download: true,
   complete: function(results) {
     const raw = results.data.filter(r => r["FISCAL YEAR"]);
+    const baseFields = ["FISCAL YEAR", "PRIOR YEAR OPERATING BUDGET"];
+    const allFields = Object.keys(results.data[0]);
+    const reserveFields = allFields.filter(f => !baseFields.includes(f));
 
-    const processSection = (field, chartId, tableBodyId, toggleBtnId, label) => {
+    const container = document.querySelector("main");
+
+    reserveFields.forEach(field => {
       const rows = raw
         .map(r => ({
           fy: r["FISCAL YEAR"],
@@ -114,12 +147,9 @@ Papa.parse(reservesDataUrl, {
           percent: r.amount / r.priorBudget
         }));
 
-      const last10 = rows.slice(-10);
-      drawComboChart(chartId, last10.map(r => r.fy), last10.map(r => r.amount), last10.map(r => r.percent * 100), label);
-      populateTable(tableBodyId, toggleBtnId, rows);
-    };
-
-    processSection("CERTIFIED FREE CASH", "freeCashChart", "freeCashTableBody", "toggleFreeCashTable", "Free Cash");
-    processSection("GENERAL STABILIZATION", "stabilizationChart", "stabilizationTableBody", "toggleStabilizationTable", "General Stabilization");
+      if (rows.length > 0) {
+        createSection(field.replace(/\s/g, "_").toLowerCase(), rows, container);
+      }
+    });
   }
 });
