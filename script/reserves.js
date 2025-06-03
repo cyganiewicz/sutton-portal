@@ -16,9 +16,11 @@ function toTitleCase(str) {
 }
 
 function drawComboChart(canvasId, labels, amounts, percents, labelName) {
-  const ctx = document.getElementById(canvasId).getContext("2d");
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
 
-  return new Chart(ctx, {
+  const ctx = canvas.getContext("2d");
+  new Chart(ctx, {
     type: "bar",
     data: {
       labels: labels,
@@ -128,7 +130,7 @@ function populateTable(tableId, rows, maxRows = 10) {
   const toggleBtn = document.getElementById(`${tableId}-toggle`);
   let expanded = false;
 
-  const sorted = [...rows].sort((a, b) => b.fy - a.fy);
+  const sorted = [...rows].sort((a, b) => b.fy - a.fy).reverse();
   const htmlRows = sorted.map(r => `
     <tr>
       <td class="text-center">${r.fy}</td>
@@ -185,9 +187,12 @@ Papa.parse(reservesDataUrl, {
 
         createReserveSection(label, canvasId, tableId);
 
-        // Use 10 most recent fiscal years for chart
-        const last10 = rows.sort((a, b) => a.fy - b.fy).slice(-10);
-        drawComboChart(canvasId, last10.map(r => r.fy), last10.map(r => r.amount), last10.map(r => r.percent * 100), toTitleCase(label));
+        // Delay rendering of chart until canvas is in DOM
+        setTimeout(() => {
+          const last10 = rows.sort((a, b) => a.fy - b.fy).slice(-10);
+          drawComboChart(canvasId, last10.map(r => r.fy), last10.map(r => r.amount), last10.map(r => r.percent * 100), toTitleCase(label));
+        }, 100);
+
         populateTable(tableId, rows);
       }
     });
