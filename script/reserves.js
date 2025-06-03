@@ -15,7 +15,9 @@ function toTitleCase(str) {
     .replace(/\b\w/g, c => c.toUpperCase());
 }
 
-function drawComboChart(ctx, labels, amounts, percents, labelName) {
+function drawComboChart(canvasId, labels, amounts, percents, labelName) {
+  const ctx = document.getElementById(canvasId).getContext("2d");
+
   return new Chart(ctx, {
     type: "bar",
     data: {
@@ -47,11 +49,9 @@ function drawComboChart(ctx, labels, amounts, percents, labelName) {
         legend: { position: "bottom" },
         tooltip: {
           callbacks: {
-            label: function(ctx) {
-              return ctx.dataset.label.includes('%')
-                ? formatPercent(ctx.raw / 100)
-                : formatCurrency(ctx.raw);
-            }
+            label: ctx => ctx.dataset.label.includes("%")
+              ? formatPercent(ctx.raw / 100)
+              : formatCurrency(ctx.raw)
           }
         }
       },
@@ -74,28 +74,28 @@ function drawComboChart(ctx, labels, amounts, percents, labelName) {
   });
 }
 
-function createReserveSection(label, chartId, tableId) {
+function createReserveSection(label, canvasId, tableId) {
   const section = document.createElement("section");
   section.className = "mb-12 animate-fadein";
 
-  const header = document.createElement("h3");
-  header.className = "text-2xl font-semibold mb-4";
-  header.textContent = toTitleCase(label);
-  section.appendChild(header);
+  const title = document.createElement("h3");
+  title.className = "text-2xl font-semibold mb-4";
+  title.textContent = toTitleCase(label);
+  section.appendChild(title);
 
   const container = document.createElement("div");
   container.className = "grid grid-cols-1 md:grid-cols-2 gap-6";
 
+  // Chart
   const chartTile = document.createElement("div");
   chartTile.className = "chart-tile";
   const canvas = document.createElement("canvas");
-  canvas.id = chartId;
+  canvas.id = canvasId;
   canvas.height = 360;
   chartTile.appendChild(canvas);
 
+  // Table
   const tableWrap = document.createElement("div");
-  tableWrap.className = "overflow-x-auto";
-
   const table = document.createElement("table");
   table.className = "reserves-table w-full";
   table.innerHTML = `
@@ -108,14 +108,14 @@ function createReserveSection(label, chartId, tableId) {
     </thead>
     <tbody id="${tableId}"></tbody>
   `;
-
   const toggleBtn = document.createElement("button");
-  toggleBtn.className = "show-toggle";
   toggleBtn.id = `${tableId}-toggle`;
+  toggleBtn.className = "show-toggle";
   toggleBtn.textContent = "Show More";
 
   tableWrap.appendChild(table);
   tableWrap.appendChild(toggleBtn);
+
   container.appendChild(chartTile);
   container.appendChild(tableWrap);
   section.appendChild(container);
@@ -123,22 +123,22 @@ function createReserveSection(label, chartId, tableId) {
   document.querySelector("main").appendChild(section);
 }
 
-function populateTable(tableId, data, maxRows = 10) {
+function populateTable(tableId, rows, maxRows = 10) {
   const tbody = document.getElementById(tableId);
   const toggleBtn = document.getElementById(`${tableId}-toggle`);
   let expanded = false;
 
-  const sorted = data.sort((a, b) => b.fy - a.fy);
-  const rows = sorted.map(row => `
+  const sorted = [...rows].sort((a, b) => b.fy - a.fy);
+  const htmlRows = sorted.map(r => `
     <tr>
-      <td class="text-center">${row.fy}</td>
-      <td class="text-right">${formatCurrency(row.amount)}</td>
-      <td class="text-right">${formatPercent(row.percent)}</td>
+      <td class="text-center">${r.fy}</td>
+      <td class="text-right">${formatCurrency(r.amount)}</td>
+      <td class="text-right">${formatPercent(r.percent)}</td>
     </tr>
   `);
 
   const render = () => {
-    tbody.innerHTML = expanded ? rows.join("") : rows.slice(0, maxRows).join("");
+    tbody.innerHTML = expanded ? htmlRows.join("") : htmlRows.slice(0, maxRows).join("");
     toggleBtn.textContent = expanded ? "Show Fewer" : "Show More";
   };
 
@@ -158,36 +158,38 @@ Papa.parse(reservesDataUrl, {
     const priorMap = {};
     raw.forEach(r => {
       const fy = r["FISCAL YEAR"];
-      const prior = parseFloat(r["PRIOR YEAR OPERATING BUDGET"]) || 0;
-      if (fy && prior) priorMap[fy] = prior;
+      const val = parseFloat(r["PRIOR YEAR OPERATING BUDGET"]) || 0;
+      if (fy && val) priorMap[fy] = val;
     });
 
-    Object.keys(raw[0])
-      .filter(col => col !== "FISCAL YEAR" && col !== "PRIOR YEAR OPERATING BUDGET")
-      .forEach(col => {
-        const rows = raw.map(r => {
-          const fy = r["FISCAL YEAR"];
-          const amount = parseFloat(r[col]) || 0;
-          const prior = priorMap[fy] || 0;
-          return { fy, amount, percent: prior ? amount / prior : 0 };
-        }).filter(r => r.amount > 0 && r.percent > 0);
+    const allReserves = Object.keys(raw[0]).filter(
+      col => col !== "FISCAL YEAR" && col !== "PRIOR YEAR OPERATING BUDGET"
+    );
 
-        if (rows.length > 0) {
-          const slug = col.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-          const chartId = `${slug}-chart`;
-          const tableId = `${slug}-table`;
+    allReserves.forEach(label => {
+      const rows = raw.map(r => {
+        const fy = r["FISCAL YEAR"];
+        const amount = parseFloat(r[label]) || 0;
+        const prior = priorMap[fy] || 0;
+        return {
+          fy,
+          amount,
+          percent: prior ? amount / prior : 0
+        };
+      }).filter(r => r.amount > 0 && r.percent > 0);
 
-          createReserveSection(col, chartId, tableId);
+      if (rows.length > 0) {
+        const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        const canvasId = `${slug}-chart`;
+        const tableId = `${slug}-table`;
 
-          // Wait until DOM has rendered the canvas
-          setTimeout(() => {
-            const ctx = document.getElementById(chartId).getContext("2d");
-            const last10 = rows.slice(-10);
-            drawComboChart(ctx, last10.map(r => r.fy), last10.map(r => r.amount), last10.map(r => r.percent * 100), toTitleCase(col));
-          }, 50);
+        createReserveSection(label, canvasId, tableId);
 
-          populateTable(tableId, rows);
-        }
-      });
+        // Use 10 most recent fiscal years for chart
+        const last10 = rows.sort((a, b) => a.fy - b.fy).slice(-10);
+        drawComboChart(canvasId, last10.map(r => r.fy), last10.map(r => r.amount), last10.map(r => r.percent * 100), toTitleCase(label));
+        populateTable(tableId, rows);
+      }
+    });
   }
 });
