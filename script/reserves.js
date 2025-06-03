@@ -12,7 +12,7 @@ function drawComboChart(ctx, labels, amounts, percents, labelName) {
   return new Chart(ctx, {
     type: "bar",
     data: {
-      labels,
+      labels: labels,
       datasets: [
         {
           type: "bar",
@@ -34,10 +34,15 @@ function drawComboChart(ctx, labels, amounts, percents, labelName) {
     },
     options: {
       responsive: true,
-      interaction: { mode: "index", intersect: false },
+      interaction: {
+        mode: "index",
+        intersect: false
+      },
       stacked: false,
       plugins: {
-        legend: { position: "bottom" },
+        legend: {
+          position: "bottom",
+        },
         tooltip: {
           callbacks: {
             label: function(ctx) {
@@ -65,62 +70,79 @@ function drawComboChart(ctx, labels, amounts, percents, labelName) {
   });
 }
 
-function createSection(field, rows, container) {
-  const label = field.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
-
+function createReserveSection(label, chartId, tableId) {
   const section = document.createElement("section");
-  section.className = "mb-12";
-  section.innerHTML = `
-    <h3 class="text-2xl font-semibold mb-4">${label}</h3>
-    <div class="grid md:grid-cols-2 gap-6 items-start">
-      <div class="chart-tile">
-        <canvas id="${field}-chart" height="320"></canvas>
-      </div>
-      <div>
-        <table class="reserves-table w-full mb-4">
-          <thead>
-            <tr>
-              <th>Fiscal Year</th>
-              <th class="text-right">$ Amount</th>
-              <th class="text-right">% of Prior Budget</th>
-            </tr>
-          </thead>
-          <tbody id="${field}-table-body"></tbody>
-        </table>
-        <div class="text-center">
-          <button id="${field}-toggle" class="text-sm text-blue-600 hover:underline">Show More</button>
-        </div>
-      </div>
-    </div>
+  section.className = "mb-12 animate-fadein";
+
+  const header = document.createElement("h3");
+  header.className = "text-2xl font-semibold mb-4";
+  header.textContent = label;
+  section.appendChild(header);
+
+  const container = document.createElement("div");
+  container.className = "grid grid-cols-1 md:grid-cols-2 gap-6";
+
+  const chartTile = document.createElement("div");
+  chartTile.className = "chart-tile";
+  const canvas = document.createElement("canvas");
+  canvas.id = chartId;
+  canvas.height = 360;
+  chartTile.appendChild(canvas);
+
+  const tableWrap = document.createElement("div");
+  tableWrap.className = "overflow-x-auto";
+
+  const table = document.createElement("table");
+  table.className = "reserves-table w-full";
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>Fiscal Year</th>
+        <th>${label}</th>
+        <th>% of Prior Budget</th>
+      </tr>
+    </thead>
+    <tbody id="${tableId}"></tbody>
   `;
-  container.appendChild(section);
+  const toggleBtn = document.createElement("button");
+  toggleBtn.className = "show-toggle";
+  toggleBtn.id = `${tableId}-toggle`;
+  toggleBtn.textContent = "Show More";
 
-  // Populate chart
-  const last10 = rows.slice(-10);
-  const ctx = document.getElementById(`${field}-chart`).getContext("2d");
-  drawComboChart(ctx, last10.map(r => r.fy), last10.map(r => r.amount), last10.map(r => r.percent * 100), label);
+  tableWrap.appendChild(table);
+  tableWrap.appendChild(toggleBtn);
+  container.appendChild(chartTile);
+  container.appendChild(tableWrap);
+  section.appendChild(container);
 
-  // Populate table
-  const tbody = document.getElementById(`${field}-table-body`);
-  const toggleBtn = document.getElementById(`${field}-toggle`);
-  const tableRows = rows.map(r => `
+  document.querySelector("main").appendChild(section);
+}
+
+function populateTable(tableId, data, maxRows = 10) {
+  const tbody = document.getElementById(tableId);
+  const toggleBtn = document.getElementById(`${tableId}-toggle`);
+  let expanded = false;
+
+  const sorted = data.sort((a, b) => b.fy - a.fy);
+  const rows = sorted.map(row => `
     <tr>
-      <td class="text-center">${r.fy}</td>
-      <td class="text-right">${formatCurrency(r.amount)}</td>
-      <td class="text-right">${formatPercent(r.percent)}</td>
+      <td class="text-center">${row.fy}</td>
+      <td class="text-right">${formatCurrency(row.amount)}</td>
+      <td class="text-right">${formatPercent(row.percent)}</td>
     </tr>
   `);
 
-  let expanded = false;
-  const renderRows = () => {
-    tbody.innerHTML = expanded ? tableRows.join("") : tableRows.slice(-10).join("");
+  const render = () => {
+    tbody.innerHTML = expanded ? rows.join("") : rows.slice(0, maxRows).join("");
     toggleBtn.textContent = expanded ? "Show Fewer" : "Show More";
   };
+
   toggleBtn.onclick = () => {
     expanded = !expanded;
-    renderRows();
+    render();
   };
-  renderRows();
+
+  render();
 }
 
 Papa.parse(reservesDataUrl, {
@@ -128,28 +150,33 @@ Papa.parse(reservesDataUrl, {
   download: true,
   complete: function(results) {
     const raw = results.data.filter(r => r["FISCAL YEAR"]);
-    const baseFields = ["FISCAL YEAR", "PRIOR YEAR OPERATING BUDGET"];
-    const allFields = Object.keys(results.data[0]);
-    const reserveFields = allFields.filter(f => !baseFields.includes(f));
-
-    const container = document.querySelector("main");
-
-    reserveFields.forEach(field => {
-      const rows = raw
-        .map(r => ({
-          fy: r["FISCAL YEAR"],
-          amount: parseFloat(r[field]) || 0,
-          priorBudget: parseFloat(r["PRIOR YEAR OPERATING BUDGET"]) || 0
-        }))
-        .filter(r => r.amount && r.priorBudget)
-        .map(r => ({
-          ...r,
-          percent: r.amount / r.priorBudget
-        }));
-
-      if (rows.length > 0) {
-        createSection(field.replace(/\s/g, "_").toLowerCase(), rows, container);
-      }
+    const priorMap = {};
+    raw.forEach(r => {
+      const fy = r["FISCAL YEAR"];
+      const prior = parseFloat(r["PRIOR YEAR OPERATING BUDGET"]) || 0;
+      if (fy && prior) priorMap[fy] = prior;
     });
+
+    Object.keys(raw[0])
+      .filter(col => col !== "FISCAL YEAR" && col !== "PRIOR YEAR OPERATING BUDGET")
+      .forEach((col, i) => {
+        const rows = raw.map(r => {
+          const fy = r["FISCAL YEAR"];
+          const amount = parseFloat(r[col]) || 0;
+          const prior = priorMap[fy] || 0;
+          return { fy, amount, percent: prior ? amount / prior : 0 };
+        }).filter(r => r.amount > 0 && r.percent > 0);
+
+        if (rows.length > 0) {
+          const slug = col.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          const chartId = `${slug}-chart`;
+          const tableId = `${slug}-table`;
+          createReserveSection(col, chartId, tableId);
+          const last10 = rows.slice(-10);
+          const ctx = document.getElementById(chartId).getContext("2d");
+          drawComboChart(ctx, last10.map(r => r.fy), last10.map(r => r.amount), last10.map(r => r.percent * 100), col);
+          populateTable(tableId, rows);
+        }
+      });
   }
 });
