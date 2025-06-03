@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sutton Reserves</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="styles/reserves_styles.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+  <!-- Header -->
+  <header class="bg-[#3f6522] shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <img src="assets/logo.png" alt="Town Seal" class="h-14 w-auto object-contain" />
+        <h1 class="text-2xl font-bold text-white">Sutton Budget Portal</h1>
+      </div>
+      <nav class="space-x-6 text-sm font-medium">
+        <a href="index.html" class="text-white hover:underline">Home</a>
+        <a href="expenses.html" class="text-white hover:underline">Expenses</a>
+        <a href="revenues.html" class="text-white hover:underline">Revenues</a>
+        <a href="capital.html" class="text-white hover:underline">Capital</a>
+        <a href="reserves.html" class="text-white font-semibold underline">Reserves</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="max-w-7xl mx-auto px-4 py-10">
+    <!-- Page Title -->
+    <div class="text-center mb-10">
+      <h2 class="text-3xl font-bold mb-2">Reserves</h2>
+      <p class="text-gray-700 text-lg">A historical overview of Sutton’s financial reserves, including Free Cash and Stabilization Funds.</p>
+    </div>
+
+    <!-- Free Cash Section -->
+    <section class="mb-12">
+      <h3 class="text-2xl font-semibold mb-4">Certified Free Cash</h3>
+      <div class="chart-tile mb-6">
+        <canvas id="freeCashChart" height="400"></canvas>
+      </div>
+      <div id="freeCashTableContainer" class="overflow-x-auto">
+        <table class="reserves-table">
+          <thead>
+            <tr>
+              <th>Fiscal Year</th>
+              <th>Prior Year Operating Budget</th>
+              <th>Certified Free Cash</th>
+              <th>% of Operating Budget</th>
+            </tr>
+          </thead>
+          <tbody id="freeCashTableBody"></tbody>
+        </table>
+        <div class="text-center mt-4">
+          <button id="toggleFreeCashTable" class="text-sm text-blue-600 hover:underline">Show More</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stabilization Funds Section -->
+    <section class="mb-12">
+      <h3 class="text-2xl font-semibold mb-4">General Stabilization Fund</h3>
+      <div class="chart-tile mb-6">
+        <canvas id="stabilizationChart" height="400"></canvas>
+      </div>
+      <div id="stabilizationTableContainer" class="overflow-x-auto">
+        <table class="reserves-table">
+          <thead>
+            <tr>
+              <th>Fiscal Year</th>
+              <th>Prior Year Operating Budget</th>
+              <th>General Stabilization</th>
+              <th>% of Operating Budget</th>
+            </tr>
+          </thead>
+          <tbody id="stabilizationTableBody"></tbody>
+        </table>
+        <div class="text-center mt-4">
+          <button id="toggleStabilizationTable" class="text-sm text-blue-600 hover:underline">Show More</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Placeholder for Additional Reserves -->
+    <section class="mb-12">
+      <h3 class="text-2xl font-semibold mb-4">Other Reserves</h3>
+      <div class="bg-white p-6 rounded-lg shadow-md text-center">
+        <p class="text-gray-600 mb-4">More categories will be added here as data becomes available.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="script/reserves.js"></script>
+</body>
+</html>
