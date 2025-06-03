@@ -5,39 +5,37 @@ function formatCurrency(val) {
 }
 
 function formatPercent(val) {
-  return val.toFixed(1) + "%";
+  return (val * 100).toFixed(1) + "%";
 }
 
 function titleCase(str) {
-  return str.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+  return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
 }
 
-function drawComboChart(canvasId, labels, amounts, percents, reserveLabel) {
-  const ctx = document.getElementById(canvasId)?.getContext("2d");
-  if (!ctx) return;
-
-  new Chart(ctx, {
+function drawComboChart(ctxId, labels, amounts, percents, labelName) {
+  const ctx = document.getElementById(ctxId).getContext("2d");
+  return new Chart(ctx, {
     type: "bar",
     data: {
       labels,
       datasets: [
         {
           type: "bar",
-          label: `${reserveLabel} ($)`,
+          label: `${labelName} ($)`,
           data: amounts,
           backgroundColor: "#3f6522",
           yAxisID: "y",
         },
         {
           type: "line",
-          label: `${reserveLabel} (% of Prior Budget)`,
+          label: `${labelName} (% of Prior Budget)`,
           data: percents,
           borderColor: "#9ca3af",
           backgroundColor: "#9ca3af",
           yAxisID: "y1",
-          tension: 0.4,
-        }
-      ]
+          tension: 0.3,
+        },
+      ],
     },
     options: {
       responsive: true,
@@ -47,126 +45,138 @@ function drawComboChart(canvasId, labels, amounts, percents, reserveLabel) {
         legend: { position: "bottom" },
         tooltip: {
           callbacks: {
-            label: function(ctx) {
+            label: function (ctx) {
               return ctx.dataset.label.includes('%')
-                ? formatPercent(ctx.raw)
+                ? formatPercent(ctx.raw / 100)
                 : formatCurrency(ctx.raw);
-            }
-          }
-        }
+            },
+          },
+        },
       },
       scales: {
         y: {
-          title: { display: true, text: "Amount ($)" },
-          ticks: { callback: v => "$" + v.toLocaleString() }
+          type: "linear",
+          position: "left",
+          title: { display: true, text: "$ Amount" },
+          ticks: { callback: value => "$" + value.toLocaleString() },
         },
         y1: {
+          type: "linear",
           position: "right",
-          grid: { drawOnChartArea: false },
           title: { display: true, text: "% of Prior Budget" },
-          ticks: { callback: v => v + "%" }
-        }
-      }
-    }
+          grid: { drawOnChartArea: false },
+          ticks: { callback: value => value + "%" },
+        },
+      },
+    },
   });
 }
 
-function renderReserveSection(key, entries) {
-  const container = document.querySelector("main");
-  const canvasId = `chart-${key}`;
-  const tableId = `table-${key}`;
-  const toggleId = `toggle-${key}`;
-
-  // Create Section
-  const section = document.createElement("section");
-  section.className = "mb-16 animate-fade-in";
-  section.innerHTML = `
-    <h3 class="text-2xl font-semibold mb-4">${titleCase(key)}</h3>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-      <div class="chart-tile"><canvas id="${canvasId}" height="300"></canvas></div>
-      <div class="overflow-x-auto shadow bg-white rounded-lg">
-        <table class="reserves-table">
-          <thead>
-            <tr>
-              <th>Fiscal Year</th>
-              <th>Amount</th>
-              <th>% of Prior Budget</th>
-            </tr>
-          </thead>
-          <tbody id="${tableId}"></tbody>
-        </table>
-        <div class="text-center p-4">
-          <button id="${toggleId}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded text-sm transition">Show More</button>
-        </div>
-      </div>
-    </div>
-  `;
-  container.appendChild(section);
-
-  const sorted = entries.sort((a, b) => b.fy - a.fy);
-  const latest10 = sorted.slice(0, 10);
-
-  // Chart
-  drawComboChart(
-    canvasId,
-    latest10.map(r => r.fy),
-    latest10.map(r => r.amount),
-    latest10.map(r => r.percent * 100),
-    titleCase(key)
-  );
-
-  // Table
-  const tbody = section.querySelector(`#${tableId}`);
-  let expanded = false;
-
-  const renderTable = () => {
-    const display = expanded ? sorted : latest10;
-    tbody.innerHTML = display.map(r => `
+function createTable(id, rows) {
+  const table = document.createElement("table");
+  table.className = "reserves-table";
+  table.innerHTML = `
+    <thead>
       <tr>
-        <td class="text-center">${r.fy}</td>
-        <td class="text-right">${formatCurrency(r.amount)}</td>
-        <td class="text-right">${formatPercent(r.percent * 100)}</td>
+        <th>Fiscal Year</th>
+        <th>Amount</th>
+        <th>% of Prior Budget</th>
       </tr>
-    `).join("");
-    section.querySelector(`#${toggleId}`).textContent = expanded ? "Show Fewer" : "Show More";
-  };
+    </thead>
+    <tbody></tbody>
+  `;
 
-  renderTable();
-  section.querySelector(`#${toggleId}`).onclick = () => {
-    expanded = !expanded;
-    renderTable();
-  };
+  const tbody = table.querySelector("tbody");
+  rows.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="text-center">${r.fy}</td>
+      <td class="text-right">${formatCurrency(r.amount)}</td>
+      <td class="text-right">${formatPercent(r.percent)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  return table;
 }
 
-// Load and process data
+function createSection(label, rows) {
+  const section = document.createElement("section");
+  section.className = "reserve-section";
+
+  const title = document.createElement("h3");
+  title.className = "text-2xl font-semibold mb-4";
+  title.textContent = titleCase(label);
+
+  const chartContainer = document.createElement("div");
+  chartContainer.className = "chart-container";
+  const canvas = document.createElement("canvas");
+  canvas.id = `${label.toLowerCase().replace(/\s+/g, "-")}-chart`;
+  canvas.height = 300;
+  chartContainer.appendChild(canvas);
+
+  const tableContainer = document.createElement("div");
+  tableContainer.className = "table-container";
+
+  const showMoreBtn = document.createElement("button");
+  showMoreBtn.className = "show-more-btn";
+  showMoreBtn.textContent = "Show More";
+
+  let expanded = false;
+  let fullTable = createTable(label, rows);
+  let shortTable = createTable(label, rows.slice(0, 10));
+
+  tableContainer.appendChild(shortTable);
+  tableContainer.appendChild(showMoreBtn);
+
+  showMoreBtn.addEventListener("click", () => {
+    tableContainer.replaceChild(expanded ? shortTable : fullTable, tableContainer.firstChild);
+    showMoreBtn.textContent = expanded ? "Show More" : "Show Fewer";
+    expanded = !expanded;
+  });
+
+  const container = document.createElement("div");
+  container.className = "flex flex-col lg:flex-row gap-8 items-start mb-12";
+  container.appendChild(chartContainer);
+  container.appendChild(tableContainer);
+
+  section.appendChild(title);
+  section.appendChild(container);
+  document.querySelector("main").appendChild(section);
+
+  // Draw chart
+  const last10 = rows.slice(0, 10).reverse(); // Reverse for recent fiscal years on the right
+  drawComboChart(canvas.id, last10.map(r => r.fy), last10.map(r => r.amount), last10.map(r => r.percent * 100), titleCase(label));
+}
+
 Papa.parse(reservesDataUrl, {
   header: true,
   download: true,
-  complete: function(results) {
-    const rows = results.data.filter(r => r["FISCAL YEAR"] && r["PRIOR YEAR OPERATING BUDGET"]);
+  complete: function (results) {
+    const data = results.data.filter(row => row["FISCAL YEAR"] && row["PRIOR YEAR OPERATING BUDGET"]);
+
     const reserves = {};
+    data.forEach(row => {
+      const fy = row["FISCAL YEAR"];
+      const prior = parseFloat(row["PRIOR YEAR OPERATING BUDGET"].replace(/,/g, "")) || 0;
 
-    rows.forEach(r => {
-      const fy = r["FISCAL YEAR"];
-      const prior = parseFloat(r["PRIOR YEAR OPERATING BUDGET"].replace(/,/g, "")) || 0;
+      if (!prior || isNaN(prior)) return;
 
-      Object.keys(r).forEach(key => {
+      Object.keys(row).forEach(key => {
         if (["FISCAL YEAR", "PRIOR YEAR OPERATING BUDGET"].includes(key)) return;
-        const val = parseFloat(r[key].replace(/,/g, "")) || 0;
-        if (val && prior) {
-          if (!reserves[key]) reserves[key] = [];
-          reserves[key].push({
-            fy,
-            amount: val,
-            percent: val / prior
-          });
-        }
+
+        const val = parseFloat((row[key] || "").replace(/,/g, ""));
+        if (!val || isNaN(val)) return;
+
+        if (!reserves[key]) reserves[key] = [];
+        reserves[key].push({ fy, amount: val, percent: val / prior });
       });
     });
 
-    // Render each reserve section
-    Object.entries(reserves).forEach(([key, values]) => {
-      if (values.length) renderReserveSection(key, values);
+    // Sort and display each section
+    Object.entries(reserves).forEach(([label, entries]) => {
+      const sorted = entries.sort((a, b) => parseInt(b.fy) - parseInt(a.fy));
+      if (sorted.length > 0) createSection(label, sorted);
     });
   }
 });
