@@ -1,0 +1,88 @@
+/* reserves_styles.css */
+
+/* Base and Layout */
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+/* Chart Containers */
+.chart-tile {
+  background-color: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Table Styling */
+.reserves-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1rem;
+}
+
+.reserves-table th,
+.reserves-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+}
+
+.reserves-table th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+  color: #374151;
+}
+
+.reserves-table td {
+  color: #374151;
+}
+
+.reserves-table tr:hover td {
+  background-color: #f9fafb;
+}
+
+.reserves-table tfoot td {
+  font-weight: 700;
+  background-color: #e5e7eb;
+  border-top: 2px solid #d1d5db;
+}
+
+/* Toggle Button Styling */
+button#toggleFreeCashTable,
+button#toggleStabilizationTable {
+  background: none;
+  border: none;
+  color: #2563eb;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+button#toggleFreeCashTable:hover,
+button#toggleStabilizationTable:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .chart-tile {
+    padding: 1rem;
+  }
+
+  .reserves-table th,
+  .reserves-table td {
+    font-size: 0.8rem;
+  }
+
+  button {
+    font-size: 0.8rem;
+  }
+}
