@@ -39,7 +39,6 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
       stacked: false,
       plugins: {
@@ -73,15 +72,15 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
   });
 }
 
-function createTable(label, rows) {
+function createTable(id, rows) {
   const table = document.createElement("table");
-  table.className = "reserves-table w-full text-sm";
+  table.className = "reserves-table";
   table.innerHTML = `
     <thead>
       <tr>
-        <th class="text-left">Fiscal Year</th>
-        <th class="text-right">Amount</th>
-        <th class="text-right">% of Prior Budget</th>
+        <th>Fiscal Year</th>
+        <th>Amount</th>
+        <th>% of Prior Budget</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -91,7 +90,7 @@ function createTable(label, rows) {
   rows.forEach(r => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td class="text-left">${r.fy}</td>
+      <td class="text-center">${r.fy}</td>
       <td class="text-right">${formatCurrency(r.amount)}</td>
       <td class="text-right">${formatPercent(r.percent)}</td>
     `;
@@ -103,31 +102,28 @@ function createTable(label, rows) {
 
 function createSection(label, rows) {
   const section = document.createElement("section");
-  section.className = "reserve-section mb-16";
+  section.className = "reserve-section";
 
   const title = document.createElement("h3");
-  title.className = "text-2xl font-semibold mb-4 text-center";
+  title.className = "text-2xl font-semibold mb-4";
   title.textContent = titleCase(label);
 
   const chartContainer = document.createElement("div");
-  chartContainer.className = "w-full lg:w-1/2 mx-auto mb-6";
+  chartContainer.className = "reserves-chart-container";
   const canvas = document.createElement("canvas");
   canvas.id = `${label.toLowerCase().replace(/\s+/g, "-")}-chart`;
-  canvas.style.height = "400px";
   chartContainer.appendChild(canvas);
 
   const tableContainer = document.createElement("div");
-  tableContainer.className = "w-full lg:w-2/3 mx-auto";
+  tableContainer.className = "reserves-table-container";
 
   const showMoreBtn = document.createElement("button");
-  showMoreBtn.className = "mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition";
+  showMoreBtn.className = "show-toggle-btn";
   showMoreBtn.textContent = "Show More";
 
   let expanded = false;
-  const sortedRows = [...rows].sort((a, b) => parseInt(b.fy) - parseInt(a.fy));
-  const last10 = sortedRows.slice(0, 10);
-  const fullTable = createTable(label, sortedRows);
-  const shortTable = createTable(label, last10);
+  const fullTable = createTable(label, rows);
+  const shortTable = createTable(label, rows.slice(0, 10).reverse()); // newest first
 
   tableContainer.appendChild(shortTable);
   tableContainer.appendChild(showMoreBtn);
@@ -138,23 +134,21 @@ function createSection(label, rows) {
     expanded = !expanded;
   });
 
+  const wrapper = document.createElement("div");
+  wrapper.className = "reserves-chart-table-wrapper";
+  wrapper.appendChild(chartContainer);
+  wrapper.appendChild(tableContainer);
+
   section.appendChild(title);
-  section.appendChild(chartContainer);
-  section.appendChild(tableContainer);
+  section.appendChild(wrapper);
   document.querySelector("main").appendChild(section);
 
-  // Draw chart (reverse to get most recent year on right)
-  const reversedForChart = last10.slice().reverse();
-  drawComboChart(
-    canvas.id,
-    reversedForChart.map(r => r.fy),
-    reversedForChart.map(r => r.amount),
-    reversedForChart.map(r => r.percent * 100),
-    titleCase(label)
-  );
+  // Sort and use 10 most recent for chart (left → right = oldest → newest)
+  const last10 = rows.slice(0, 10).reverse();
+  drawComboChart(canvas.id, last10.map(r => r.fy), last10.map(r => r.amount), last10.map(r => r.percent * 100), titleCase(label));
 }
 
-// Load and process data
+// Load and parse data
 Papa.parse(reservesDataUrl, {
   header: true,
   download: true,
@@ -165,6 +159,7 @@ Papa.parse(reservesDataUrl, {
     data.forEach(row => {
       const fy = row["FISCAL YEAR"];
       const prior = parseFloat(row["PRIOR YEAR OPERATING BUDGET"].replace(/,/g, "")) || 0;
+
       if (!prior || isNaN(prior)) return;
 
       Object.keys(row).forEach(key => {
@@ -178,8 +173,10 @@ Papa.parse(reservesDataUrl, {
       });
     });
 
+    // Sort and create sections
     Object.entries(reserves).forEach(([label, entries]) => {
-      if (entries.length > 0) createSection(label, entries);
+      const sorted = entries.sort((a, b) => parseInt(b.fy) - parseInt(a.fy));
+      if (sorted.length > 0) createSection(label, sorted);
     });
   }
 });
