@@ -27,18 +27,18 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
           yAxisID: "y",
         },
         {
-  type: "line",
-  label: `${labelName} (% of Prior Budget)`,
-  data: percents,
-  borderColor: "#1f2937", // darker color (like Tailwind's gray-800)
-  backgroundColor: "#1f2937",
-  borderWidth: 3,          // thicker line
-  pointRadius: 4,          // visible points
-  pointBackgroundColor: "#1f2937",
-  yAxisID: "y1",
-  tension: 0.3,
-  order: 2                // ensures it's drawn after the bars
-},
+          type: "line",
+          label: `${labelName} (% of Prior Budget)`,
+          data: percents,
+          borderColor: "#1f2937",
+          backgroundColor: "#1f2937",
+          borderWidth: 3,
+          pointRadius: 4,
+          pointBackgroundColor: "#1f2937",
+          yAxisID: "y1",
+          tension: 0.3,
+          order: 2
+        },
       ],
     },
     options: {
@@ -125,9 +125,11 @@ function createSection(label, rows) {
   showMoreBtn.className = "show-toggle-btn";
   showMoreBtn.textContent = "Show More";
 
+  const sorted = [...rows].sort((a, b) => parseInt(b.fy) - parseInt(a.fy)); // Most recent to oldest
+
   let expanded = false;
-  const fullTable = createTable(label, rows);
-  const shortTable = createTable(label, rows.slice(0, 10).reverse()); // newest first
+  const fullTable = createTable(label, sorted);
+  const shortTable = createTable(label, sorted.slice(0, 10));
 
   tableContainer.appendChild(shortTable);
   tableContainer.appendChild(showMoreBtn);
@@ -147,9 +149,15 @@ function createSection(label, rows) {
   section.appendChild(wrapper);
   document.querySelector("main").appendChild(section);
 
-  // Sort and use 10 most recent for chart (left → right = oldest → newest)
-  const last10 = rows.slice(0, 10).reverse();
-  drawComboChart(canvas.id, last10.map(r => r.fy), last10.map(r => r.amount), last10.map(r => r.percent * 100), titleCase(label));
+  // Chart: reverse most recent 10 so most recent year is on the RIGHT
+  const chartRows = sorted.slice(0, 10).reverse();
+  drawComboChart(
+    canvas.id,
+    chartRows.map(r => r.fy),
+    chartRows.map(r => r.amount),
+    chartRows.map(r => r.percent * 100),
+    titleCase(label)
+  );
 }
 
 // Load and parse data
@@ -163,24 +171,19 @@ Papa.parse(reservesDataUrl, {
     data.forEach(row => {
       const fy = row["FISCAL YEAR"];
       const prior = parseFloat(row["PRIOR YEAR OPERATING BUDGET"].replace(/,/g, "")) || 0;
-
       if (!prior || isNaN(prior)) return;
 
       Object.keys(row).forEach(key => {
         if (["FISCAL YEAR", "PRIOR YEAR OPERATING BUDGET"].includes(key)) return;
-
         const val = parseFloat((row[key] || "").replace(/,/g, ""));
         if (!val || isNaN(val)) return;
-
         if (!reserves[key]) reserves[key] = [];
         reserves[key].push({ fy, amount: val, percent: val / prior });
       });
     });
 
-    // Sort and create sections
     Object.entries(reserves).forEach(([label, entries]) => {
-      const sorted = entries.sort((a, b) => parseInt(b.fy) - parseInt(a.fy));
-      if (sorted.length > 0) createSection(label, sorted);
+      if (entries.length > 0) createSection(label, entries);
     });
   }
 });
