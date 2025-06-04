@@ -13,7 +13,17 @@ function titleCase(str) {
 }
 
 function drawComboChart(ctxId, labels, amounts, percents, labelName) {
-  const ctx = document.getElementById(ctxId).getContext("2d");
+  const canvas = document.getElementById(ctxId);
+  const ctx = canvas.getContext("2d");
+
+  // Retina Fix
+  const dpr = window.devicePixelRatio || 1;
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  ctx.scale(dpr, dpr);
+
   return new Chart(ctx, {
     type: "bar",
     data: {
@@ -126,11 +136,11 @@ function createSection(label, rows) {
   showMoreBtn.className = "show-toggle-btn";
   showMoreBtn.textContent = "Show More";
 
-  const sorted = [...rows].sort((a, b) => parseInt(b.fy) - parseInt(a.fy)); // Most recent to oldest
+  const sorted = [...rows].sort((a, b) => parseInt(b.fy) - parseInt(a.fy)); // oldest to most recent
 
   let expanded = false;
-  const fullTable = createTable(label, sorted);
-  const shortTable = createTable(label, sorted.slice(0, 10));
+  const fullTable = createTable(label, sorted.slice().reverse());
+  const shortTable = createTable(label, sorted.slice(-10).reverse());
 
   tableContainer.appendChild(shortTable);
   tableContainer.appendChild(showMoreBtn);
@@ -150,8 +160,8 @@ function createSection(label, rows) {
   section.appendChild(wrapper);
   document.querySelector("main").appendChild(section);
 
-  // Chart: reverse most recent 10 so most recent year is on the RIGHT
-  const chartRows = sorted.slice(0, 10).reverse();
+  // Chart: 10 most recent → rightmost on chart
+  const chartRows = sorted.slice(-10);
   drawComboChart(
     canvas.id,
     chartRows.map(r => r.fy),
