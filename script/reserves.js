@@ -48,7 +48,7 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
           pointBackgroundColor: "#1f2937",
           yAxisID: "y1",
           tension: 0.3,
-          order: 2
+          order: 0
         }
       ]
     },
