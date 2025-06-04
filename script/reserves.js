@@ -16,7 +16,6 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
   const canvas = document.getElementById(ctxId);
   const ctx = canvas.getContext("2d");
 
-  // Retina rendering fix
   const dpr = window.devicePixelRatio || 1;
   const width = canvas.clientWidth;
   const height = canvas.clientHeight;
@@ -136,11 +135,12 @@ function createSection(label, rows) {
   showMoreBtn.className = "show-toggle-btn";
   showMoreBtn.textContent = "Show More";
 
-  const sorted = [...rows].sort((a, b) => parseInt(b.fy) - parseInt(a.fy)); // oldest to newest
+  // Sort rows by fiscal year (descending)
+  const sortedDesc = [...rows].sort((a, b) => parseInt(b.fy) - parseInt(a.fy));
 
   let expanded = false;
-  const shortTable = createTable(label, sorted.slice(-10).reverse()); // newest at top
-  const fullTable = createTable(label, [...sorted].reverse());        // all, newest at top
+  const shortTable = createTable(label, sortedDesc.slice(0, 10));
+  const fullTable = createTable(label, sortedDesc);
 
   tableContainer.appendChild(shortTable);
   tableContainer.appendChild(showMoreBtn);
@@ -160,8 +160,8 @@ function createSection(label, rows) {
   section.appendChild(wrapper);
   document.querySelector("main").appendChild(section);
 
-  // 10 most recent years for chart (newest on right)
-  const chartData = sorted.slice(-10); // oldest → newest
+  // Prepare chart data: 10 most recent (sorted ascending for proper chart order)
+  const chartData = [...sortedDesc].slice(0, 10).sort((a, b) => parseInt(a.fy) - parseInt(b.fy));
   drawComboChart(
     canvas.id,
     chartData.map(r => r.fy),
