@@ -1,99 +1,116 @@
-/* Base Styling */
+/* reserves_styles.css */
+
+/* Global Settings */
+:root {
+  --sutton-green: #3f6522;
+}
+
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: system-ui, sans-serif;
   background-color: #f9fafb;
   color: #1f2937;
 }
 
-/* Chart + Table Row */
-.reserves-section {
-  margin-bottom: 4rem;
-  animation: fadeIn 0.6s ease-in;
+/* Chart and Table Layout */
+.reserve-section {
+  margin-bottom: 3rem;
+  animation: fadeInUp 0.5s ease;
 }
 
-.reserves-title {
-  font-size: 1.75rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  text-transform: none;
-  color: #111827;
-}
-
-/* Grid for Chart & Table */
-.chart-table-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.reserves-chart-table-wrapper {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
   gap: 2rem;
 }
 
-@media (max-width: 1024px) {
-  .chart-table-grid {
-    grid-template-columns: 1fr;
-  }
+.reserves-chart-container {
+  flex: 1 1 60%;
+  max-width: 700px;
+  height: 400px;
 }
 
-/* Chart Container */
-.chart-container {
-  background: white;
-  border-radius: 0.75rem;
-  padding: 1rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+.reserves-chart-container canvas {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* Table Styling */
+.reserves-table-container {
+  flex: 1 1 35%;
+  overflow-x: auto;
+}
+
 .reserves-table {
   width: 100%;
   border-collapse: collapse;
   background-color: white;
-  border-radius: 0.75rem;
-  overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  font-size: 0.875rem;
 }
 
 .reserves-table th,
 .reserves-table td {
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   text-align: right;
   border-bottom: 1px solid #e5e7eb;
-  font-size: 0.875rem;
 }
 
 .reserves-table th {
   background-color: #f3f4f6;
   font-weight: 600;
-  color: #374151;
-  text-align: right;
+  text-align: left;
 }
 
 .reserves-table td:first-child,
 .reserves-table th:first-child {
-  text-align: left;
-}
-
-.reserves-table tr:hover {
-  background-color: #f9fafb;
+  text-align: center;
 }
 
 /* Toggle Button Styling */
-.toggle-button {
-  margin-top: 1rem;
-  display: inline-block;
-  padding: 0.4rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
+.show-toggle-btn {
+  background-color: var(--sutton-green);
   color: white;
-  background-color: #2563eb;
+  padding: 0.5rem 1rem;
   border-radius: 0.375rem;
-  transition: background-color 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  margin-top: 0.75rem;
 }
 
-.toggle-button:hover {
-  background-color: #1e40af;
+.show-toggle-btn:hover {
+  background-color: #2d4d18;
 }
 
-/* Fade Animation */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Section Header Styling */
+.reserve-section h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-transform: none;
+}
+
+/* Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Layout */
+@media (max-width: 768px) {
+  .reserves-chart-table-wrapper {
+    flex-direction: column;
+  }
+
+  .reserves-chart-container,
+  .reserves-table-container {
+    max-width: 100%;
+  }
 }
