@@ -109,17 +109,17 @@ function createSection(label, rows) {
   title.textContent = titleCase(label);
 
   const chartContainer = document.createElement("div");
-  chartContainer.className = "chart-container";
+  chartContainer.className = "reserves-chart-container"; // FIXED
   const canvas = document.createElement("canvas");
   canvas.id = `${label.toLowerCase().replace(/\s+/g, "-")}-chart`;
-  canvas.height = 300;
+  canvas.style.height = "400px"; // Optional visual improvement
   chartContainer.appendChild(canvas);
 
   const tableContainer = document.createElement("div");
   tableContainer.className = "table-container";
 
   const showMoreBtn = document.createElement("button");
-  showMoreBtn.className = "show-more-btn";
+  showMoreBtn.className = "show-toggle-btn"; // FIXED
   showMoreBtn.textContent = "Show More";
 
   let expanded = false;
@@ -144,8 +144,8 @@ function createSection(label, rows) {
   section.appendChild(container);
   document.querySelector("main").appendChild(section);
 
-  // Draw chart
-  const last10 = rows.slice(0, 10).reverse(); // Reverse for recent fiscal years on the right
+  // Draw chart with most recent years on the right
+  const last10 = rows.slice(0, 10).reverse();
   drawComboChart(canvas.id, last10.map(r => r.fy), last10.map(r => r.amount), last10.map(r => r.percent * 100), titleCase(label));
 }
 
@@ -175,7 +175,7 @@ Papa.parse(reservesDataUrl, {
 
     // Sort and display each section
     Object.entries(reserves).forEach(([label, entries]) => {
-      const sorted = entries.sort((a, b) => parseInt(b.fy) - parseInt(a.fy));
+      const sorted = entries.sort((a, b) => parseInt(b.fy) - parseInt(a.fy)).reverse();
       if (sorted.length > 0) createSection(label, sorted);
     });
   }
