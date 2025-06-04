@@ -2,7 +2,15 @@
 
 /* Global Settings */
 :root {
-  --sutton-green: #3f6522;
+  --navbar-height: 104px;
+  --navbar-bg: #3f6522; /* Sutton green */
+  --header-text: #ffffff;
+}
+
+/* Navbar override (in case Tailwind doesn't apply) */
+header {
+  background-color: var(--navbar-bg);
+  color: var(--header-text);
 }
 
 body {
