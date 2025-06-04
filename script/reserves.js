@@ -27,14 +27,18 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
           yAxisID: "y",
         },
         {
-          type: "line",
-          label: `${labelName} (% of Prior Budget)`,
-          data: percents,
-          borderColor: "#9ca3af",
-          backgroundColor: "#9ca3af",
-          yAxisID: "y1",
-          tension: 0.3,
-        },
+  type: "line",
+  label: `${labelName} (% of Prior Budget)`,
+  data: percents,
+  borderColor: "#1f2937", // darker color (like Tailwind's gray-800)
+  backgroundColor: "#1f2937",
+  borderWidth: 3,          // thicker line
+  pointRadius: 4,          // visible points
+  pointBackgroundColor: "#1f2937",
+  yAxisID: "y1",
+  tension: 0.3,
+  order: 2                // ensures it's drawn after the bars
+},
       ],
     },
     options: {
