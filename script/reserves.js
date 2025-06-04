@@ -25,6 +25,7 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
           data: amounts,
           backgroundColor: "#3f6522",
           yAxisID: "y",
+          order: 1
         },
         {
           type: "line",
