@@ -16,7 +16,7 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
   const canvas = document.getElementById(ctxId);
   const ctx = canvas.getContext("2d");
 
-  // Retina Fix
+  // Retina rendering fix
   const dpr = window.devicePixelRatio || 1;
   const width = canvas.clientWidth;
   const height = canvas.clientHeight;
@@ -49,8 +49,8 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
           yAxisID: "y1",
           tension: 0.3,
           order: 2
-        },
-      ],
+        }
+      ]
     },
     options: {
       responsive: true,
@@ -64,26 +64,26 @@ function drawComboChart(ctxId, labels, amounts, percents, labelName) {
               return ctx.dataset.label.includes('%')
                 ? formatPercent(ctx.raw / 100)
                 : formatCurrency(ctx.raw);
-            },
-          },
-        },
+            }
+          }
+        }
       },
       scales: {
         y: {
           type: "linear",
           position: "left",
           title: { display: true, text: "$ Amount" },
-          ticks: { callback: value => "$" + value.toLocaleString() },
+          ticks: { callback: value => "$" + value.toLocaleString() }
         },
         y1: {
           type: "linear",
           position: "right",
           title: { display: true, text: "% of Prior Budget" },
           grid: { drawOnChartArea: false },
-          ticks: { callback: value => value + "%" },
-        },
-      },
-    },
+          ticks: { callback: value => value + "%" }
+        }
+      }
+    }
   });
 }
 
@@ -136,11 +136,11 @@ function createSection(label, rows) {
   showMoreBtn.className = "show-toggle-btn";
   showMoreBtn.textContent = "Show More";
 
-  const sorted = [...rows].sort((a, b) => parseInt(b.fy) - parseInt(a.fy)); // oldest to most recent
+  const sorted = [...rows].sort((a, b) => parseInt(b.fy) - parseInt(a.fy)); // oldest to newest
 
   let expanded = false;
-  const fullTable = createTable(label, sorted.slice().reverse());
-  const shortTable = createTable(label, sorted.slice(-10).reverse());
+  const shortTable = createTable(label, sorted.slice(-10).reverse()); // newest at top
+  const fullTable = createTable(label, [...sorted].reverse());        // all, newest at top
 
   tableContainer.appendChild(shortTable);
   tableContainer.appendChild(showMoreBtn);
@@ -160,13 +160,13 @@ function createSection(label, rows) {
   section.appendChild(wrapper);
   document.querySelector("main").appendChild(section);
 
-  // Chart: 10 most recent → rightmost on chart
-  const chartRows = sorted.slice(-10);
+  // 10 most recent years for chart (newest on right)
+  const chartData = sorted.slice(-10); // oldest → newest
   drawComboChart(
     canvas.id,
-    chartRows.map(r => r.fy),
-    chartRows.map(r => r.amount),
-    chartRows.map(r => r.percent * 100),
+    chartData.map(r => r.fy),
+    chartData.map(r => r.amount),
+    chartData.map(r => r.percent * 100),
     titleCase(label)
   );
 }
