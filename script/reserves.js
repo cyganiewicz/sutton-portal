@@ -120,7 +120,15 @@ function createSection(label, rows) {
 
   const title = document.createElement("h3");
   title.className = "text-2xl font-semibold mb-4";
-  title.textContent = titleCase(label);
+  title.innerHTML = `
+  ${titleCase(label)}
+  <span class="tooltip">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block text-gray-500 ml-2 cursor-pointer" viewBox="0 0 20 20" fill="currentColor">
+      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-4.5a.75.75 0 01-1.5 0v-1a.75.75 0 011.5 0v1zm-1.5-6.25a.75.75 0 011.5 0v.25a.75.75 0 01-.75.75h-.25v2.25a.75.75 0 01-1.5 0v-3a.75.75 0 01.75-.75z" clip-rule="evenodd" />
+    </svg>
+    <span class="tooltip-text">${getTooltipText(label)}</span>
+  </span>
+`;
 
   const chartContainer = document.createElement("div");
   chartContainer.className = "reserves-chart-container";
@@ -134,6 +142,16 @@ function createSection(label, rows) {
   const showMoreBtn = document.createElement("button");
   showMoreBtn.className = "show-toggle-btn";
   showMoreBtn.textContent = "Show More";
+
+  function getTooltipText(label) {
+  const tooltip = {
+    "Certified Free Cash": "Surplus expenses and/or revenues certified annually by the Department of Revenue Division of Local Services, available for appropriation or reserves.",
+    "General Stabilization": "The Town’s rainy-day fund, used to stabilize finances or cover unexpected costs.",
+    "Capital Stabilization": "A reserve specifically for funding future capital projects and equipment purchases."
+    // Add more descriptions as you add new reserves
+  };
+  return tooltip[label] || "No description available.";
+}
 
   // Sort rows by fiscal year (descending)
   const sortedDesc = [...rows].sort((a, b) => parseInt(b.fy) - parseInt(a.fy));
