@@ -151,7 +151,8 @@ function createSection(label, rows) {
   showMoreBtn.className = "show-toggle-btn";
   showMoreBtn.textContent = "Show More";
 
-  const sortedDesc = [...rows].sort((a, b) => parseInt(b.fy) - parseInt(a.fy)).reverse(); // newest → oldest
+  // Sort: newest to oldest for table
+  const sortedDesc = [...rows].sort((a, b) => parseInt(b.fy) - parseInt(a.fy)).reverse();
 
   let expanded = false;
   const shortTable = createTable(label, sortedDesc.slice(0, 10));
@@ -175,8 +176,8 @@ function createSection(label, rows) {
   section.appendChild(wrapper);
   document.querySelector("main").appendChild(section);
 
-  // For chart: show oldest → newest (so newest appears on RIGHT)
-  const chartData = sortedDesc.slice(0, 10).sort((a, b) => parseInt(a.fy) - parseInt(b.fy));
+  // Chart: show oldest to newest (so most recent on right)
+  const chartData = [...sortedDesc.slice(0, 10)].sort((a, b) => parseInt(a.fy) - parseInt(b.fy));
   drawComboChart(
     canvas.id,
     chartData.map(r => r.fy),
