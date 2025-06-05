@@ -143,15 +143,22 @@ function createSection(label, rows) {
   showMoreBtn.className = "show-toggle-btn";
   showMoreBtn.textContent = "Show More";
 
-  function getTooltipText(label) {
-  const tooltip = {
-    "Certified Free Cash": "Surplus expenses and/or revenues certified annually by the Department of Revenue Division of Local Services, available for appropriation or reserves.",
-    "General Stabilization": "The Town’s rainy-day fund, used to stabilize finances or cover unexpected costs.",
-    "Capital Stabilization": "A reserve specifically for funding future capital projects and equipment purchases."
-    // Add more descriptions as you add new reserves
-  };
-  return tooltip[label] || "No description available.";
-}
+  const descriptions = {
+  "Certified Free Cash": "Unrestricted surplus funds certified annually by the Department of Revenue.",
+  "General Stabilization": "Rainy-day fund to stabilize the operating budget during economic downturns.",
+  "Capital Stabilization": "Funds set aside specifically for capital improvements and large purchases."
+};
+
+const labelTitle = titleCase(label); // Keep this consistent
+title.textContent = labelTitle;
+
+const tooltip = document.createElement("span");
+tooltip.className = "tooltip";
+tooltip.innerHTML = `
+  <span class="material-symbols-outlined">help</span>
+  <span class="tooltip-text">${descriptions[labelTitle] || "No description available."}</span>
+`;
+title.appendChild(tooltip);
 
   // Sort rows by fiscal year (descending)
   const sortedDesc = [...rows].sort((a, b) => parseInt(b.fy) - parseInt(a.fy));
