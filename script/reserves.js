@@ -118,17 +118,25 @@ function createSection(label, rows) {
   const section = document.createElement("section");
   section.className = "reserve-section";
 
+  const descriptions = {
+    "Certified Free Cash": "Unrestricted surplus funds certified annually by the Department of Revenue.",
+    "General Stabilization": "Rainy-day fund to stabilize the operating budget during economic downturns.",
+    "Capital Stabilization": "Funds set aside specifically for capital improvements and large purchases."
+  };
+
+  const labelTitle = titleCase(label);
+
   const title = document.createElement("h3");
   title.className = "text-2xl font-semibold mb-4";
-  title.innerHTML = `
-  ${titleCase(label)}
-  <span class="tooltip">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block text-gray-500 ml-2 cursor-pointer" viewBox="0 0 20 20" fill="currentColor">
-      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-4.5a.75.75 0 01-1.5 0v-1a.75.75 0 011.5 0v1zm-1.5-6.25a.75.75 0 011.5 0v.25a.75.75 0 01-.75.75h-.25v2.25a.75.75 0 01-1.5 0v-3a.75.75 0 01.75-.75z" clip-rule="evenodd" />
-    </svg>
-    <span class="tooltip-text">${getTooltipText(label)}</span>
-  </span>
-`;
+  title.textContent = labelTitle;
+
+  const tooltip = document.createElement("span");
+  tooltip.className = "tooltip";
+  tooltip.innerHTML = `
+    <span class="material-symbols-outlined">help</span>
+    <span class="tooltip-text">${descriptions[labelTitle] || "No description available."}</span>
+  `;
+  title.appendChild(tooltip);
 
   const chartContainer = document.createElement("div");
   chartContainer.className = "reserves-chart-container";
@@ -143,25 +151,7 @@ function createSection(label, rows) {
   showMoreBtn.className = "show-toggle-btn";
   showMoreBtn.textContent = "Show More";
 
-  const descriptions = {
-  "Certified Free Cash": "Unrestricted surplus funds certified annually by the Department of Revenue.",
-  "General Stabilization": "Rainy-day fund to stabilize the operating budget during economic downturns.",
-  "Capital Stabilization": "Funds set aside specifically for capital improvements and large purchases."
-};
-
-const labelTitle = titleCase(label); // Keep this consistent
-title.textContent = labelTitle;
-
-const tooltip = document.createElement("span");
-tooltip.className = "tooltip";
-tooltip.innerHTML = `
-  <span class="material-symbols-outlined">help</span>
-  <span class="tooltip-text">${descriptions[labelTitle] || "No description available."}</span>
-`;
-title.appendChild(tooltip);
-
-  // Sort rows by fiscal year (descending)
-  const sortedDesc = [...rows].sort((a, b) => parseInt(b.fy) - parseInt(a.fy));
+  const sortedDesc = [...rows].sort((a, b) => parseInt(b.fy) - parseInt(a.fy)).reverse(); // newest → oldest
 
   let expanded = false;
   const shortTable = createTable(label, sortedDesc.slice(0, 10));
@@ -185,18 +175,18 @@ title.appendChild(tooltip);
   section.appendChild(wrapper);
   document.querySelector("main").appendChild(section);
 
-  // Prepare chart data: 10 most recent (sorted ascending for proper chart order)
-  const chartData = [...sortedDesc].slice(0, 10).sort((a, b) => parseInt(a.fy) - parseInt(b.fy));
+  // For chart: show oldest → newest (so newest appears on RIGHT)
+  const chartData = sortedDesc.slice(0, 10).sort((a, b) => parseInt(a.fy) - parseInt(b.fy));
   drawComboChart(
     canvas.id,
     chartData.map(r => r.fy),
     chartData.map(r => r.amount),
     chartData.map(r => r.percent * 100),
-    titleCase(label)
+    labelTitle
   );
 }
 
-// Load and parse data
+// Load and parse CSV data
 Papa.parse(reservesDataUrl, {
   header: true,
   download: true,
