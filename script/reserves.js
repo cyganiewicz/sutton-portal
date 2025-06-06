@@ -119,13 +119,9 @@ function createSection(label, rows) {
   section.className = "reserve-section";
 
   const descriptions = {
-    "Certified Free Cash": "Remaining, unrestricted funds from operations of the previous fiscal year, including unexpended free cash from the previous year, actual receipts in excess of revenue estimated on the tax
-recapitulation sheet, and unspent amounts in budget
-line items. Unpaid property taxes and certain deficits
-reduce the amount that can be certified as free cash.",
-    "General Stabilization": "Massachusetts communities are permitted by M.G.L. Chapter 40, Section 5B, to set aside money each year to be held in a Stabilization Fund in order to provide for emergencies and unforeseen expenses. 
-    The funds can be used for any lawful municipal purpose, but a 2/3 vote of the Town Meeting is required to make an appropriate from the fund. Rating agencies such as Standard and Poors look at the Town's reserves, and especially the Stabilization Fund, in setting the Town's bond rating, which in turn determines the rate at which Sutton can borrow money.",
-    "Capital Stabilization": "Pursuant to M.G.L Chapter 40 Section 5B, Sutton has established a special purpose stabilization fund to designate funds to be utilized for capital projects. As a special purpose fund, a majority vote of Town Meeting is necessary to appropriate funds."
+    "Certified Free Cash": "Remaining, unrestricted funds left over at the end of a fiscal year. These funds are certified annually by the Department of Revenue and can be appropriated by Town Meeting for one-time expenses, capital projects, or to supplement reserves.",
+    "General Stabilization": "Serves as the Town’s 'rainy day' fund. It provides financial flexibility and can be used to stabilize the budget during economic downturns or unexpected revenue shortfalls. Appropriations require a two-thirds Town Meeting vote.",
+    "Capital Stabilization": "Designated for capital expenditures such as vehicles, equipment, or facility improvements. It helps reduce reliance on borrowing and promotes long-term capital planning. Appropriations require a majority Town Meeting vote."
   };
 
   const labelTitle = titleCase(label);
