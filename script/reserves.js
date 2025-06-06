@@ -119,9 +119,13 @@ function createSection(label, rows) {
   section.className = "reserve-section";
 
   const descriptions = {
-    "Certified Free Cash": "Unrestricted surplus funds certified annually by the Department of Revenue.",
-    "General Stabilization": "Rainy-day fund to stabilize the operating budget during economic downturns.",
-    "Capital Stabilization": "Funds set aside specifically for capital improvements and large purchases."
+    "Certified Free Cash": "Remaining, unrestricted funds from operations of the previous fiscal year, including unexpended free cash from the previous year, actual receipts in excess of revenue estimated on the tax
+recapitulation sheet, and unspent amounts in budget
+line items. Unpaid property taxes and certain deficits
+reduce the amount that can be certified as free cash.",
+    "General Stabilization": "Massachusetts communities are permitted by M.G.L. Chapter 40, Section 5B, to set aside money each year to be held in a Stabilization Fund in order to provide for emergencies and unforeseen expenses. 
+    The funds can be used for any lawful municipal purpose, but a 2/3 vote of the Town Meeting is required to make an appropriate from the fund. Rating agencies such as Standard and Poors look at the Town's reserves, and especially the Stabilization Fund, in setting the Town's bond rating, which in turn determines the rate at which Sutton can borrow money.",
+    "Capital Stabilization": "Pursuant to M.G.L Chapter 40 Section 5B, Sutton has established a special purpose stabilization fund to designate funds to be utilized for capital projects. As a special purpose fund, a majority vote of Town Meeting is necessary to appropriate funds."
   };
 
   const labelTitle = titleCase(label);
