@@ -151,11 +151,12 @@ function createSection(label, rows) {
   showMoreBtn.className = "show-toggle-btn";
   showMoreBtn.textContent = "Show More";
 
-  // Sort: newest to oldest for table
-  const sortedDesc = [...rows].sort((a, b) => parseInt(b.fy) - parseInt(a.fy)).reverse();
+  // Sort years numerically
+  const sortedAsc = [...rows].sort((a, b) => parseInt(a.fy) - parseInt(b.fy));   // Oldest → Newest
+  const sortedDesc = [...rows].sort((a, b) => parseInt(b.fy) - parseInt(a.fy));  // Newest → Oldest
 
   let expanded = false;
-  const shortTable = createTable(label, sortedDesc.slice(0, 10));
+  const shortTable = createTable(label, sortedDesc.slice(0, 10)); // Most recent on top
   const fullTable = createTable(label, sortedDesc);
 
   tableContainer.appendChild(shortTable);
@@ -176,8 +177,8 @@ function createSection(label, rows) {
   section.appendChild(wrapper);
   document.querySelector("main").appendChild(section);
 
-  // Chart: show oldest to newest (so most recent on right)
-  const chartData = [...sortedDesc.slice(0, 10)].sort((a, b) => parseInt(a.fy) - parseInt(b.fy));
+  // Chart: 10 most recent years in ascending order → most recent is last/right
+  const chartData = sortedDesc.slice(0, 10).sort((a, b) => parseInt(a.fy) - parseInt(b.fy));
   drawComboChart(
     canvas.id,
     chartData.map(r => r.fy),
@@ -187,7 +188,6 @@ function createSection(label, rows) {
   );
 }
 
-// Load and parse CSV data
 Papa.parse(reservesDataUrl, {
   header: true,
   download: true,
