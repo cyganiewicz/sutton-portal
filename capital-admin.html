@@ -15,8 +15,6 @@
   input,select,textarea{width:100%;padding:.5rem;border:1px solid #ddd;border-radius:.5rem}
   .btn{padding:.45rem .8rem;border-radius:.6rem;border:1px solid #ccc;background:#fff;cursor:pointer}
   .btn.primary{background:#1246a7;color:#fff;border-color:#1246a7}
-  .pill{display:inline-block;padding:.2rem .5rem;border-radius:999px;background:#eef3ff;color:#1246a7;font-weight:600}
-  .num{text-align:right}
   .muted{color:#6b7280}
   .danger{color:#b00020}
 </style>
@@ -24,6 +22,7 @@
 <body>
 <div class="wrap">
   <h1>Capital Admin</h1>
+
   <div id="auth">
     <div id="g_id_onload"
       data-client_id="1053304257177-rvreds5b4j328d2p7n5dfvvo3u58r3v2.apps.googleusercontent.com"
@@ -51,26 +50,39 @@
       <div><label>Title<input id="p-title"></label></div>
       <div><label>Category<input id="p-category"></label></div>
       <div><label>Location<input id="p-location"></label></div>
-      <div><label>Attachments (comma-separated Drive URLs)<input id="p-attachments"></label></div>
       <div class="grid" style="grid-column:1/-1">
         <div><label>Description<textarea id="p-description" rows="4"></textarea></label></div>
         <div><label>Justification<textarea id="p-justification" rows="4"></textarea></label></div>
       </div>
     </div>
 
-    <div class="row" style="margin-top:.5rem">
-      <button class="btn" onclick="createFolder()">Create/Get Project Folder</button>
-      <span id="folder-msg" class="muted"></span>
+    <!-- Maintenance / Operating impact -->
+    <h3>Maintenance & Operating Impact</h3>
+    <div class="grid">
+      <div><label>Annual O&M Cost (est.)<input id="p-om" type="number" min="0" step="1" placeholder="e.g., 5000"></label></div>
+      <div><label>Lifecycle (years)<input id="p-life" type="number" min="0" step="1" placeholder="e.g., 15"></label></div>
+      <div><label>One-time Startup Cost<input id="p-startup" type="number" min="0" step="1" placeholder="e.g., 20000"></label></div>
+      <div><label>Maintenance Notes<textarea id="p-maint-notes" rows="2" placeholder="e.g., scheduled replacements, warranties, etc."></textarea></label></div>
     </div>
+
+    <h3>Attachments</h3>
+    <!-- Hidden iframe + form for file uploads -->
+    <iframe name="uploadFrame" id="uploadFrame" style="display:none"></iframe>
+    <form id="uploadForm" target="uploadFrame" method="POST" enctype="multipart/form-data">
+      <!-- action is set at runtime: API?path=/upload&id_token=...&project_id=... -->
+      <input id="p-files" type="file" name="file1" multiple>
+      <div class="muted">Upload quotes, spec sheets, photos, etc. You can add more files later when editing.</div>
+    </form>
+    <div id="upload-msg" class="muted" style="margin-top:.25rem"></div>
 
     <h3>Costs by Year</h3>
     <table>
-      <thead><tr><th>FY</th><th>Estimate</th><th>Inflation %</th><th>Funding</th><th>Detail</th><th></th></tr></thead>
+      <thead><tr><th>FY</th><th>Base Estimate (today’s $)</th><th>Funding Source</th><th>Detail</th><th></th></tr></thead>
       <tbody id="cost-rows"></tbody>
     </table>
     <div class="row">
       <button class="btn" onclick="addCostRow()">+ Add Row</button>
-      <div class="muted">Use whole dollars; inflation is a decimal (e.g., 0.03)</div>
+      <div class="muted">We’ll apply the Town default escalation on the backend; no need to enter inflation here.</div>
     </div>
 
     <div class="row" style="margin-top:1rem">
@@ -123,11 +135,32 @@
 </div>
 
 <script>
-  // IMPORTANT: set to your Apps Script /exec URL (latest deployment)
+  // Set to your Apps Script /exec URL
   const API = 'https://script.google.com/macros/s/AKfycby6WaJq0C0A7zEQS7pmUXgcPmgRdJMq_-hrOXFw-ahFIyfn8oQ0_QLV0u4H9dLAjpniNw/exec';
-  let ID_TOKEN=null, PROFILE=null;
+  let ID_TOKEN=null, PROFILE=null, OPTIONS=null;
   let editingProjectId=null;
   let costRows=[];
+
+  // JSONP helpers (no CORS)
+  let __cbSeq = 0;
+  function jsonp(url){
+    return new Promise((resolve,reject)=>{
+      const cb = '__cb'+(++__cbSeq);
+      const s = document.createElement('script');
+      window[cb] = (data)=>{ delete window[cb]; s.remove(); resolve(data); };
+      s.onerror = ()=>{ delete window[cb]; s.remove(); reject(new Error('Network error')); };
+      s.src = url + (url.includes('?')?'&':'?') + 'callback=' + cb;
+      document.head.appendChild(s);
+    });
+  }
+  function apiGet(path, qs=''){
+    const q = qs ? ('&'+qs) : '';
+    return jsonp(`${API}?path=${encodeURIComponent(path)}${q}&id_token=${encodeURIComponent(ID_TOKEN||'')}`);
+  }
+  function apiPost(target, body){
+    const bodyEnc = encodeURIComponent(JSON.stringify(body||{}));
+    return jsonp(`${API}?path=/xpost&target=${encodeURIComponent(target)}&id_token=${encodeURIComponent(ID_TOKEN||'')}&body=${bodyEnc}`);
+  }
 
   function showError(msg){
     const el = document.getElementById('who');
@@ -135,100 +168,82 @@
     el.style.color = '#b00020';
   }
 
-  // ---- JSONP helpers ----
-  let __cbSeq = 0;
-  function jsonp(url){
-    return new Promise((resolve,reject)=>{
-      const cbName = '__jsonp_cb_' + (++__cbSeq);
-      const sep = url.includes('?') ? '&' : '?';
-      const src = `${url}${sep}callback=${cbName}`;
-      const s = document.createElement('script');
-      let done = false;
-      window[cbName] = (data)=>{ done=true; cleanup(); resolve(data); };
-      s.onerror = ()=>{ if(!done){ cleanup(); reject(new Error('Network error')); } };
-      function cleanup(){ delete window[cbName]; s.remove(); }
-      s.src = src; document.head.appendChild(s);
-    });
-  }
-  function apiGet(path, qs=''){
-    const q = qs ? `&${qs}` : '';
-    return jsonp(`${API}?path=${encodeURIComponent(path)}${q}&id_token=${encodeURIComponent(ID_TOKEN||'')}`);
-  }
-  function apiPost(path, body){
-    // use GET shim /xpost with body json-encoded; JSONP callback returns result
-    const bodyEnc = encodeURIComponent(JSON.stringify(body||{}));
-    return jsonp(`${API}?path=/xpost&id_token=${encodeURIComponent(ID_TOKEN||'')}&body=${bodyEnc}&path=${encodeURIComponent(path)}`);
-  }
-
-  // Google Sign-In callback
+  // Google Sign-In
   window.onGoogleSignIn = async (resp)=>{
     try{
       ID_TOKEN = resp.credential;
+      OPTIONS = await apiGet('/options'); // funding list & default escalation
       const me = await apiGet('/me');
       if(me && me.error) throw new Error(me.error);
       PROFILE = me;
       document.getElementById('who').textContent =
         `${PROFILE.full_name||PROFILE.email} — ${PROFILE.role.toUpperCase()} ${PROFILE.org_id? '('+PROFILE.org_id+')':''}`;
+
       if(PROFILE.role==='staff'){ document.getElementById('staff').style.display='block'; await loadMyProjects(); newProject(); }
       if(PROFILE.role==='tmgr' || PROFILE.role==='finance'){ document.getElementById('tm').style.display='block'; await loadInbox(); }
       if(PROFILE.role==='readonly'){ document.getElementById('who').textContent += ' (read-only)'; }
     }catch(err){ showError(err.message||String(err)); }
   };
 
-  // ----- Staff
+  // ----- Staff views
   async function loadMyProjects(){
-    try{
-      const rows = await apiGet('/projects');
-      if(rows.error) throw new Error(rows.error);
-      const tb = document.getElementById('my-projects');
-      tb.innerHTML = rows.map(r=>`
-        <tr>
-          <td>${escapeHtml(r.title||'(untitled)')}</td>
-          <td>${r.status||''}</td>
-          <td>${r.updated_at? new Date(r.updated_at).toLocaleString() : ''}</td>
-          <td>
-            <button class="btn" onclick="editProject('${r.project_id}')">Edit</button>
-            ${ (r.status==='draft' || r.status==='returned') ? `<button class="btn primary" onclick="submitExisting('${r.project_id}')">Submit</button>`:''}
-          </td>
-        </tr>`).join('');
-    }catch(err){ showError(err.message); }
+    const rows = await apiGet('/projects');
+    if(rows.error) return showError(rows.error);
+    const tb = document.getElementById('my-projects');
+    tb.innerHTML = rows.map(r=>`
+      <tr>
+        <td>${escapeHtml(r.title||'(untitled)')}</td>
+        <td>${r.status||''}</td>
+        <td>${r.updated_at? new Date(r.updated_at).toLocaleString() : ''}</td>
+        <td>
+          <button class="btn" onclick="editProject('${r.project_id}')">Edit</button>
+          ${ (r.status==='draft' || r.status==='returned') ? `<button class="btn primary" onclick="submitExisting('${r.project_id}')">Submit</button>`:''}
+        </td>
+      </tr>`).join('');
   }
 
   function newProject(){
     editingProjectId=null;
     document.getElementById('edit-title').textContent = 'Create Project';
-    ['p-title','p-category','p-location','p-attachments','p-description','p-justification'].forEach(id=> document.getElementById(id).value='');
+    ['p-title','p-category','p-location','p-description','p-justification','p-om','p-life','p-startup','p-maint-notes'].forEach(id=> document.getElementById(id).value='');
     costRows=[]; renderCostRows();
-    document.getElementById('folder-msg').textContent = '';
+    document.getElementById('upload-msg').textContent = '';
+    // clear file input
+    document.getElementById('p-files').value = '';
   }
 
   async function editProject(id){
-    try{
-      const data = await apiGet('/project','id='+encodeURIComponent(id));
-      if(data.error) throw new Error(data.error);
-      editingProjectId = data.project.project_id;
-      document.getElementById('edit-title').textContent = 'Edit Project';
-      document.getElementById('p-title').value = data.project.title||'';
-      document.getElementById('p-category').value = data.project.category||'';
-      document.getElementById('p-location').value = data.project.location||'';
-      document.getElementById('p-attachments').value = data.project.attachments||'';
-      document.getElementById('p-description').value = data.project.description||'';
-      document.getElementById('p-justification').value = data.project.justification||'';
-      costRows = (data.costs||[]).map(c=> ({row_id:c.row_id, fiscal_year:c.fiscal_year, cost_estimate:c.cost_estimate, inflation_pct:c.inflation_pct, funding_source:c.funding_source, funding_detail:c.funding_detail}));
-      renderCostRows();
-      document.getElementById('folder-msg').innerHTML = data.project.folder_url ? (`Folder: <a href="${data.project.folder_url}" target="_blank" rel="noopener">${data.project.folder_url}</a>`) : '';
-    }catch(err){ showError(err.message); }
+    const data = await apiGet('/project','id='+encodeURIComponent(id));
+    if(data.error) return showError(data.error);
+    editingProjectId = data.project.project_id;
+    document.getElementById('edit-title').textContent = 'Edit Project';
+    document.getElementById('p-title').value = data.project.title||'';
+    document.getElementById('p-category').value = data.project.category||'';
+    document.getElementById('p-location').value = data.project.location||'';
+    document.getElementById('p-description').value = data.project.description||'';
+    document.getElementById('p-justification').value = data.project.justification||'';
+    document.getElementById('p-om').value = data.project.annual_om_cost||'';
+    document.getElementById('p-life').value = data.project.lifecycle_years||'';
+    document.getElementById('p-startup').value = data.project.startup_cost||'';
+    document.getElementById('p-maint-notes').value = data.project.maintenance_notes||'';
+    costRows = (data.costs||[]).map(c=> ({row_id:c.row_id, fiscal_year:c.fiscal_year, cost_estimate:c.cost_estimate, funding_source:c.funding_source, funding_detail:c.funding_detail}));
+    renderCostRows();
   }
 
   function renderCostRows(){
     const tb = document.getElementById('cost-rows');
+    const opts = (OPTIONS && OPTIONS.funding_sources || []).map(s=>`<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
     tb.innerHTML = costRows.map((r,idx)=>`
       <tr>
         <td><input type="number" value="${r.fiscal_year||''}" oninput="costRows[${idx}].fiscal_year=this.value"></td>
-        <td><input type="number" value="${r.cost_estimate||''}" oninput="costRows[${idx}].cost_estimate=this.value"></td>
-        <td><input type="number" step="0.01" value="${r.inflation_pct||''}" oninput="costRows[${idx}].inflation_pct=this.value"></td>
-        <td><input value="${r.funding_source||''}" oninput="costRows[${idx}].funding_source=this.value" placeholder="Free Cash, Debt Excluded, Grants, …"></td>
-        <td><input value="${r.funding_detail||''}" oninput="costRows[${idx}].funding_detail=this.value"></td>
+        <td><input type="number" value="${r.cost_estimate||''}" oninput="costRows[${idx}].cost_estimate=this.value" placeholder="whole dollars"></td>
+        <td>
+          <select oninput="costRows[${idx}].funding_source=this.value">
+            <option value="">— Select —</option>
+            ${opts.replace(`value="${escapeAttr(r.funding_source||'')}"`, `value="${escapeAttr(r.funding_source||'')}" selected`)}
+          </select>
+        </td>
+        <td><input value="${r.funding_detail||''}" oninput="costRows[${idx}].funding_detail=this.value" placeholder="e.g., grant name"></td>
         <td><button class="btn danger" onclick="removeCostRow(${idx})">✕</button></td>
       </tr>`).join('');
   }
@@ -236,122 +251,136 @@
   function removeCostRow(i){ costRows.splice(i,1); renderCostRows(); }
 
   async function saveDraft(){
-    try{
-      const proj = {
-        project_id: editingProjectId || undefined,
-        title: document.getElementById('p-title').value,
-        category: document.getElementById('p-category').value,
-        location: document.getElementById('p-location').value,
-        attachments: document.getElementById('p-attachments').value,
-        description: document.getElementById('p-description').value,
-        justification: document.getElementById('p-justification').value,
-        status: 'draft'
-      };
-      const res = await apiPost('/project', proj);
-      if(res.error) throw new Error(res.error);
-      editingProjectId = res.project_id;
-      if(costRows.length){
-        const res2 = await apiPost('/cost_rows', { project_id: editingProjectId, rows: costRows });
-        if(res2.error) throw new Error(res2.error);
-      }
-      document.getElementById('save-msg').textContent = 'Saved.';
-      loadMyProjects();
-    }catch(err){ showError(err.message); }
+    // upsert project + costs
+    const proj = collectProject('draft');
+    const res = await apiPost('/project', proj);
+    if(res.error) return showError(res.error);
+    editingProjectId = res.project_id;
+
+    if(costRows.length){
+      const r2 = await apiPost('/cost_rows', { project_id: editingProjectId, rows: costRows });
+      if(r2.error) return showError(r2.error);
+    }
+    document.getElementById('save-msg').textContent = 'Saved.';
+    loadMyProjects();
   }
 
   async function submitProject(){
-    try{
-      if(!editingProjectId){ await saveDraft(); }
-      const res = await apiPost('/submit', { project_id: editingProjectId });
-      if(res.error) throw new Error(res.error);
-      document.getElementById('save-msg').textContent = 'Submitted for review.';
-      loadMyProjects();
-    }catch(err){ showError(err.message); }
+    // 1) ensure project exists and costs saved
+    if(!editingProjectId){ await saveDraft(); } else { await saveDraft(); }
+
+    // 2) if user attached files, upload first (form POST to Apps Script)
+    const files = document.getElementById('p-files').files;
+    if(files && files.length){
+      document.getElementById('upload-msg').textContent = 'Uploading attachments…';
+      // set form action with project_id + id_token
+      const form = document.getElementById('uploadForm');
+      form.action = `${API}?path=/upload&id_token=${encodeURIComponent(ID_TOKEN)}&project_id=${encodeURIComponent(editingProjectId)}`;
+      window.addEventListener('message', onUploadMessageOnce, { once:true });
+      form.submit(); // will trigger hidden iframe
+      // continue in onUploadMessageOnce -> then call doSubmit()
+    }else{
+      await doSubmit();
+    }
   }
-  async function submitExisting(id){
+  function onUploadMessageOnce(ev){
     try{
-      const res = await apiPost('/submit', { project_id: id });
-      if(res.error) throw new Error(res.error);
-      loadMyProjects();
-    }catch(err){ showError(err.message); }
+      // Optionally: check ev.origin includes 'https://script.google.com' or 'https://script.googleusercontent.com'
+      if(!ev.data || ev.data.type!=='CIP_UPLOAD') return;
+      const payload = ev.data.data || {};
+      if(payload.error){ showError(payload.error); return; }
+      document.getElementById('upload-msg').textContent = `Uploaded ${payload.count||0} file(s).`;
+      doSubmit();
+    }catch(_){}
+  }
+  async function doSubmit(){
+    const r = await apiPost('/submit', { project_id: editingProjectId });
+    if(r.error) return showError(r.error);
+    document.getElementById('save-msg').textContent = 'Submitted for review.';
+    loadMyProjects();
   }
 
-  async function createFolder(){
-    try{
-      if(!editingProjectId){ await saveDraft(); }
-      const fyHint = (costRows[0] && Number(costRows[0].fiscal_year)) || undefined;
-      const res = await apiPost('/ensure_folder', { project_id: editingProjectId, fiscal_year_hint: fyHint, org_id_hint: PROFILE.org_id });
-      if(res.error) throw new Error(res.error);
-      document.getElementById('folder-msg').innerHTML = `Folder: <a href="${res.folder_url}" target="_blank" rel="noopener">${res.folder_url}</a>`;
-      const cur = document.getElementById('p-attachments').value.trim();
-      if(cur.indexOf(res.folder_url)===-1){
-        document.getElementById('p-attachments').value = (cur ? (cur + ', ') : '') + res.folder_url;
-      }
-    }catch(err){ showError(err.message); }
+  async function submitExisting(id){
+    editingProjectId = id;
+    await submitProject();
+  }
+
+  function collectProject(status){
+    return {
+      project_id: editingProjectId || undefined,
+      title: document.getElementById('p-title').value,
+      category: document.getElementById('p-category').value,
+      location: document.getElementById('p-location').value,
+      description: document.getElementById('p-description').value,
+      justification: document.getElementById('p-justification').value,
+      status: status || 'draft',
+      annual_om_cost: valueOrNull('p-om'),
+      lifecycle_years: valueOrNull('p-life'),
+      startup_cost: valueOrNull('p-startup'),
+      maintenance_notes: document.getElementById('p-maint-notes').value
+    };
+  }
+  function valueOrNull(id){
+    const v = document.getElementById(id).value.trim();
+    return v==='' ? null : +v;
   }
 
   // ----- TM/Finance
   async function loadInbox(){
-    try{
-      const list = await apiGet('/projects','status=submitted');
-      if(list.error) throw new Error(list.error);
-      const tb = document.getElementById('inbox');
-      tb.innerHTML = list.map(r=>`
-        <tr>
-          <td><a href="/capital-project.html?id=${encodeURIComponent(r.project_id)}" target="_blank">${escapeHtml(r.title||'(untitled)')}</a></td>
-          <td>${escapeHtml(r.org_id||'')}</td>
-          <td>${r.status||''}</td>
-          <td>${r.total_score||''}</td>
-          <td>
-            <button class="btn" onclick="setScoreProject('${r.project_id}')">Score</button>
-            <button class="btn primary" onclick="transition(['${r.project_id}'],'recommended')">Recommend</button>
-            <button class="btn" onclick="transition(['${r.project_id}'],'under_review')">Under Review</button>
-            <button class="btn" onclick="transition(['${r.project_id}'],'returned')">Return</button>
-            <button class="btn" onclick="transition(['${r.project_id}'],'deferred')">Defer</button>
-          </td>
-        </tr>`).join('');
-    }catch(err){ showError(err.message); }
+    const list = await apiGet('/projects','status=submitted');
+    if(list.error) return showError(list.error);
+    const tb = document.getElementById('inbox');
+    tb.innerHTML = list.map(r=>`
+      <tr>
+        <td><a href="/capital-project.html?id=${encodeURIComponent(r.project_id)}" target="_blank">${escapeHtml(r.title||'(untitled)')}</a></td>
+        <td>${escapeHtml(r.org_id||'')}</td>
+        <td>${r.status||''}</td>
+        <td>${r.total_score||''}</td>
+        <td>
+          <button class="btn" onclick="setScoreProject('${r.project_id}')">Score</button>
+          <button class="btn primary" onclick="transition(['${r.project_id}'],'recommended')">Recommend</button>
+          <button class="btn" onclick="transition(['${r.project_id}'],'under_review')">Under Review</button>
+          <button class="btn" onclick="transition(['${r.project_id}'],'returned')">Return</button>
+          <button class="btn" onclick="transition(['${r.project_id}'],'deferred')">Defer</button>
+        </td>
+      </tr>`).join('');
   }
   function setScoreProject(id){ document.getElementById('score-project-id').value=id; }
   async function saveScore(){
-    try{
-      const project_id = document.getElementById('score-project-id').value;
-      if(!project_id) return alert('Select a project (Score button)');
-      const body = {
-        project_id,
-        safety: +document.getElementById('sc-safety').value||0,
-        compliance: +document.getElementById('sc-compliance').value||0,
-        asset_condition: +document.getElementById('sc-asset').value||0,
-        service_demand: +document.getElementById('sc-service').value||0,
-        strategic_alignment: +document.getElementById('sc-align').value||0,
-        external_funding: +document.getElementById('sc-ext').value||0,
-        return_on_investment: +document.getElementById('sc-roi').value||0
-      };
-      const res = await apiPost('/score', body);
-      if(res.error) throw new Error(res.error);
-      loadInbox();
-    }catch(err){ showError(err.message); }
+    const project_id = document.getElementById('score-project-id').value;
+    if(!project_id) return alert('Select a project (Score button)');
+    const body = {
+      project_id,
+      safety: +document.getElementById('sc-safety').value||0,
+      compliance: +document.getElementById('sc-compliance').value||0,
+      asset_condition: +document.getElementById('sc-asset').value||0,
+      service_demand: +document.getElementById('sc-service').value||0,
+      strategic_alignment: +document.getElementById('sc-align').value||0,
+      external_funding: +document.getElementById('sc-ext').value||0,
+      return_on_investment: +document.getElementById('sc-roi').value||0
+    };
+    const res = await apiPost('/score', body);
+    if(res.error) return showError(res.error);
+    loadInbox();
   }
   async function transition(ids, to){
-    try{
-      const res = await apiPost('/transition', { project_ids: ids, to, note:'' });
-      if(res.error) throw new Error(res.error);
-      loadInbox();
-    }catch(err){ showError(err.message); }
+    const res = await apiPost('/transition', { project_ids: ids, to, note:'' });
+    if(res.error) return showError(res.error);
+    loadInbox();
   }
   async function doSnapshot(){
-    try{
-      const phase_key = document.getElementById('snap-phase').value;
-      const window_start_fy = +document.getElementById('snap-start').value;
-      const window_end_fy = +document.getElementById('snap-end').value;
-      const replace = document.getElementById('snap-replace').checked;
-      const res = await apiPost('/snapshot', { phase_key, window_start_fy, window_end_fy, replace });
-      if(res.error) throw new Error(res.error);
-      document.getElementById('snap-msg').textContent = 'Snapshot created.';
-    }catch(err){ showError(err.message); }
+    const phase_key = document.getElementById('snap-phase').value;
+    const window_start_fy = +document.getElementById('snap-start').value;
+    const window_end_fy = +document.getElementById('snap-end').value;
+    const replace = document.getElementById('snap-replace').checked;
+    const res = await apiPost('/snapshot', { phase_key, window_start_fy, window_end_fy, replace });
+    if(res.error) return showError(res.error);
+    document.getElementById('snap-msg').textContent = 'Snapshot created.';
   }
 
+  // utils
   function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  function escapeAttr(s){ return String(s||'').replace(/"/g,'&quot;'); }
 </script>
 </body>
 </html>
