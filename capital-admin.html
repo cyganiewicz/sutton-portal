@@ -2,151 +2,183 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Capital Admin</title>
+<title>Capital Admin • Town of Sutton</title>
 
 <link rel="stylesheet" href="styles/cip-styles.css">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
+<!-- Local per-page tweaks (tiny) -->
 <style>
+  /* keeps page width consistent with the design system */
   .wrap{max-width:1100px;margin:2rem auto;padding:0 1rem}
-  .row{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-  table{width:100%;border-collapse:collapse} th,td{padding:.5rem;border-bottom:1px solid #eee}
-  input,select,textarea{width:100%;padding:.5rem;border:1px solid #ddd;border-radius:.5rem}
-  .btn{padding:.45rem .8rem;border-radius:.6rem;border:1px solid #ccc;background:#fff;cursor:pointer}
-  .btn.primary{background:#1246a7;color:#fff;border-color:#1246a7}
-  .muted{color:#6b7280}
-  .danger{color:#b00020}
 </style>
 </head>
-<body>
-<div class="wrap">
-  <h1>Capital Admin</h1>
-
-  <div id="auth">
-    <div id="g_id_onload"
-      data-client_id="1053304257177-rvreds5b4j328d2p7n5dfvvo3u58r3v2.apps.googleusercontent.com"
-      data-callback="onGoogleSignIn"
-      data-ux_mode="popup"
-      data-use_fedcm_for_prompt="false"
-      data-auto_select="false"></div>
-    <div class="g_id_signin" data-type="standard"></div>
-  </div>
-
-  <div id="who" class="muted"></div>
-
-  <!-- STAFF PANEL -->
-  <div id="staff" style="display:none">
-    <h2>My Projects</h2>
-    <div class="row">
-      <button class="btn primary" onclick="newProject()">+ New Project</button>
+<body class="theme-light">
+  <!-- Brand Header -->
+  <header class="brandbar">
+    <div class="brandbar__inner">
+      <a class="brandbar__logo" href="/"><span class="brandbar__seal">🏛️</span></a>
+      <div class="brandbar__titles">
+        <div class="brandbar__title">Town of Sutton</div>
+        <div class="brandbar__subtitle">Capital Improvement Program</div>
+      </div>
+      <nav class="brandbar__nav">
+        <a href="/capital.html">Public Capital</a>
+        <a href="/capital-plan.html">Plan Viewer</a>
+        <a href="/capital-admin.html" class="active">Admin</a>
+      </nav>
     </div>
-    <table>
-      <thead><tr><th>Title</th><th>Status</th><th>Updated</th><th></th></tr></thead>
-      <tbody id="my-projects"></tbody>
-    </table>
+  </header>
 
-    <h3 id="edit-title" style="margin-top:2rem">Create / Edit Project</h3>
-    <div class="grid">
-      <div><label>Title<input id="p-title"></label></div>
-      <div><label>Category<input id="p-category"></label></div>
-      <div><label>Location<input id="p-location"></label></div>
-      <div class="grid" style="grid-column:1/-1">
-        <div><label>Description<textarea id="p-description" rows="4"></textarea></label></div>
-        <div><label>Justification<textarea id="p-justification" rows="4"></textarea></label></div>
+  <!-- Subheader band shows who’s signed in -->
+  <div class="subhead">
+    <div class="subhead__inner">
+      <div id="who" class="subhead__who">Not signed in</div>
+      <div id="auth" class="subhead__auth">
+        <div id="g_id_onload"
+          data-client_id="1053304257177-rvreds5b4j328d2p7n5dfvvo3u58r3v2.apps.googleusercontent.com"
+          data-callback="onGoogleSignIn"
+          data-ux_mode="popup"
+          data-use_fedcm_for_prompt="false"
+          data-auto_select="false"></div>
+        <div class="g_id_signin" data-type="standard"></div>
       </div>
     </div>
-
-    <h3>Maintenance & Operating Impact</h3>
-    <div class="grid">
-      <div><label>Annual O&M Cost (est.)<input id="p-om" type="number" min="0" step="1" placeholder="e.g., 5000"></label></div>
-      <div><label>Lifecycle (years)<input id="p-life" type="number" min="0" step="1" placeholder="e.g., 15"></label></div>
-      <div><label>One-time Startup Cost<input id="p-startup" type="number" min="0" step="1" placeholder="e.g., 20000"></label></div>
-      <div><label>Maintenance Notes<textarea id="p-maint-notes" rows="2" placeholder="e.g., scheduled replacements, warranties, etc."></textarea></label></div>
-    </div>
-
-    <h3>Attachments</h3>
-    <iframe name="uploadFrame" id="uploadFrame" style="display:none"></iframe>
-    <form id="uploadForm" target="uploadFrame" method="POST" enctype="multipart/form-data">
-      <!-- action is set at runtime: API?path=/upload&id_token=...&project_id=... -->
-      <input id="p-files" type="file" name="file1" multiple>
-      <div class="muted">Upload quotes, spec sheets, photos, etc. You can add more files later when editing.</div>
-    </form>
-    <div id="upload-msg" class="muted" style="margin-top:.25rem"></div>
-
-    <h3>Costs by Year</h3>
-    <table>
-      <thead><tr><th>FY</th><th>Base Estimate (today’s $)</th><th>Funding Source</th><th>Detail</th><th></th></tr></thead>
-      <tbody id="cost-rows"></tbody>
-    </table>
-    <div class="row">
-      <button class="btn" onclick="addCostRow()">+ Add Row</button>
-      <div class="muted">We’ll apply the Town default escalation on the backend; no need to enter inflation here.</div>
-    </div>
-
-    <div class="row" style="margin-top:1rem">
-      <button class="btn" onclick="saveDraft()">Save Draft</button>
-      <button class="btn primary" onclick="submitProject()">Submit for Review</button>
-      <div id="save-msg" class="muted"></div>
-    </div>
   </div>
 
-  <!-- TM/FINANCE PANEL -->
-  <div id="tm" style="display:none;margin-top:2rem">
-    <h2>Projects</h2>
-    <div class="row" style="margin:.5rem 0">
-      <label>Status
-        <select id="inbox-status" onchange="loadInbox()">
-          <option value="submitted" selected>Submitted</option>
-          <option value="under_review">Under Review</option>
-          <option value="recommended">Recommended</option>
-          <option value="returned">Returned</option>
-          <option value="deferred">Deferred</option>
-          <option value="">All</option>
-        </select>
-      </label>
-    </div>
-    <table>
-      <thead><tr><th>Title</th><th>Dept</th><th>Status</th><th>Score</th><th></th></tr></thead>
-      <tbody id="inbox"></tbody>
-    </table>
+  <!-- Page Content -->
+  <main class="wrap">
+    <h1 class="page-title">Capital Admin</h1>
 
-    <h3>Scoring</h3>
-    <div id="score-banner" class="muted" style="margin:.25rem 0 .5rem 0;"></div>
-    <div class="grid" style="max-width:700px">
-      <label>Safety<input id="sc-safety" type="number" min="0" max="5" step="1" value="0"></label>
-      <label>Compliance<input id="sc-compliance" type="number" min="0" max="5" step="1" value="0"></label>
-      <label>Asset Condition<input id="sc-asset" type="number" min="0" max="5" step="1" value="0"></label>
-      <label>Service Demand<input id="sc-service" type="number" min="0" max="5" step="1" value="0"></label>
-      <label>Strategic Alignment<input id="sc-align" type="number" min="0" max="5" step="1" value="0"></label>
-      <label>External Funding<input id="sc-ext" type="number" min="0" max="5" step="1" value="0"></label>
-      <label>ROI<input id="sc-roi" type="number" min="0" max="5" step="1" value="0"></label>
-    </div>
-    <div class="row" style="margin-top:.5rem">
-      <input id="score-project-id" type="hidden">
-      <button class="btn" onclick="saveScore()">Save Score</button>
-      <div id="score-msg" class="muted"></div>
-    </div>
+    <!-- STAFF PANEL -->
+    <section id="staff" class="card" style="display:none">
+      <div class="card__header">
+        <h2 class="card__title">My Projects</h2>
+        <div class="card__actions">
+          <button class="btn btn-primary" onclick="newProject()">+ New Project</button>
+        </div>
+      </div>
 
-    <h3 style="margin-top:2rem">Plan Snapshot</h3>
-    <div class="row">
-      <label>Phase
-        <select id="snap-phase">
-          <option value="tm_recommended">Town Manager Recommend</option>
-          <option value="preliminary">Preliminary</option>
-          <option value="fincom">FinCom</option>
-          <option value="town_meeting">Town Meeting</option>
-          <option value="adopted">Adopted</option>
-        </select>
-      </label>
-      <label>Start FY <input id="snap-start" type="number" value="2027"></label>
-      <label>End FY <input id="snap-end" type="number" value="2036"></label>
-      <label><input id="snap-replace" type="checkbox"> Replace existing</label>
-      <button class="btn primary" onclick="doSnapshot()">Create Snapshot</button>
-      <div id="snap-msg" class="muted"></div>
-    </div>
-  </div>
-</div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr><th>Title</th><th>Status</th><th>Updated</th><th></th></tr>
+          </thead>
+          <tbody id="my-projects"></tbody>
+        </table>
+      </div>
+
+      <h3 id="edit-title" class="section-title">Create / Edit Project</h3>
+      <div class="grid grid-2">
+        <div><label class="label">Title<input class="input" id="p-title"></label></div>
+        <div><label class="label">Category<input class="input" id="p-category"></label></div>
+        <div><label class="label">Location<input class="input" id="p-location"></label></div>
+        <div class="grid grid-2 grid-span-2">
+          <div><label class="label">Description<textarea class="input" id="p-description" rows="4"></textarea></label></div>
+          <div><label class="label">Justification<textarea class="input" id="p-justification" rows="4"></textarea></label></div>
+        </div>
+      </div>
+
+      <h3 class="section-title">Maintenance & Operating Impact</h3>
+      <div class="grid grid-2">
+        <div><label class="label">Annual O&M Cost (est.)<input class="input" id="p-om" type="number" min="0" step="1" placeholder="e.g., 5000"></label></div>
+        <div><label class="label">Lifecycle (years)<input class="input" id="p-life" type="number" min="0" step="1" placeholder="e.g., 15"></label></div>
+        <div><label class="label">One-time Startup Cost<input class="input" id="p-startup" type="number" min="0" step="1" placeholder="e.g., 20000"></label></div>
+        <div><label class="label">Maintenance Notes<textarea class="input" id="p-maint-notes" rows="2" placeholder="e.g., scheduled replacements, warranties, etc."></textarea></label></div>
+      </div>
+
+      <h3 class="section-title">Attachments</h3>
+      <div class="card card--soft">
+        <iframe name="uploadFrame" id="uploadFrame" style="display:none"></iframe>
+        <form id="uploadForm" target="uploadFrame" method="POST" enctype="multipart/form-data" class="row row--gap">
+          <input id="p-files" type="file" name="file1" multiple class="file">
+          <div class="muted">Upload quotes, spec sheets, photos. You can add more files later.</div>
+        </form>
+        <div id="upload-msg" class="muted" style="margin-top:.25rem"></div>
+      </div>
+
+      <h3 class="section-title">Costs by Year</h3>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>FY</th><th>Base Estimate (today’s $)</th><th>Funding Source</th><th>Detail</th><th></th></tr></thead>
+          <tbody id="cost-rows"></tbody>
+        </table>
+      </div>
+      <div class="row row--gap">
+        <button class="btn" onclick="addCostRow()">+ Add Row</button>
+        <div class="muted">Town default escalation is applied on the backend—no inflation input needed.</div>
+      </div>
+
+      <div class="row row--gap" style="margin-top:1rem">
+        <button class="btn" onclick="saveDraft()">Save Draft</button>
+        <button class="btn btn-primary" onclick="submitProject()">Submit for Review</button>
+        <div id="save-msg" class="muted"></div>
+      </div>
+    </section>
+
+    <!-- TM/FINANCE PANEL -->
+    <section id="tm" class="card" style="display:none;margin-top:2rem">
+      <div class="card__header">
+        <h2 class="card__title">Projects</h2>
+        <div class="card__actions">
+          <label class="label label--inline">Status
+            <select id="inbox-status" class="input input--select" onchange="loadInbox()">
+              <option value="submitted" selected>Submitted</option>
+              <option value="under_review">Under Review</option>
+              <option value="recommended">Recommended</option>
+              <option value="returned">Returned</option>
+              <option value="deferred">Deferred</option>
+              <option value="">All</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table table--hover">
+          <thead><tr><th>Title</th><th>Dept</th><th>Status</th><th>Score</th><th></th></tr></thead>
+          <tbody id="inbox"></tbody>
+        </table>
+      </div>
+
+      <h3 class="section-title">Scoring</h3>
+      <div id="score-banner" class="banner banner--muted"></div>
+      <div class="grid grid-2" style="max-width:700px">
+        <label class="label">Safety<input class="input" id="sc-safety" type="number" min="0" max="5" step="1" value="0"></label>
+        <label class="label">Compliance<input class="input" id="sc-compliance" type="number" min="0" max="5" step="1" value="0"></label>
+        <label class="label">Asset Condition<input class="input" id="sc-asset" type="number" min="0" max="5" step="1" value="0"></label>
+        <label class="label">Service Demand<input class="input" id="sc-service" type="number" min="0" max="5" step="1" value="0"></label>
+        <label class="label">Strategic Alignment<input class="input" id="sc-align" type="number" min="0" max="5" step="1" value="0"></label>
+        <label class="label">External Funding<input class="input" id="sc-ext" type="number" min="0" max="5" step="1" value="0"></label>
+        <label class="label">ROI<input class="input" id="sc-roi" type="number" min="0" max="5" step="1" value="0"></label>
+      </div>
+      <div class="row row--gap" style="margin-top:.5rem">
+        <input id="score-project-id" type="hidden">
+        <button class="btn" onclick="saveScore()">Save Score</button>
+        <div id="score-msg" class="muted"></div>
+      </div>
+
+      <h3 class="section-title">Plan Snapshot</h3>
+      <div class="row row--gap">
+        <label class="label label--inline">Phase
+          <select id="snap-phase" class="input input--select">
+            <option value="tm_recommended">Town Manager Recommend</option>
+            <option value="preliminary">Preliminary</option>
+            <option value="fincom">FinCom</option>
+            <option value="town_meeting">Town Meeting</option>
+            <option value="adopted">Adopted</option>
+          </select>
+        </label>
+        <label class="label label--inline">Start FY <input class="input input--sm" id="snap-start" type="number" value="2027"></label>
+        <label class="label label--inline">End FY <input class="input input--sm" id="snap-end" type="number" value="2036"></label>
+        <label class="label label--inline"><input id="snap-replace" type="checkbox"> Replace existing</label>
+        <button class="btn btn-primary" onclick="doSnapshot()">Create Snapshot</button>
+        <div id="snap-msg" class="muted"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- your existing <script> with logic sits below this -->
 
 <script>
   // 1) CHANGE THIS to your Apps Script /exec URL:
