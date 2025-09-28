@@ -4,11 +4,10 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Capital Admin</title>
 
-<!-- Use the page-specific stylesheet -->
-<link rel="stylesheet" href="styles/cip-styles.css">
+<link rel="stylesheet" href="/cip-styles.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <style>
-  /* Small local tweaks; most styling lives in cip-styles.css */
   .wrap{max-width:1100px;margin:2rem auto;padding:0 1rem}
   .row{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
@@ -21,7 +20,6 @@
   .muted{color:#6b7280}
   .danger{color:#b00020}
 </style>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 <div class="wrap">
@@ -29,7 +27,10 @@
   <div id="auth">
     <div id="g_id_onload"
       data-client_id="1053304257177-rvreds5b4j328d2p7n5dfvvo3u58r3v2.apps.googleusercontent.com"
-      data-callback="onGoogleSignIn"></div>
+      data-callback="onGoogleSignIn"
+      data-ux_mode="popup"
+      data-use_fedcm_for_prompt="false"
+      data-auto_select="false"></div>
     <div class="g_id_signin" data-type="standard"></div>
   </div>
 
@@ -57,7 +58,6 @@
       </div>
     </div>
 
-    <!-- New: Drive folder helper -->
     <div class="row" style="margin-top:.5rem">
       <button class="btn" onclick="createFolder()">Create/Get Project Folder</button>
       <span id="folder-msg" class="muted"></span>
@@ -123,54 +123,63 @@
 </div>
 
 <script>
-  // IMPORTANT: /exec URL (latest deployment)
+  // IMPORTANT: set to your Apps Script /exec URL (latest deployment)
   const API = 'https://script.google.com/macros/s/AKfycby6WaJq0C0A7zEQS7pmUXgcPmgRdJMq_-hrOXFw-ahFIyfn8oQ0_QLV0u4H9dLAjpniNw/exec';
   let ID_TOKEN=null, PROFILE=null;
   let editingProjectId=null;
   let costRows=[];
 
-  // Error helper so you see problems instead of a blank page
   function showError(msg){
     const el = document.getElementById('who');
     el.textContent = 'Error: ' + msg;
     el.style.color = '#b00020';
   }
 
-  // Google Sign-In callback (must be global)
+  // ---- JSONP helpers ----
+  let __cbSeq = 0;
+  function jsonp(url){
+    return new Promise((resolve,reject)=>{
+      const cbName = '__jsonp_cb_' + (++__cbSeq);
+      const sep = url.includes('?') ? '&' : '?';
+      const src = `${url}${sep}callback=${cbName}`;
+      const s = document.createElement('script');
+      let done = false;
+      window[cbName] = (data)=>{ done=true; cleanup(); resolve(data); };
+      s.onerror = ()=>{ if(!done){ cleanup(); reject(new Error('Network error')); } };
+      function cleanup(){ delete window[cbName]; s.remove(); }
+      s.src = src; document.head.appendChild(s);
+    });
+  }
+  function apiGet(path, qs=''){
+    const q = qs ? `&${qs}` : '';
+    return jsonp(`${API}?path=${encodeURIComponent(path)}${q}&id_token=${encodeURIComponent(ID_TOKEN||'')}`);
+  }
+  function apiPost(path, body){
+    // use GET shim /xpost with body json-encoded; JSONP callback returns result
+    const bodyEnc = encodeURIComponent(JSON.stringify(body||{}));
+    return jsonp(`${API}?path=/xpost&id_token=${encodeURIComponent(ID_TOKEN||'')}&body=${bodyEnc}&path=${encodeURIComponent(path)}`);
+  }
+
+  // Google Sign-In callback
   window.onGoogleSignIn = async (resp)=>{
     try{
       ID_TOKEN = resp.credential;
-      PROFILE = await apiGet('/me'); // uses id_token in query (no CORS preflight)
+      const me = await apiGet('/me');
+      if(me && me.error) throw new Error(me.error);
+      PROFILE = me;
       document.getElementById('who').textContent =
         `${PROFILE.full_name||PROFILE.email} — ${PROFILE.role.toUpperCase()} ${PROFILE.org_id? '('+PROFILE.org_id+')':''}`;
-
       if(PROFILE.role==='staff'){ document.getElementById('staff').style.display='block'; await loadMyProjects(); newProject(); }
       if(PROFILE.role==='tmgr' || PROFILE.role==='finance'){ document.getElementById('tm').style.display='block'; await loadInbox(); }
       if(PROFILE.role==='readonly'){ document.getElementById('who').textContent += ' (read-only)'; }
-    }catch(err){
-      showError((err && err.message) || 'Sign-in failed');
-    }
+    }catch(err){ showError(err.message||String(err)); }
   };
-
-  // ------- API helpers (no Authorization header; no JSON Content-Type) -------
-  async function apiGet(path, qs=''){
-    const url = `${API}?path=${encodeURIComponent(path)}${qs ? '&'+qs : ''}&id_token=${encodeURIComponent(ID_TOKEN)}`;
-    const r = await fetch(url, { method: 'GET' });
-    const j = await r.json(); if(!r.ok || j.error) throw new Error(j.error || ('HTTP '+r.status));
-    return j;
-  }
-  async function apiPost(path, body){
-    const url = `${API}?path=${encodeURIComponent(path)}&id_token=${encodeURIComponent(ID_TOKEN)}`;
-    // Content-Type: text/plain avoids preflight on Apps Script
-    const r = await fetch(url, { method:'POST', headers:{ 'Content-Type':'text/plain' }, body: JSON.stringify(body||{}) });
-    const j = await r.json(); if(!r.ok || j.error) throw new Error(j.error || ('HTTP '+r.status));
-    return j;
-  }
 
   // ----- Staff
   async function loadMyProjects(){
     try{
       const rows = await apiGet('/projects');
+      if(rows.error) throw new Error(rows.error);
       const tb = document.getElementById('my-projects');
       tb.innerHTML = rows.map(r=>`
         <tr>
@@ -196,6 +205,7 @@
   async function editProject(id){
     try{
       const data = await apiGet('/project','id='+encodeURIComponent(id));
+      if(data.error) throw new Error(data.error);
       editingProjectId = data.project.project_id;
       document.getElementById('edit-title').textContent = 'Edit Project';
       document.getElementById('p-title').value = data.project.title||'';
@@ -206,7 +216,7 @@
       document.getElementById('p-justification').value = data.project.justification||'';
       costRows = (data.costs||[]).map(c=> ({row_id:c.row_id, fiscal_year:c.fiscal_year, cost_estimate:c.cost_estimate, inflation_pct:c.inflation_pct, funding_source:c.funding_source, funding_detail:c.funding_detail}));
       renderCostRows();
-      document.getElementById('folder-msg').textContent = data.project.folder_url ? ('Folder: '+data.project.folder_url) : '';
+      document.getElementById('folder-msg').innerHTML = data.project.folder_url ? (`Folder: <a href="${data.project.folder_url}" target="_blank" rel="noopener">${data.project.folder_url}</a>`) : '';
     }catch(err){ showError(err.message); }
   }
 
@@ -238,8 +248,12 @@
         status: 'draft'
       };
       const res = await apiPost('/project', proj);
+      if(res.error) throw new Error(res.error);
       editingProjectId = res.project_id;
-      if(costRows.length){ await apiPost('/cost_rows', { project_id: editingProjectId, rows: costRows }); }
+      if(costRows.length){
+        const res2 = await apiPost('/cost_rows', { project_id: editingProjectId, rows: costRows });
+        if(res2.error) throw new Error(res2.error);
+      }
       document.getElementById('save-msg').textContent = 'Saved.';
       loadMyProjects();
     }catch(err){ showError(err.message); }
@@ -248,24 +262,26 @@
   async function submitProject(){
     try{
       if(!editingProjectId){ await saveDraft(); }
-      await apiPost('/submit', { project_id: editingProjectId });
+      const res = await apiPost('/submit', { project_id: editingProjectId });
+      if(res.error) throw new Error(res.error);
       document.getElementById('save-msg').textContent = 'Submitted for review.';
       loadMyProjects();
     }catch(err){ showError(err.message); }
   }
   async function submitExisting(id){
     try{
-      await apiPost('/submit', { project_id: id });
+      const res = await apiPost('/submit', { project_id: id });
+      if(res.error) throw new Error(res.error);
       loadMyProjects();
     }catch(err){ showError(err.message); }
   }
 
-  // Drive folder: create/get under CIP root
   async function createFolder(){
     try{
-      if(!editingProjectId){ await saveDraft(); } // ensure project exists
+      if(!editingProjectId){ await saveDraft(); }
       const fyHint = (costRows[0] && Number(costRows[0].fiscal_year)) || undefined;
       const res = await apiPost('/ensure_folder', { project_id: editingProjectId, fiscal_year_hint: fyHint, org_id_hint: PROFILE.org_id });
+      if(res.error) throw new Error(res.error);
       document.getElementById('folder-msg').innerHTML = `Folder: <a href="${res.folder_url}" target="_blank" rel="noopener">${res.folder_url}</a>`;
       const cur = document.getElementById('p-attachments').value.trim();
       if(cur.indexOf(res.folder_url)===-1){
@@ -278,6 +294,7 @@
   async function loadInbox(){
     try{
       const list = await apiGet('/projects','status=submitted');
+      if(list.error) throw new Error(list.error);
       const tb = document.getElementById('inbox');
       tb.innerHTML = list.map(r=>`
         <tr>
@@ -310,13 +327,15 @@
         external_funding: +document.getElementById('sc-ext').value||0,
         return_on_investment: +document.getElementById('sc-roi').value||0
       };
-      await apiPost('/score', body);
+      const res = await apiPost('/score', body);
+      if(res.error) throw new Error(res.error);
       loadInbox();
     }catch(err){ showError(err.message); }
   }
   async function transition(ids, to){
     try{
-      await apiPost('/transition', { project_ids: ids, to, note:'' });
+      const res = await apiPost('/transition', { project_ids: ids, to, note:'' });
+      if(res.error) throw new Error(res.error);
       loadInbox();
     }catch(err){ showError(err.message); }
   }
@@ -326,7 +345,8 @@
       const window_start_fy = +document.getElementById('snap-start').value;
       const window_end_fy = +document.getElementById('snap-end').value;
       const replace = document.getElementById('snap-replace').checked;
-      await apiPost('/snapshot', { phase_key, window_start_fy, window_end_fy, replace });
+      const res = await apiPost('/snapshot', { phase_key, window_start_fy, window_end_fy, replace });
+      if(res.error) throw new Error(res.error);
       document.getElementById('snap-msg').textContent = 'Snapshot created.';
     }catch(err){ showError(err.message); }
   }
