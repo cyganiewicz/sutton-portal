@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Capital Plan</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .wrap{max-width:1100px;margin:2rem auto;padding:0 1rem}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:.6rem;border-bottom:1px solid #eee}
+  th{text-align:left;font-size:.9rem;color:#334}
+  .num{text-align:right}
+  .badge{display:inline-block;padding:.15rem .45rem;border-radius:.75rem;background:#e6f0ff;color:#1246a7;font-size:.75rem;margin-left:.35rem}
+  .toolbar{display:flex;gap:.5rem;align-items:center;justify-content:space-between;margin:1rem 0}
+  select{padding:.35rem .5rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Capital Plan</h1>
+
+  <div class="toolbar">
+    <div>
+      <label>Phase:
+        <select id="phase">
+          <option value="tm_recommended">Town Manager Recommend</option>
+          <option value="preliminary">Preliminary</option>
+          <option value="fincom">FinCom</option>
+          <option value="town_meeting">Town Meeting</option>
+          <option value="adopted">Adopted</option>
+        </select>
+      </label>
+      <label>Window:
+        <select id="startfy"></select>–<select id="endfy"></select>
+      </label>
+    </div>
+    <div id="totals"></div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>FY</th>
+        <th>Project</th>
+        <th>Department</th>
+        <th>Funding</th>
+        <th class="num">Amount</th>
+      </tr>
+    </thead>
+    <tbody id="cap-rows"></tbody>
+  </table>
+</div>
+
+<script>
+  const API = 'https://script.google.com/macros/s/AKfycby6WaJq0C0A7zEQS7pmUXgcPmgRdJMq_-hrOXFw-ahFIyfn8oQ0_QLV0u4H9dLAjpniNw/exec'; // <-- replace
+  const yearNow = new Date().getFullYear();
+  const fyDefaultStart = yearNow + 1;  // tweak if you number FYS different
+  const fyDefaultEnd   = fyDefaultStart + 9;
+
+  const $phase = document.getElementById('phase');
+  const $start = document.getElementById('startfy');
+  const $end = document.getElementById('endfy');
+  const $rows = document.getElementById('cap-rows');
+  const $totals = document.getElementById('totals');
+
+  function fillFYSelects(startFY, endFY){
+    $start.innerHTML = ''; $end.innerHTML = '';
+    for(let y = startFY-2; y <= endFY+2; y++){
+      const o1 = document.createElement('option'); o1.value=o1.textContent=y; if(y===startFY) o1.selected=true; $start.appendChild(o1);
+      const o2 = document.createElement('option'); o2.value=o2.textContent=y; if(y===endFY) o2.selected=true; $end.appendChild(o2);
+    }
+  }
+
+  async function load(){
+    const phase = $phase.value;
+    const start_fy = Number($start.value);
+    const end_fy = Number($end.value);
+
+    const rows = await fetch(`${API}?path=/public_feed&phase_key=${phase}&start_fy=${start_fy}&end_fy=${end_fy}`).then(r=>r.json());
+    const totals = await fetch(`${API}?path=/public_totals&phase_key=${phase}&start_fy=${start_fy}&end_fy=${end_fy}&by=year`).then(r=>r.json());
+
+    renderTable(rows);
+    renderTotals(totals);
+  }
+
+  function renderTable(rows){
+    $rows.innerHTML = rows
+      .sort((a,b)=> a.fiscal_year-b.fiscal_year || a.title.localeCompare(b.title))
+      .map(r=>{
+        const rec = (r.project_status||'').toLowerCase()==='recommended' ? '<span class="badge">Recommended</span>' : '';
+        return `<tr>
+          <td>${r.fiscal_year}</td>
+          <td><a href="/capital-project.html?id=${encodeURIComponent(r.project_id)}">${escapeHtml(r.title)}</a> ${rec}</td>
+          <td>${escapeHtml(r.org_id||'')}</td>
+          <td>${escapeHtml(r.funding_source||'')}</td>
+          <td class="num">$${Number(r.amount||0).toLocaleString()}</td>
+        </tr>`;
+      }).join('');
+  }
+
+  function renderTotals(totals){
+    const sum = totals.reduce((a,t)=> a + Number(t.total||0), 0);
+    $totals.innerHTML = `<strong>Total window:</strong> $${sum.toLocaleString()}`;
+  }
+
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+  fillFYSelects(fyDefaultStart, fyDefaultEnd);
+  ['change','input'].forEach(evt=>{
+    $phase.addEventListener(evt, load);
+    $start.addEventListener(evt, ()=>{ if(Number($end.value) < Number($start.value)) $end.value = $start.value; load(); });
+    $end.addEventListener(evt, load);
+  });
+  document.addEventListener('DOMContentLoaded', load);
+</script>
+</body>
+</html>
