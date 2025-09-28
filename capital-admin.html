@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Capital Admin</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .wrap{max-width:1100px;margin:2rem auto;padding:0 1rem}
+  .row{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  table{width:100%;border-collapse:collapse} th,td{padding:.5rem;border-bottom:1px solid #eee}
+  input,select,textarea{width:100%;padding:.5rem;border:1px solid #ddd;border-radius:.5rem}
+  .btn{padding:.45rem .8rem;border-radius:.6rem;border:1px solid #ccc;background:#fff;cursor:pointer}
+  .btn.primary{background:#1246a7;color:#fff;border-color:#1246a7}
+  .pill{display:inline-block;padding:.2rem .5rem;border-radius:999px;background:#eef3ff;color:#1246a7;font-weight:600}
+  .num{text-align:right}
+  .muted{color:#6b7280}
+  .danger{color:#b00020}
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+<div class="wrap">
+  <h1>Capital Admin</h1>
+  <div id="auth">
+    <div id="g_id_onload"
+      data-client_id="1053304257177-rvreds5b4j328d2p7n5dfvvo3u58r3v2.apps.googleusercontent.com"
+      data-callback="onGoogleSignIn"></div>
+    <div class="g_id_signin" data-type="standard"></div>
+  </div>
+
+  <div id="who" class="muted"></div>
+
+  <div id="staff" style="display:none">
+    <h2>My Projects</h2>
+    <div class="row">
+      <button class="btn primary" onclick="newProject()">+ New Project</button>
+    </div>
+    <table>
+      <thead><tr><th>Title</th><th>Status</th><th>Updated</th><th></th></tr></thead>
+      <tbody id="my-projects"></tbody>
+    </table>
+
+    <h3 id="edit-title" style="margin-top:2rem">Create / Edit Project</h3>
+    <div class="grid">
+      <div>
+        <label>Title<input id="p-title"></label>
+      </div>
+      <div>
+        <label>Category<input id="p-category"></label>
+      </div>
+      <div>
+        <label>Location<input id="p-location"></label>
+      </div>
+      <div>
+        <label>Attachments (comma-separated Drive URLs)<input id="p-attachments"></label>
+      </div>
+      <div class="grid" style="grid-column:1/-1">
+        <div><label>Description<textarea id="p-description" rows="4"></textarea></label></div>
+        <div><label>Justification<textarea id="p-justification" rows="4"></textarea></label></div>
+      </div>
+    </div>
+
+    <h3>Costs by Year</h3>
+    <table>
+      <thead><tr><th>FY</th><th>Estimate</th><th>Inflation %</th><th>Funding</th><th>Detail</th><th></th></tr></thead>
+      <tbody id="cost-rows"></tbody>
+    </table>
+    <div class="row">
+      <button class="btn" onclick="addCostRow()">+ Add Row</button>
+      <div class="muted">Use whole dollars; inflation is a decimal (e.g., 0.03)</div>
+    </div>
+
+    <div class="row" style="margin-top:1rem">
+      <button class="btn" onclick="saveDraft()">Save Draft</button>
+      <button class="btn primary" onclick="submitProject()">Submit for Review</button>
+      <div id="save-msg" class="muted"></div>
+    </div>
+  </div>
+
+  <div id="tm" style="display:none;margin-top:2rem">
+    <h2>Inbox (Submitted)</h2>
+    <table>
+      <thead><tr><th>Title</th><th>Dept</th><th>Status</th><th>Score</th><th></th></tr></thead>
+      <tbody id="inbox"></tbody>
+    </table>
+
+    <h3>Scoring</h3>
+    <div class="grid" style="max-width:700px">
+      <label>Safety<input id="sc-safety" type="number" min="0" max="5" step="1" value="0"></label>
+      <label>Compliance<input id="sc-compliance" type="number" min="0" max="5" step="1" value="0"></label>
+      <label>Asset Condition<input id="sc-asset" type="number" min="0" max="5" step="1" value="0"></label>
+      <label>Service Demand<input id="sc-service" type="number" min="0" max="5" step="1" value="0"></label>
+      <label>Strategic Alignment<input id="sc-align" type="number" min="0" max="5" step="1" value="0"></label>
+      <label>External Funding<input id="sc-ext" type="number" min="0" max="5" step="1" value="0"></label>
+      <label>ROI<input id="sc-roi" type="number" min="0" max="5" step="1" value="0"></label>
+    </div>
+    <div class="row" style="margin-top:.5rem">
+      <input id="score-project-id" type="hidden">
+      <button class="btn" onclick="saveScore()">Save Score</button>
+    </div>
+
+    <h3 style="margin-top:2rem">Plan Snapshot</h3>
+    <div class="row">
+      <label>Phase
+        <select id="snap-phase">
+          <option value="tm_recommended">Town Manager Recommend</option>
+          <option value="preliminary">Preliminary</option>
+          <option value="fincom">FinCom</option>
+          <option value="town_meeting">Town Meeting</option>
+          <option value="adopted">Adopted</option>
+        </select>
+      </label>
+      <label>Start FY <input id="snap-start" type="number" value="2027"></label>
+      <label>End FY <input id="snap-end" type="number" value="2036"></label>
+      <label><input id="snap-replace" type="checkbox"> Replace existing</label>
+      <button class="btn primary" onclick="doSnapshot()">Create Snapshot</button>
+      <div id="snap-msg" class="muted"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://script.google.com/macros/s/AKfycby6WaJq0C0A7zEQS7pmUXgcPmgRdJMq_-hrOXFw-ahFIyfn8oQ0_QLV0u4H9dLAjpniNw/exec'; // <-- replace
+  let ID_TOKEN=null, PROFILE=null;
+  let editingProjectId=null;
+  let costRows=[];
+
+  // Google Sign-In
+  window.onGoogleSignIn = async (resp)=>{
+    ID_TOKEN = resp.credential;
+    PROFILE = await apiGet('/me');
+    document.getElementById('who').textContent = `${PROFILE.full_name||PROFILE.email} — ${PROFILE.role.toUpperCase()} ${PROFILE.org_id? '('+PROFILE.org_id+')':''}`;
+    if(PROFILE.role==='staff'){ document.getElementById('staff').style.display='block'; loadMyProjects(); newProject(); }
+    if(PROFILE.role==='tmgr' || PROFILE.role==='finance'){ document.getElementById('tm').style.display='block'; loadInbox(); }
+    if(PROFILE.role==='readonly'){ /* view-only pages if desired */ }
+  };
+
+  // API helpers
+  function apiGet(path, qs=''){ return fetch(API+'?path='+encodeURIComponent(path)+(qs? '&'+qs:''),{ headers:{'Authorization':'Bearer '+ID_TOKEN}}).then(r=>r.json()); }
+  function apiPost(path, body){ return fetch(API+'?path='+encodeURIComponent(path),{ method:'POST', headers:{'Authorization':'Bearer '+ID_TOKEN,'Content-Type':'application/json'}, body: JSON.stringify(body||{}) }).then(r=>r.json()); }
+
+  // ----- Staff
+  async function loadMyProjects(){
+    const rows = await apiGet('/projects');
+    const tb = document.getElementById('my-projects');
+    tb.innerHTML = rows.map(r=>`
+      <tr>
+        <td>${escapeHtml(r.title||'(untitled)')}</td>
+        <td>${r.status||''}</td>
+        <td>${r.updated_at? new Date(r.updated_at).toLocaleString() : ''}</td>
+        <td>
+          <button class="btn" onclick="editProject('${r.project_id}')">Edit</button>
+          ${ (r.status==='draft' || r.status==='returned') ? `<button class="btn primary" onclick="submitExisting('${r.project_id}')">Submit</button>`:''}
+        </td>
+      </tr>`).join('');
+  }
+
+  function newProject(){
+    editingProjectId=null;
+    document.getElementById('edit-title').textContent = 'Create Project';
+    ['p-title','p-category','p-location','p-attachments','p-description','p-justification'].forEach(id=> document.getElementById(id).value='');
+    costRows=[]; renderCostRows();
+  }
+
+  async function editProject(id){
+    const data = await apiGet('/project','id='+encodeURIComponent(id));
+    editingProjectId = data.project.project_id;
+    document.getElementById('edit-title').textContent = 'Edit Project';
+    document.getElementById('p-title').value = data.project.title||'';
+    document.getElementById('p-category').value = data.project.category||'';
+    document.getElementById('p-location').value = data.project.location||'';
+    document.getElementById('p-attachments').value = data.project.attachments||'';
+    document.getElementById('p-description').value = data.project.description||'';
+    document.getElementById('p-justification').value = data.project.justification||'';
+    costRows = (data.costs||[]).map(c=> ({row_id:c.row_id, fiscal_year:c.fiscal_year, cost_estimate:c.cost_estimate, inflation_pct:c.inflation_pct, funding_source:c.funding_source, funding_detail:c.funding_detail}));
+    renderCostRows();
+  }
+
+  function renderCostRows(){
+    const tb = document.getElementById('cost-rows');
+    tb.innerHTML = costRows.map((r,idx)=>`
+      <tr>
+        <td><input type="number" value="${r.fiscal_year||''}" oninput="costRows[${idx}].fiscal_year=this.value"></td>
+        <td><input type="number" value="${r.cost_estimate||''}" oninput="costRows[${idx}].cost_estimate=this.value"></td>
+        <td><input type="number" step="0.01" value="${r.inflation_pct||''}" oninput="costRows[${idx}].inflation_pct=this.value"></td>
+        <td><input value="${r.funding_source||''}" oninput="costRows[${idx}].funding_source=this.value" placeholder="Free Cash, Debt Excluded, Grants, …"></td>
+        <td><input value="${r.funding_detail||''}" oninput="costRows[${idx}].funding_detail=this.value"></td>
+        <td><button class="btn danger" onclick="removeCostRow(${idx})">✕</button></td>
+      </tr>`).join('');
+  }
+  function addCostRow(){ costRows.push({}); renderCostRows(); }
+  function removeCostRow(i){ costRows.splice(i,1); renderCostRows(); }
+
+  async function saveDraft(){
+    const proj = {
+      project_id: editingProjectId || undefined,
+      title: document.getElementById('p-title').value,
+      category: document.getElementById('p-category').value,
+      location: document.getElementById('p-location').value,
+      attachments: document.getElementById('p-attachments').value,
+      description: document.getElementById('p-description').value,
+      justification: document.getElementById('p-justification').value,
+      status: 'draft'
+    };
+    const res = await apiPost('/project', proj);
+    editingProjectId = res.project_id;
+    if(costRows.length){ await apiPost('/cost_rows', { project_id: editingProjectId, rows: costRows }); }
+    document.getElementById('save-msg').textContent = 'Saved.';
+    loadMyProjects();
+  }
+
+  async function submitProject(){
+    if(!editingProjectId){ await saveDraft(); }
+    await apiPost('/submit', { project_id: editingProjectId });
+    document.getElementById('save-msg').textContent = 'Submitted for review.';
+    loadMyProjects();
+  }
+  async function submitExisting(id){
+    await apiPost('/submit', { project_id: id });
+    loadMyProjects();
+  }
+
+  // ----- TM/Finance
+  async function loadInbox(){
+    const list = await apiGet('/projects','status=submitted');
+    const tb = document.getElementById('inbox');
+    tb.innerHTML = list.map(r=>`
+      <tr>
+        <td><a href="/capital-project.html?id=${encodeURIComponent(r.project_id)}" target="_blank">${escapeHtml(r.title||'(untitled)')}</a></td>
+        <td>${escapeHtml(r.org_id||'')}</td>
+        <td>${r.status||''}</td>
+        <td>${r.total_score||''}</td>
+        <td>
+          <button class="btn" onclick="setScoreProject('${r.project_id}')">Score</button>
+          <button class="btn primary" onclick="transition(['${r.project_id}'],'recommended')">Recommend</button>
+          <button class="btn" onclick="transition(['${r.project_id}'],'under_review')">Under Review</button>
+          <button class="btn" onclick="transition(['${r.project_id}'],'returned')">Return</button>
+          <button class="btn" onclick="transition(['${r.project_id}'],'deferred')">Defer</button>
+        </td>
+      </tr>`).join('');
+  }
+  function setScoreProject(id){ document.getElementById('score-project-id').value=id; }
+  async function saveScore(){
+    const project_id = document.getElementById('score-project-id').value;
+    if(!project_id) return alert('Select a project (Score button)');
+    const body = {
+      project_id,
+      safety: +document.getElementById('sc-safety').value||0,
+      compliance: +document.getElementById('sc-compliance').value||0,
+      asset_condition: +document.getElementById('sc-asset').value||0,
+      service_demand: +document.getElementById('sc-service').value||0,
+      strategic_alignment: +document.getElementById('sc-align').value||0,
+      external_funding: +document.getElementById('sc-ext').value||0,
+      return_on_investment: +document.getElementById('sc-roi').value||0
+    };
+    await apiPost('/score', body);
+    loadInbox();
+  }
+  async function transition(ids, to){
+    await apiPost('/transition', { project_ids: ids, to, note:'' });
+    loadInbox();
+  }
+  async function doSnapshot(){
+    const phase_key = document.getElementById('snap-phase').value;
+    const window_start_fy = +document.getElementById('snap-start').value;
+    const window_end_fy = +document.getElementById('snap-end').value;
+    const replace = document.getElementById('snap-replace').checked;
+    await apiPost('/snapshot', { phase_key, window_start_fy, window_end_fy, replace });
+    document.getElementById('snap-msg').textContent = 'Snapshot created.';
+  }
+
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+</script>
+</body>
+</html>
