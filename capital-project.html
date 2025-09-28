@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Capital Project</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .wrap{max-width:960px;margin:2rem auto;padding:0 1rem}
+  .pill{display:inline-block;padding:.2rem .5rem;border-radius:999px;background:#eef3ff;color:#1246a7;font-weight:600}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  table{width:100%;border-collapse:collapse} th,td{padding:.5rem;border-bottom:1px solid #eee}
+  .num{text-align:right}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="/capital-plan.html">← Back to Capital Plan</a>
+  <h1 id="title">Project</h1>
+  <div id="meta"></div>
+  <p id="desc"></p>
+
+  <h2>Costs by Year</h2>
+  <table>
+    <thead><tr><th>Fiscal Year</th><th>Funding Source</th><th class="num">Amount</th></tr></thead>
+    <tbody id="cost-rows"></tbody>
+  </table>
+
+  <div id="attachments"></div>
+</div>
+
+<script>
+  const API = 'https://script.google.com/macros/s/AKfycby6WaJq0C0A7zEQS7pmUXgcPmgRdJMq_-hrOXFw-ahFIyfn8oQ0_QLV0u4H9dLAjpniNw/exec'; // <-- replace
+  function qp(k){ return new URLSearchParams(location.search).get(k); }
+
+  async function load(){
+    const id = qp('id'); if(!id){ document.getElementById('title').textContent='Not Found'; return; }
+    const data = await fetch(`${API}?path=/public_project&id=${encodeURIComponent(id)}`).then(r=>r.json());
+    if(data.error){ document.getElementById('title').textContent='Not Found'; return; }
+    document.getElementById('title').textContent = data.title || 'Project';
+    const rec = (data.project_status||'').toLowerCase()==='recommended' ? `<span class="pill">Recommended</span>` : '';
+    document.getElementById('meta').innerHTML = `
+      <div class="grid">
+        <div><strong>Department:</strong> ${escapeHtml(data.org_id||'')}</div>
+        <div><strong>Category:</strong> ${escapeHtml(data.category||'')}</div>
+        <div><strong>Location:</strong> ${escapeHtml(data.location||'')}</div>
+        <div>${rec}</div>
+      </div>`;
+    document.getElementById('desc').textContent = data.description || data.justification || '';
+
+    const tb = document.getElementById('cost-rows');
+    tb.innerHTML = (data.costs||[]).sort((a,b)=> a.fiscal_year-b.fiscal_year)
+      .map(c=> `<tr><td>${c.fiscal_year}</td><td>${escapeHtml(c.funding_source||'')}</td><td class="num">$${Number(c.amount||0).toLocaleString()}</td></tr>`).join('');
+
+    if (data.attachments){
+      const links = String(data.attachments).split(',').map(x=>x.trim()).filter(Boolean)
+        .map(url=> `<li><a href="${url}" target="_blank" rel="noopener">Attachment</a></li>`).join('');
+      if(links) document.getElementById('attachments').innerHTML = `<h3>Attachments</h3><ul>${links}</ul>`;
+    }
+  }
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  document.addEventListener('DOMContentLoaded', load);
+</script>
+</body>
+</html>
