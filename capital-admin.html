@@ -35,6 +35,7 @@
 
   <div id="who" class="muted"></div>
 
+  <!-- STAFF PANEL -->
   <div id="staff" style="display:none">
     <h2>My Projects</h2>
     <div class="row">
@@ -90,14 +91,28 @@
     </div>
   </div>
 
+  <!-- TM/FINANCE PANEL -->
   <div id="tm" style="display:none;margin-top:2rem">
-    <h2>Inbox (Submitted)</h2>
+    <h2>Projects</h2>
+    <div class="row" style="margin:.5rem 0">
+      <label>Status
+        <select id="inbox-status" onchange="loadInbox()">
+          <option value="submitted" selected>Submitted</option>
+          <option value="under_review">Under Review</option>
+          <option value="recommended">Recommended</option>
+          <option value="returned">Returned</option>
+          <option value="deferred">Deferred</option>
+          <option value="">All</option>
+        </select>
+      </label>
+    </div>
     <table>
       <thead><tr><th>Title</th><th>Dept</th><th>Status</th><th>Score</th><th></th></tr></thead>
       <tbody id="inbox"></tbody>
     </table>
 
     <h3>Scoring</h3>
+    <div id="score-banner" class="muted" style="margin:.25rem 0 .5rem 0;"></div>
     <div class="grid" style="max-width:700px">
       <label>Safety<input id="sc-safety" type="number" min="0" max="5" step="1" value="0"></label>
       <label>Compliance<input id="sc-compliance" type="number" min="0" max="5" step="1" value="0"></label>
@@ -110,6 +125,7 @@
     <div class="row" style="margin-top:.5rem">
       <input id="score-project-id" type="hidden">
       <button class="btn" onclick="saveScore()">Save Score</button>
+      <div id="score-msg" class="muted"></div>
     </div>
 
     <h3 style="margin-top:2rem">Plan Snapshot</h3>
@@ -140,7 +156,7 @@
   let editingProjectId=null;
   let costRows=[];
 
-  // JSONP helpers (no CORS)
+  // JSONP helpers (avoid CORS)
   let __cbSeq = 0;
   function jsonp(url){
     return new Promise((resolve,reject)=>{
@@ -171,7 +187,7 @@
   window.onGoogleSignIn = async (resp)=>{
     try{
       ID_TOKEN = resp.credential;
-      OPTIONS = await apiGet('/options'); // funding list & default escalation
+      OPTIONS = await apiGet('/options'); // funding list & default escalation (if provided by backend)
       const me = await apiGet('/me');
       if(me && me.error) throw new Error(me.error);
       PROFILE = me;
@@ -230,7 +246,6 @@
 
   function renderCostRows(){
     const tb = document.getElementById('cost-rows');
-    const sel = (val)=> (val ? ` selected` : '');
     const opts = (OPTIONS && OPTIONS.funding_sources || []).map(s=>`<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
     tb.innerHTML = costRows.map((r,idx)=>`
       <tr>
@@ -245,7 +260,7 @@
         <td><input value="${r.funding_detail||''}" oninput="costRows[${idx}].funding_detail=this.value" placeholder="e.g., grant name"></td>
         <td><button class="btn danger" onclick="removeCostRow(${idx})">✕</button></td>
       </tr>`).join('');
-    // set selected values after rendering
+    // restore selected values
     Array.from(tb.querySelectorAll('tr')).forEach((tr,i)=>{
       const s = tr.querySelector('select');
       if(s && costRows[i] && costRows[i].funding_source) s.value = costRows[i].funding_source;
@@ -325,28 +340,58 @@
 
   // ----- TM/Finance
   async function loadInbox(){
-    const list = await apiGet('/projects','status=submitted');
+    const status = document.getElementById('inbox-status').value || '';
+    const q = status ? ('status='+encodeURIComponent(status)) : '';
+    const list = await apiGet('/projects', q);
     if(list.error) return showError(list.error);
     const tb = document.getElementById('inbox');
+
+    if(!list.length){
+      tb.innerHTML = `<tr><td colspan="5" class="muted">No projects in this view.</td></tr>`;
+      return;
+    }
+
     tb.innerHTML = list.map(r=>`
       <tr>
         <td><a href="/capital-project.html?id=${encodeURIComponent(r.project_id)}" target="_blank">${escapeHtml(r.title||'(untitled)')}</a></td>
         <td>${escapeHtml(r.org_id||'')}</td>
         <td>${r.status||''}</td>
-        <td>${r.total_score||''}</td>
+        <td>${r.total_score_100 ?? r.total_score ?? ''}</td>
         <td>
           <button class="btn" onclick="setScoreProject('${r.project_id}')">Score</button>
-          <button class="btn primary" onclick="transition(['${r.project_id}'],'recommended')">Recommend</button>
           <button class="btn" onclick="transition(['${r.project_id}'],'under_review')">Under Review</button>
+          <button class="btn primary" onclick="transition(['${r.project_id}'],'recommended')">Recommend</button>
           <button class="btn" onclick="transition(['${r.project_id}'],'returned')">Return</button>
           <button class="btn" onclick="transition(['${r.project_id}'],'deferred')">Defer</button>
         </td>
       </tr>`).join('');
   }
-  function setScoreProject(id){ document.getElementById('score-project-id').value=id; }
+
+  async function setScoreProject(id){
+    const data = await apiGet('/project','id='+encodeURIComponent(id));
+    if(data.error) return showError(data.error);
+
+    document.getElementById('score-project-id').value = id;
+    const p = data.project;
+    const sc = data.scores || {};
+
+    document.getElementById('sc-safety').value = sc.safety ?? 0;
+    document.getElementById('sc-compliance').value = sc.compliance ?? 0;
+    document.getElementById('sc-asset').value = sc.asset_condition ?? 0;
+    document.getElementById('sc-service').value = sc.service_demand ?? 0;
+    document.getElementById('sc-align').value = sc.strategic_alignment ?? 0;
+    document.getElementById('sc-ext').value = sc.external_funding ?? 0;
+    document.getElementById('sc-roi').value = sc.return_on_investment ?? 0;
+
+    document.getElementById('score-banner').textContent =
+      `Scoring: ${p.title||'(untitled)'} — ${p.org_id||''}`;
+    document.getElementById('score-msg').textContent = '';
+  }
+
   async function saveScore(){
     const project_id = document.getElementById('score-project-id').value;
-    if(!project_id) return alert('Select a project (Score button)');
+    if(!project_id) return alert('Click the Score button on a project first.');
+
     const body = {
       project_id,
       safety: +document.getElementById('sc-safety').value||0,
@@ -359,13 +404,21 @@
     };
     const res = await apiPost('/score', body);
     if(res.error) return showError(res.error);
-    loadInbox();
+
+    document.getElementById('score-msg').textContent =
+      (res.total_score_100!=null)
+        ? `Saved (Score: ${res.total_score_100} / 100)`
+        : `Saved (Composite: ${res.total_score?.toFixed?.(2) ?? res.total_score})`;
+
+    loadInbox(); // refresh table to show updated score
   }
+
   async function transition(ids, to){
     const res = await apiPost('/transition', { project_ids: ids, to, note:'' });
     if(res.error) return showError(res.error);
     loadInbox();
   }
+
   async function doSnapshot(){
     const phase_key = document.getElementById('snap-phase').value;
     const window_start_fy = +document.getElementById('snap-start').value;
