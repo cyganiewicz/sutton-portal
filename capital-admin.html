@@ -56,7 +56,6 @@
       </div>
     </div>
 
-    <!-- Maintenance / Operating impact -->
     <h3>Maintenance & Operating Impact</h3>
     <div class="grid">
       <div><label>Annual O&M Cost (est.)<input id="p-om" type="number" min="0" step="1" placeholder="e.g., 5000"></label></div>
@@ -66,7 +65,6 @@
     </div>
 
     <h3>Attachments</h3>
-    <!-- Hidden iframe + form for file uploads -->
     <iframe name="uploadFrame" id="uploadFrame" style="display:none"></iframe>
     <form id="uploadForm" target="uploadFrame" method="POST" enctype="multipart/form-data">
       <!-- action is set at runtime: API?path=/upload&id_token=...&project_id=... -->
@@ -135,8 +133,9 @@
 </div>
 
 <script>
-  // Set to your Apps Script /exec URL
+  // 1) CHANGE THIS to your Apps Script /exec URL:
   const API = 'https://script.google.com/macros/s/AKfycby6WaJq0C0A7zEQS7pmUXgcPmgRdJMq_-hrOXFw-ahFIyfn8oQ0_QLV0u4H9dLAjpniNw/exec';
+
   let ID_TOKEN=null, PROFILE=null, OPTIONS=null;
   let editingProjectId=null;
   let costRows=[];
@@ -208,8 +207,7 @@
     ['p-title','p-category','p-location','p-description','p-justification','p-om','p-life','p-startup','p-maint-notes'].forEach(id=> document.getElementById(id).value='');
     costRows=[]; renderCostRows();
     document.getElementById('upload-msg').textContent = '';
-    // clear file input
-    document.getElementById('p-files').value = '';
+    document.getElementById('p-files').value = ''; // clear chooser
   }
 
   async function editProject(id){
@@ -232,6 +230,7 @@
 
   function renderCostRows(){
     const tb = document.getElementById('cost-rows');
+    const sel = (val)=> (val ? ` selected` : '');
     const opts = (OPTIONS && OPTIONS.funding_sources || []).map(s=>`<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
     tb.innerHTML = costRows.map((r,idx)=>`
       <tr>
@@ -240,18 +239,22 @@
         <td>
           <select oninput="costRows[${idx}].funding_source=this.value">
             <option value="">— Select —</option>
-            ${opts.replace(`value="${escapeAttr(r.funding_source||'')}"`, `value="${escapeAttr(r.funding_source||'')}" selected`)}
+            ${opts}
           </select>
         </td>
         <td><input value="${r.funding_detail||''}" oninput="costRows[${idx}].funding_detail=this.value" placeholder="e.g., grant name"></td>
         <td><button class="btn danger" onclick="removeCostRow(${idx})">✕</button></td>
       </tr>`).join('');
+    // set selected values after rendering
+    Array.from(tb.querySelectorAll('tr')).forEach((tr,i)=>{
+      const s = tr.querySelector('select');
+      if(s && costRows[i] && costRows[i].funding_source) s.value = costRows[i].funding_source;
+    });
   }
   function addCostRow(){ costRows.push({}); renderCostRows(); }
   function removeCostRow(i){ costRows.splice(i,1); renderCostRows(); }
 
   async function saveDraft(){
-    // upsert project + costs
     const proj = collectProject('draft');
     const res = await apiPost('/project', proj);
     if(res.error) return showError(res.error);
@@ -266,26 +269,22 @@
   }
 
   async function submitProject(){
-    // 1) ensure project exists and costs saved
     if(!editingProjectId){ await saveDraft(); } else { await saveDraft(); }
 
-    // 2) if user attached files, upload first (form POST to Apps Script)
+    // Upload files first (if any), then submit
     const files = document.getElementById('p-files').files;
     if(files && files.length){
       document.getElementById('upload-msg').textContent = 'Uploading attachments…';
-      // set form action with project_id + id_token
       const form = document.getElementById('uploadForm');
       form.action = `${API}?path=/upload&id_token=${encodeURIComponent(ID_TOKEN)}&project_id=${encodeURIComponent(editingProjectId)}`;
       window.addEventListener('message', onUploadMessageOnce, { once:true });
-      form.submit(); // will trigger hidden iframe
-      // continue in onUploadMessageOnce -> then call doSubmit()
+      form.submit();
     }else{
       await doSubmit();
     }
   }
   function onUploadMessageOnce(ev){
     try{
-      // Optionally: check ev.origin includes 'https://script.google.com' or 'https://script.googleusercontent.com'
       if(!ev.data || ev.data.type!=='CIP_UPLOAD') return;
       const payload = ev.data.data || {};
       if(payload.error){ showError(payload.error); return; }
@@ -299,7 +298,6 @@
     document.getElementById('save-msg').textContent = 'Submitted for review.';
     loadMyProjects();
   }
-
   async function submitExisting(id){
     editingProjectId = id;
     await submitProject();
