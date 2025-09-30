@@ -29,7 +29,7 @@
     </div>
   </header>
 
-  <!-- Subheader band shows who’s signed in -->
+  <!-- Signed-in band -->
   <div class="subhead">
     <div class="subhead__inner">
       <div id="who" class="subhead__who">Not signed in</div>
@@ -45,11 +45,10 @@
     </div>
   </div>
 
-  <!-- Page Content -->
   <main class="wrap">
     <h1 class="page-title">Capital Admin</h1>
 
-    <!-- STAFF PANEL -->
+    <!-- STAFF -->
     <section id="staff" class="card" style="display:none">
       <div class="card__header">
         <h2 class="card__title">My Projects</h2>
@@ -90,12 +89,17 @@
         <div><label class="label">Maintenance Notes<textarea class="input" id="p-maint-notes" rows="2" placeholder="e.g., scheduled replacements, warranties, etc."></textarea></label></div>
       </div>
 
+      <!-- Attachments: GAS-friendly (one input per file), postMessage origin + fallback -->
       <h3 class="section-title">Attachments</h3>
       <div class="card card--soft">
         <iframe name="uploadFrame" id="uploadFrame" style="display:none"></iframe>
         <form id="uploadForm" target="uploadFrame" method="POST" enctype="multipart/form-data" class="row row--gap">
-          <input id="p-files" type="file" name="file1" multiple class="file">
-          <div class="muted">Upload quotes, spec sheets, and a <b>photo</b> of the capital item. You can add more files later.</div>
+          <input type="hidden" name="origin" id="upload-origin">
+          <div id="file-list" class="row row--gap">
+            <input class="file" type="file" name="file1" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt">
+          </div>
+          <button type="button" class="btn" onclick="addFileInput()">+ Add another file</button>
+          <div class="muted">Upload quotes, spec sheets, and a <b>photo</b> of the capital item.</div>
         </form>
         <div id="upload-msg" class="muted" style="margin-top:.25rem"></div>
       </div>
@@ -119,7 +123,7 @@
       </div>
     </section>
 
-    <!-- TM/FINANCE PANEL -->
+    <!-- TM/FINANCE -->
     <section id="tm" class="card" style="display:none;margin-top:2rem">
       <div class="card__header">
         <h2 class="card__title">Projects</h2>
@@ -182,7 +186,7 @@
   </main>
 
 <script>
-  // CHANGE THIS to your Apps Script /exec URL (latest deployment):
+  // CHANGE THIS to your Apps Script /exec URL:
   const API = 'https://script.google.com/macros/s/AKfycby6WaJq0C0A7zEQS7pmUXgcPmgRdJMq_-hrOXFw-ahFIyfn8oQ0_QLV0u4H9dLAjpniNw/exec';
 
   let ID_TOKEN=null, PROFILE=null, OPTIONS=null;
@@ -265,7 +269,28 @@
     ['p-title','p-category','p-location','p-description','p-justification','p-om','p-life','p-startup','p-maint-notes'].forEach(id=> document.getElementById(id).value='');
     costRows=[]; renderCostRows();
     document.getElementById('upload-msg').textContent = '';
-    document.getElementById('p-files').value = ''; // clear chooser
+    resetFileInputs();
+  }
+
+  function resetFileInputs(){
+    const list = document.getElementById('file-list');
+    list.innerHTML = '';
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.name = 'file1';
+    input.className = 'file';
+    input.accept = 'image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt';
+    list.appendChild(input);
+  }
+  function addFileInput(){
+    const list = document.getElementById('file-list');
+    const idx = list.querySelectorAll('input[type="file"]').length + 1;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.name = 'file' + idx;
+    input.className = 'file';
+    input.accept = 'image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt';
+    list.appendChild(input);
   }
 
   async function editProject(id){
@@ -327,39 +352,56 @@
 
   // ---- submit flow (requires at least one photo overall)
   async function submitProject(){
-    // save first to ensure we have a project_id
     if(!editingProjectId){ await saveDraft(); } else { await saveDraft(); }
 
     // If project has no cover image yet, require at least one file in this submission
     const proj = await apiGet('/project','id='+encodeURIComponent(editingProjectId));
     const hasCover = proj && proj.project && proj.project.cover_image_url;
-    const files = document.getElementById('p-files').files;
 
-    if(!hasCover && (!files || !files.length)){
+    const chosen = Array.from(document.querySelectorAll('#file-list input[type="file"]'))
+      .reduce((n,i)=> n + (i.files && i.files.length ? 1 : 0), 0);
+
+    if(!hasCover && chosen===0){
       showError('Please add at least one image (photo) for this request before submitting.');
       return;
     }
 
-    // Upload files first (if any), then submit
-    if(files && files.length){
+    // Upload first (if any), then submit
+    if(chosen>0){
       document.getElementById('upload-msg').textContent = 'Uploading attachments…';
       const form = document.getElementById('uploadForm');
-      form.action = `${API}?path=/upload&id_token=${encodeURIComponent(ID_TOKEN)}&project_id=${encodeURIComponent(editingProjectId)}`;
-      window.addEventListener('message', onUploadMessageOnce, { once:true });
+      document.getElementById('upload-origin').value = location.origin;
+      form.action = `${API}?path=/upload&id_token=${encodeURIComponent(ID_TOKEN)}&project_id=${encodeURIComponent(editingProjectId)}&origin=${encodeURIComponent(location.origin)}`;
+
+      // one-time message
+      const onMsg = (ev)=>{
+        try{
+          if(!ev.data || ev.data.type!=='CIP_UPLOAD') return;
+          window.removeEventListener('message', onMsg);
+          const payload = ev.data.data || {};
+          if(payload.error){ showError(payload.error); return; }
+          document.getElementById('upload-msg').textContent = `Uploaded ${payload.count||0} file(s).`;
+          doSubmit();
+        }catch(_){}
+      };
+      window.addEventListener('message', onMsg);
+
+      // 10s fallback in case postMessage is blocked
+      const timer = setTimeout(()=>{
+        window.removeEventListener('message', onMsg);
+        document.getElementById('upload-msg').textContent = 'Upload finished (fallback).';
+        doSubmit();
+      }, 10000);
+
+      // cancel fallback if we get a message
+      window.addEventListener('message', ()=> clearTimeout(timer), { once:true });
+
       form.submit();
     }else{
       await doSubmit();
     }
   }
-  function onUploadMessageOnce(ev){
-    try{
-      if(!ev.data || ev.data.type!=='CIP_UPLOAD') return;
-      const payload = ev.data.data || {};
-      if(payload.error){ showError(payload.error); return; }
-      document.getElementById('upload-msg').textContent = `Uploaded ${payload.count||0} file(s).`;
-      doSubmit();
-    }catch(_){}
-  }
+
   async function doSubmit(){
     const r = await apiPost('/submit', { project_id: editingProjectId });
     if(r.error) return showError(r.error);
@@ -461,7 +503,7 @@
     document.getElementById('score-msg').textContent =
       `Saved (Composite: ${typeof res.total_score === 'number' ? res.total_score.toFixed(2) : res.total_score})`;
 
-    loadInbox(); // refresh table to show updated score
+    loadInbox();
   }
 
   async function transition(ids, to){
