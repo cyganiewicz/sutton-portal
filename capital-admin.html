@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="styles/cip-styles.css">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-<!-- Local per-page tweaks (tiny) -->
 <style>
   /* keeps page width consistent with the design system */
   .wrap{max-width:1100px;margin:2rem auto;padding:0 1rem}
@@ -72,10 +71,10 @@
       <div class="grid grid-2">
         <div><label class="label">Title<input class="input" id="p-title"></label></div>
         <div>
-  <label class="label">Category
-    <select class="input" id="p-category"></select>
-  </label>
-</div>
+          <label class="label">Category
+            <select class="input" id="p-category"></select>
+          </label>
+        </div>
         <div><label class="label">Location<input class="input" id="p-location"></label></div>
         <div class="grid grid-2 grid-span-2">
           <div><label class="label">Description<textarea class="input" id="p-description" rows="4"></textarea></label></div>
@@ -96,7 +95,7 @@
         <iframe name="uploadFrame" id="uploadFrame" style="display:none"></iframe>
         <form id="uploadForm" target="uploadFrame" method="POST" enctype="multipart/form-data" class="row row--gap">
           <input id="p-files" type="file" name="file1" multiple class="file">
-          <div class="muted">Upload quotes, spec sheets, photos. You can add more files later.</div>
+          <div class="muted">Upload quotes, spec sheets, and a <b>photo</b> of the capital item. You can add more files later.</div>
         </form>
         <div id="upload-msg" class="muted" style="margin-top:.25rem"></div>
       </div>
@@ -182,10 +181,8 @@
     </section>
   </main>
 
-  <!-- your existing <script> with logic sits below this -->
-
 <script>
-  // 1) CHANGE THIS to your Apps Script /exec URL:
+  // CHANGE THIS to your Apps Script /exec URL (latest deployment):
   const API = 'https://script.google.com/macros/s/AKfycby6WaJq0C0A7zEQS7pmUXgcPmgRdJMq_-hrOXFw-ahFIyfn8oQ0_QLV0u4H9dLAjpniNw/exec';
 
   let ID_TOKEN=null, PROFILE=null, OPTIONS=null;
@@ -219,11 +216,20 @@
     el.style.color = '#b00020';
   }
 
+  // Populate category select AFTER OPTIONS are loaded
+  function setCategoryOptions(){
+    const sel = document.getElementById('p-category');
+    const cats = (OPTIONS && OPTIONS.categories) || [];
+    sel.innerHTML = `<option value="">— Select —</option>` + cats.map(c=>`<option value="${escapeAttr(c)}">${escapeHtml(c)}</option>`).join('');
+  }
+
   // Google Sign-In
   window.onGoogleSignIn = async (resp)=>{
     try{
       ID_TOKEN = resp.credential;
-      OPTIONS = await apiGet('/options'); // funding list & default escalation (if provided by backend)
+      OPTIONS = await apiGet('/options');  // funding list, categories, default escalation
+      setCategoryOptions();
+
       const me = await apiGet('/me');
       if(me && me.error) throw new Error(me.error);
       PROFILE = me;
@@ -248,7 +254,7 @@
         <td>${r.updated_at? new Date(r.updated_at).toLocaleString() : ''}</td>
         <td>
           <button class="btn" onclick="editProject('${r.project_id}')">Edit</button>
-          ${ (r.status==='draft' || r.status==='returned') ? `<button class="btn primary" onclick="submitExisting('${r.project_id}')">Submit</button>`:''}
+          ${(r.status==='draft' || r.status==='returned') ? `<button class="btn btn-primary" onclick="submitExisting('${r.project_id}')">Submit</button>`:''}
         </td>
       </tr>`).join('');
   }
@@ -285,15 +291,15 @@
     const opts = (OPTIONS && OPTIONS.funding_sources || []).map(s=>`<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
     tb.innerHTML = costRows.map((r,idx)=>`
       <tr>
-        <td><input type="number" value="${r.fiscal_year||''}" oninput="costRows[${idx}].fiscal_year=this.value"></td>
-        <td><input type="number" value="${r.cost_estimate||''}" oninput="costRows[${idx}].cost_estimate=this.value" placeholder="whole dollars"></td>
+        <td><input class="input" type="number" value="${r.fiscal_year||''}" oninput="costRows[${idx}].fiscal_year=this.value"></td>
+        <td><input class="input" type="number" value="${r.cost_estimate||''}" oninput="costRows[${idx}].cost_estimate=this.value" placeholder="whole dollars"></td>
         <td>
-          <select oninput="costRows[${idx}].funding_source=this.value">
+          <select class="input" oninput="costRows[${idx}].funding_source=this.value">
             <option value="">— Select —</option>
             ${opts}
           </select>
         </td>
-        <td><input value="${r.funding_detail||''}" oninput="costRows[${idx}].funding_detail=this.value" placeholder="e.g., grant name"></td>
+        <td><input class="input" value="${r.funding_detail||''}" oninput="costRows[${idx}].funding_detail=this.value" placeholder="e.g., grant name"></td>
         <td><button class="btn danger" onclick="removeCostRow(${idx})">✕</button></td>
       </tr>`).join('');
     // restore selected values
@@ -304,11 +310,6 @@
   }
   function addCostRow(){ costRows.push({}); renderCostRows(); }
   function removeCostRow(i){ costRows.splice(i,1); renderCostRows(); }
-  // Fill category select
-(function fillCategories(){
-  const sel = document.getElementById('p-category');
-  sel.innerHTML = `<option value="">— Select —</option>` + (OPTIONS.categories||[]).map(c=>`<option value="${escapeAttr(c)}">${escapeHtml(c)}</option>`).join('');
-})();
 
   async function saveDraft(){
     const proj = collectProject('draft');
@@ -324,11 +325,22 @@
     loadMyProjects();
   }
 
+  // ---- submit flow (requires at least one photo overall)
   async function submitProject(){
+    // save first to ensure we have a project_id
     if(!editingProjectId){ await saveDraft(); } else { await saveDraft(); }
 
-    // Upload files first (if any), then submit
+    // If project has no cover image yet, require at least one file in this submission
+    const proj = await apiGet('/project','id='+encodeURIComponent(editingProjectId));
+    const hasCover = proj && proj.project && proj.project.cover_image_url;
     const files = document.getElementById('p-files').files;
+
+    if(!hasCover && (!files || !files.length)){
+      showError('Please add at least one image (photo) for this request before submitting.');
+      return;
+    }
+
+    // Upload files first (if any), then submit
     if(files && files.length){
       document.getElementById('upload-msg').textContent = 'Uploading attachments…';
       const form = document.getElementById('uploadForm');
@@ -338,21 +350,6 @@
     }else{
       await doSubmit();
     }
-    async function submitProject(){
-  if(!editingProjectId){ await saveDraft(); } else { await saveDraft(); }
-
-  // Require at least one photo if project has no cover yet
-  const proj = await apiGet('/project','id='+encodeURIComponent(editingProjectId));
-  const hasCover = proj && proj.project && proj.project.cover_image_url;
-  const files = document.getElementById('p-files').files;
-
-  if(!hasCover && (!files || !files.length)){
-    showError('Please add at least one image (photo) for this request before submitting.');
-    return;
-  }
-
-  // Upload files first (if any), then submit ...
-  // (rest of your function continues unchanged)
   }
   function onUploadMessageOnce(ev){
     try{
@@ -412,11 +409,11 @@
         <td><a href="/capital-project.html?id=${encodeURIComponent(r.project_id)}" target="_blank">${escapeHtml(r.title||'(untitled)')}</a></td>
         <td>${escapeHtml(r.org_id||'')}</td>
         <td>${r.status||''}</td>
-        <td>${r.total_score_100 ?? r.total_score ?? ''}</td>
+        <td>${r.total_score ?? ''}</td>
         <td>
           <button class="btn" onclick="setScoreProject('${r.project_id}')">Score</button>
           <button class="btn" onclick="transition(['${r.project_id}'],'under_review')">Under Review</button>
-          <button class="btn primary" onclick="transition(['${r.project_id}'],'recommended')">Recommend</button>
+          <button class="btn btn-primary" onclick="transition(['${r.project_id}'],'recommended')">Recommend</button>
           <button class="btn" onclick="transition(['${r.project_id}'],'returned')">Return</button>
           <button class="btn" onclick="transition(['${r.project_id}'],'deferred')">Defer</button>
         </td>
@@ -462,9 +459,7 @@
     if(res.error) return showError(res.error);
 
     document.getElementById('score-msg').textContent =
-      (res.total_score_100!=null)
-        ? `Saved (Score: ${res.total_score_100} / 100)`
-        : `Saved (Composite: ${res.total_score?.toFixed?.(2) ?? res.total_score})`;
+      `Saved (Composite: ${typeof res.total_score === 'number' ? res.total_score.toFixed(2) : res.total_score})`;
 
     loadInbox(); // refresh table to show updated score
   }
