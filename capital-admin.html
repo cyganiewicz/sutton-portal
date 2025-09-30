@@ -71,7 +71,11 @@
       <h3 id="edit-title" class="section-title">Create / Edit Project</h3>
       <div class="grid grid-2">
         <div><label class="label">Title<input class="input" id="p-title"></label></div>
-        <div><label class="label">Category<input class="input" id="p-category"></label></div>
+        <div>
+  <label class="label">Category
+    <select class="input" id="p-category"></select>
+  </label>
+</div>
         <div><label class="label">Location<input class="input" id="p-location"></label></div>
         <div class="grid grid-2 grid-span-2">
           <div><label class="label">Description<textarea class="input" id="p-description" rows="4"></textarea></label></div>
@@ -300,6 +304,11 @@
   }
   function addCostRow(){ costRows.push({}); renderCostRows(); }
   function removeCostRow(i){ costRows.splice(i,1); renderCostRows(); }
+  // Fill category select
+(function fillCategories(){
+  const sel = document.getElementById('p-category');
+  sel.innerHTML = `<option value="">— Select —</option>` + (OPTIONS.categories||[]).map(c=>`<option value="${escapeAttr(c)}">${escapeHtml(c)}</option>`).join('');
+})();
 
   async function saveDraft(){
     const proj = collectProject('draft');
@@ -329,6 +338,21 @@
     }else{
       await doSubmit();
     }
+    async function submitProject(){
+  if(!editingProjectId){ await saveDraft(); } else { await saveDraft(); }
+
+  // Require at least one photo if project has no cover yet
+  const proj = await apiGet('/project','id='+encodeURIComponent(editingProjectId));
+  const hasCover = proj && proj.project && proj.project.cover_image_url;
+  const files = document.getElementById('p-files').files;
+
+  if(!hasCover && (!files || !files.length)){
+    showError('Please add at least one image (photo) for this request before submitting.');
+    return;
+  }
+
+  // Upload files first (if any), then submit ...
+  // (rest of your function continues unchanged)
   }
   function onUploadMessageOnce(ev){
     try{
