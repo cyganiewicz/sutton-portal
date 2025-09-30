@@ -2,116 +2,158 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Capital Plan</title>
+<title>Capital Plan • Town of Sutton</title>
 <link rel="stylesheet" href="styles/cip-styles.css">
-<style>
-  .wrap{max-width:1100px;margin:2rem auto;padding:0 1rem}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:.6rem;border-bottom:1px solid #eee}
-  th{text-align:left;font-size:.9rem;color:#334}
-  .num{text-align:right}
-  .badge{display:inline-block;padding:.15rem .45rem;border-radius:.75rem;background:#e6f0ff;color:#1246a7;font-size:.75rem;margin-left:.35rem}
-  .toolbar{display:flex;gap:.5rem;align-items:center;justify-content:space-between;margin:1rem 0}
-  select{padding:.35rem .5rem}
-</style>
+<style>.wrap{max-width:1100px;margin:2rem auto;padding:0 1rem}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}@media(max-width:980px){.cards{grid-template-columns:1fr 1fr}}@media(max-width:640px){.cards{grid-template-columns:1fr}}</style>
 </head>
-<body>
-<div class="wrap">
-  <h1>Capital Plan</h1>
-
-  <div class="toolbar">
-    <div>
-      <label>Phase:
-        <select id="phase">
-          <option value="tm_recommended">Town Manager Recommend</option>
-          <option value="preliminary">Preliminary</option>
-          <option value="fincom">FinCom</option>
-          <option value="town_meeting">Town Meeting</option>
-          <option value="adopted">Adopted</option>
-        </select>
-      </label>
-      <label>Window:
-        <select id="startfy"></select>–<select id="endfy"></select>
-      </label>
+<body class="theme-light">
+  <header class="brandbar">
+    <div class="brandbar__inner">
+      <a class="brandbar__logo" href="/"><span class="brandbar__seal">🏛️</span></a>
+      <div class="brandbar__titles">
+        <div class="brandbar__title">Town of Sutton</div>
+        <div class="brandbar__subtitle">Capital Improvement Program</div>
+      </div>
+      <nav class="brandbar__nav">
+        <a href="/capital.html">Public Capital</a>
+        <a href="/capital-plan.html" class="active">Plan Viewer</a>
+        <a href="/capital-admin.html">Admin</a>
+      </nav>
     </div>
-    <div id="totals"></div>
-  </div>
+  </header>
 
-  <table>
-    <thead>
-      <tr>
-        <th>FY</th>
-        <th>Project</th>
-        <th>Department</th>
-        <th>Funding</th>
-        <th class="num">Amount</th>
-      </tr>
-    </thead>
-    <tbody id="cap-rows"></tbody>
-  </table>
-</div>
+  <main class="wrap">
+    <h1 class="page-title">Ten-Year Capital Plan</h1>
+
+    <section class="card">
+      <div class="card__header">
+        <h2 class="card__title">Town Manager Recommended</h2>
+      </div>
+      <div id="rec-cards" class="cards"></div>
+      <div id="rec-empty" class="muted" style="display:none">No recommended items yet.</div>
+    </section>
+
+    <section class="card">
+      <div class="card__header">
+        <h2 class="card__title">All Requests (Comprehensive)</h2>
+      </div>
+      <div class="table-wrap">
+        <table class="table table--hover" id="matrix"></table>
+      </div>
+    </section>
+  </main>
 
 <script>
-  const API = 'https://script.google.com/macros/s/AKfycby6WaJq0C0A7zEQS7pmUXgcPmgRdJMq_-hrOXFw-ahFIyfn8oQ0_QLV0u4H9dLAjpniNw/exec'; // <-- replace
-  const yearNow = new Date().getFullYear();
-  const fyDefaultStart = yearNow + 1;  // tweak if you number FYS different
-  const fyDefaultEnd   = fyDefaultStart + 9;
+const API='https://script.google.com/macros/s/AKfycby6WaJq0C0A7zEQS7pmUXgcPmgRdJMq_-hrOXFw-ahFIyfn8oQ0_QLV0u4H9dLAjpniNw/exec';
 
-  const $phase = document.getElementById('phase');
-  const $start = document.getElementById('startfy');
-  const $end = document.getElementById('endfy');
-  const $rows = document.getElementById('cap-rows');
-  const $totals = document.getElementById('totals');
-
-  function fillFYSelects(startFY, endFY){
-    $start.innerHTML = ''; $end.innerHTML = '';
-    for(let y = startFY-2; y <= endFY+2; y++){
-      const o1 = document.createElement('option'); o1.value=o1.textContent=y; if(y===startFY) o1.selected=true; $start.appendChild(o1);
-      const o2 = document.createElement('option'); o2.value=o2.textContent=y; if(y===endFY) o2.selected=true; $end.appendChild(o2);
-    }
-  }
-
-  async function load(){
-    const phase = $phase.value;
-    const start_fy = Number($start.value);
-    const end_fy = Number($end.value);
-
-    const rows = await fetch(`${API}?path=/public_feed&phase_key=${phase}&start_fy=${start_fy}&end_fy=${end_fy}`).then(r=>r.json());
-    const totals = await fetch(`${API}?path=/public_totals&phase_key=${phase}&start_fy=${start_fy}&end_fy=${end_fy}&by=year`).then(r=>r.json());
-
-    renderTable(rows);
-    renderTotals(totals);
-  }
-
-  function renderTable(rows){
-    $rows.innerHTML = rows
-      .sort((a,b)=> a.fiscal_year-b.fiscal_year || a.title.localeCompare(b.title))
-      .map(r=>{
-        const rec = (r.project_status||'').toLowerCase()==='recommended' ? '<span class="badge">Recommended</span>' : '';
-        return `<tr>
-          <td>${r.fiscal_year}</td>
-          <td><a href="/capital-project.html?id=${encodeURIComponent(r.project_id)}">${escapeHtml(r.title)}</a> ${rec}</td>
-          <td>${escapeHtml(r.org_id||'')}</td>
-          <td>${escapeHtml(r.funding_source||'')}</td>
-          <td class="num">$${Number(r.amount||0).toLocaleString()}</td>
-        </tr>`;
-      }).join('');
-  }
-
-  function renderTotals(totals){
-    const sum = totals.reduce((a,t)=> a + Number(t.total||0), 0);
-    $totals.innerHTML = `<strong>Total window:</strong> $${sum.toLocaleString()}`;
-  }
-
-  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-
-  fillFYSelects(fyDefaultStart, fyDefaultEnd);
-  ['change','input'].forEach(evt=>{
-    $phase.addEventListener(evt, load);
-    $start.addEventListener(evt, ()=>{ if(Number($end.value) < Number($start.value)) $end.value = $start.value; load(); });
-    $end.addEventListener(evt, load);
+function jsonp(url){
+  return new Promise((resolve,reject)=>{
+    const cb='__cb'+Math.random().toString(36).slice(2);
+    const s=document.createElement('script');
+    window[cb]=(d)=>{ delete window[cb]; s.remove(); resolve(d); };
+    s.onerror=()=>{ delete window[cb]; s.remove(); reject(new Error('Network error')); };
+    s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
+    document.head.appendChild(s);
   });
-  document.addEventListener('DOMContentLoaded', load);
+}
+function fmt(n){return Number(n||0).toLocaleString();}
+function esc(s){return String(s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+
+(async function init(){
+  // Determine rolling 10 FY window (FY starts July 1; tweak if your policy is different)
+  const now = new Date();
+  const baseFY = (now.getMonth()>=6) ? now.getFullYear()+1 : now.getFullYear();
+  const startFY = baseFY;
+  const endFY = baseFY + 9;
+
+  // 1) Recommended items come from snapshot_plan with phase_key=tm_recommended
+  const recommended = await jsonp(`${API}?path=/public_feed&phase_key=tm_recommended&start_fy=${startFY}&end_fy=${endFY}`);
+  renderRecommended(recommended);
+
+  // 2) Comprehensive requests = all non-recommended statuses with their costs
+  const requests = await jsonp(`${API}?path=/public_requests&start_fy=${startFY}&end_fy=${endFY}`);
+  renderMatrix(requests, startFY, endFY);
+})();
+
+function renderRecommended(rows){
+  const root = document.getElementById('rec-cards');
+  const empty = document.getElementById('rec-empty');
+  if(!rows || !rows.length){ empty.style.display='block'; root.innerHTML=''; return; }
+  empty.style.display='none';
+
+  // group by project
+  const byId = {};
+  rows.forEach(r=>{
+    (byId[r.project_id]=byId[r.project_id]||{title:r.title, org_id:r.org_id, total:0}).total += Number(r.amount||0);
+  });
+
+  root.innerHTML = Object.entries(byId).map(([id, p])=>{
+    return `
+      <a class="card card--soft" href="/capital-project.html?id=${encodeURIComponent(id)}" style="text-decoration:none">
+        <div class="badge badge--recommended" style="float:right">recommended</div>
+        <div class="section-title" style="margin:0 0 .4rem 0">${esc(p.title||'(untitled)')}</div>
+        <div class="muted" style="margin-bottom:.5rem">${esc(p.org_id||'')}</div>
+        <div><strong>Total (10yr):</strong> $${fmt(p.total)}</div>
+      </a>
+    `;
+  }).join('');
+}
+
+function renderMatrix(requests, startFY, endFY){
+  const years = [];
+  for(let y=startFY;y<=endFY;y++) years.push(y);
+
+  // build matrix rows per project
+  const byId = {};
+  (requests||[]).forEach(p=>{
+    const row = byId[p.project_id] = byId[p.project_id] || {
+      id:p.project_id, title:p.title, org:p.org_id,
+      status:(p.project_status||'').toLowerCase(), // submitted/under_review/returned/deferred/draft
+      annual: Object.fromEntries(years.map(y=> [y,0])),
+      total: 0
+    };
+    (p.costs||[]).forEach(c=>{
+      row.annual[c.fiscal_year] = (row.annual[c.fiscal_year]||0) + Number(c.amount||0);
+      row.total += Number(c.amount||0);
+    });
+  });
+
+  // sort: submitted/under_review first, then others, then by total desc
+  const order = {submitted:1, under_review:1, returned:2, deferred:3, draft:4};
+  const rows = Object.values(byId).sort((a,b)=>{
+    const ao = order[a.status]||9, bo = order[b.status]||9;
+    if(ao!==bo) return ao-bo;
+    return (b.total||0) - (a.total||0);
+  });
+
+  // table header
+  const thead = `<thead><tr>
+    <th>Project</th><th>Dept</th><th>Status</th>
+    ${years.map(y=>`<th class="num">${y}</th>`).join('')}
+    <th class="num">Total</th>
+  </tr></thead>`;
+
+  // body
+  const tbody = rows.map(r=>`
+    <tr>
+      <td><a href="/capital-project.html?id=${encodeURIComponent(r.id)}">${esc(r.title||'(untitled)')}</a></td>
+      <td>${esc(r.org||'')}</td>
+      <td>${r.status ? `<span class="badge badge--${r.status}">${r.status.replace('_',' ')}</span>` : ''}</td>
+      ${years.map(y=> `<td class="num">${r.annual[y] ? '$'+fmt(r.annual[y]) : ''}</td>`).join('')}
+      <td class="num"><strong>${r.total ? '$'+fmt(r.total) : ''}</strong></td>
+    </tr>
+  `).join('');
+
+  // grand totals by year
+  const totals = Object.fromEntries(years.map(y=>[y,0]));
+  rows.forEach(r=> years.forEach(y=> totals[y]+= (r.annual[y]||0)));
+  const grand = years.map(y=> `<td class="num"><strong>${totals[y] ? '$'+fmt(totals[y]) : ''}</strong></td>`).join('');
+  const tfoot = `<tfoot><tr>
+    <td colspan="3"><strong>Totals</strong></td>${grand}<td></td>
+  </tr></tfoot>`;
+
+  document.getElementById('matrix').innerHTML = thead + '<tbody>'+tbody+'</tbody>' + tfoot;
+}
 </script>
 </body>
 </html>
