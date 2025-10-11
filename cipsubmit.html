@@ -2,168 +2,202 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Sutton OpenBook · Capital Project Submission</title>
+  <title>OpenBook Sutton · Capital Project Submission</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Submit a capital project request to the Town of Sutton." />
   <link rel="icon" href="/favicon.ico" />
   <style>
-    /* ====== Light Modern Theme (Soft Gray) ====== */
-    :root{
-      --accent:#4b5563;       /* neutral gray accent */
-      --ink:#1e293b;          /* slate-800 */
-      --muted:#6b7280;        /* gray-500 */
-      --bg:#fafafa;           /* near white */
-      --card:#ffffff;
-      --border:#e5e7eb;       /* gray-200 */
-      --shadow:0 1px 3px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.05);
-      --radius:14px;
-      --pad:24px;
-      --maxw:980px;
-    }
-    @media (prefers-color-scheme: dark){
-      :root{
-        --bg:#0b1020; --card:#111827; --ink:#e5e7eb; --border:#1f2937; --muted:#9ca3af;
-        --shadow:0 1px 3px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.3);
-      }
+    /* ===== Global Variables (OpenBook Sutton palette) ===== */
+    :root {
+      --green: #355E3B;
+      --ink: #1e293b;
+      --muted: #6b7280;
+      --bg: #f3f4f6;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --shadow: 0 2px 4px rgba(0, 0, 0, .05);
+      --radius: 12px;
+      --pad: 24px;
+      --maxw: 1000px;
     }
 
-    *{box-sizing:border-box;}
-    body{
-      margin:0;
-      font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-      color:var(--ink);
-      background:var(--bg);
-    }
-    a{color:var(--accent); text-decoration:underline;}
-    a:hover{opacity:.75;}
-
-    .wrap{max-width:var(--maxw); margin:0 auto; padding:28px 16px 56px;}
-
-    /* ===== Header ===== */
-    .hero{
-      background:linear-gradient(180deg,#f9fafb,#f3f4f6 70%);
-      border-bottom:1px solid var(--border);
-    }
-    .hero .wrap{
-      padding-top:36px;
-      padding-bottom:26px;
-      display:flex;
-      align-items:center;
-      gap:16px;
-      flex-wrap:wrap;
-    }
-    .hero img{
-      height:48px;
-      width:auto;
-    }
-    .title{
-      margin:0;
-      font-size:28px;
-      letter-spacing:.2px;
-    }
-    .subtitle{
-      margin:4px 0 0;
-      color:var(--muted);
-      font-size:15px;
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
     }
 
-    /* ===== Cards ===== */
-    .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      overflow:hidden;
+    a {
+      color: var(--green);
+      text-decoration: underline;
     }
-    .card .body{padding:var(--pad);}
-    .card h2{margin:0 0 10px; font-size:18px;}
-    ul{margin:8px 0 0 18px; padding:0;}
-    ul li{margin:6px 0;}
+    a:hover { opacity: .85; }
 
-    /* ===== Iframe Section ===== */
-    .frameTop{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-      padding:14px var(--pad);
-      border-bottom:1px solid var(--border);
-      background:linear-gradient(0deg,#f3f4f6,transparent);
+    /* ===== Header / Navbar ===== */
+    header.navbar {
+      background: var(--green);
+      color: #fff;
+      box-shadow: var(--shadow);
     }
-    .frameTop b{font-size:14px;}
-    .frame{
-      display:block;
-      width:100%;
-      border:0;
-      height:1700px;
-      background:#fff;
+    .nav-wrap {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 14px 24px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand img {
+      height: 42px;
+      width: auto;
+    }
+    .brand span {
+      font-weight: 600;
+      font-size: 20px;
+      letter-spacing: .3px;
+    }
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      margin-left: 24px;
+      font-weight: 500;
+      transition: opacity .2s;
+    }
+    nav a:hover { opacity: .8; }
+
+    /* ===== Page Layout ===== */
+    main {
+      max-width: var(--maxw);
+      margin: 40px auto 80px;
+      padding: 0 20px;
     }
 
-    /* ===== Layout ===== */
-    .stack{display:flex; flex-direction:column; gap:18px; margin-top:22px;}
-    footer{margin-top:28px; color:var(--muted); font-size:14px; text-align:center;}
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 22px;
+      overflow: hidden;
+    }
+    .card .body { padding: var(--pad); }
+    h1 {
+      font-size: 26px;
+      margin: 0 0 12px;
+    }
+    h2 {
+      font-size: 18px;
+      margin: 0 0 10px;
+    }
+
+    ul {
+      margin: 8px 0 0 20px;
+      padding: 0;
+    }
+    ul li { margin: 6px 0; }
+
+    /* ===== Iframe Form Section ===== */
+    .frameTop {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f9fafb;
+      border-bottom: 1px solid var(--border);
+      padding: 12px var(--pad);
+    }
+    .frameTop b {
+      font-size: 14px;
+      color: var(--ink);
+    }
+    .frame {
+      display: block;
+      width: 100%;
+      border: 0;
+      height: 1700px;
+      background: #fff;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 20px;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
-  <header class="hero">
-    <div class="wrap">
-      <img src="https://openbook.suttonma.gov/assets/OpenBook%20Sutton%20logo.png" alt="OpenBook Sutton logo">
-      <div>
-        <h1 class="title">Capital Project Submission</h1>
-        <p class="subtitle">Submit requests using the Town’s Project Detail format. A PDF will be emailed to you and the Town Manager.</p>
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="nav-wrap">
+      <div class="brand">
+        <img src="https://openbook.suttonma.gov/assets/OpenBook%20Sutton%20logo.png" alt="OpenBook Sutton Logo">
+        <span>OpenBook Sutton</span>
       </div>
+      <nav>
+        <a href="/index.html">Home</a>
+        <a href="/expenses.html">Expenses</a>
+        <a href="/revenues.html">Revenues</a>
+        <a href="/capital.html">Capital</a>
+        <a href="/reserves.html">Reserves</a>
+      </nav>
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="wrap">
-    <div class="stack">
+  <main>
+    <h1>Capital Project Submission</h1>
+    <p style="color: var(--muted); margin-top: 4px;">
+      Submit requests using the Town’s Project Detail format. A PDF will be emailed to you and the Town Manager.
+    </p>
 
-      <!-- Before you start -->
-      <aside class="card">
-        <div class="body">
-          <h2>Before you start</h2>
-          <ul>
-            <li>Have your <b>project title</b>, <b>department</b>, and <b>category</b> ready.</li>
-            <li>Be prepared to describe the <b>need/justification</b>.</li>
-            <li>If requesting funds in <b>FY 2027</b>, a <b>quote document</b> is required.</li>
-            <li>Optional: upload a <b>project photo</b> (PNG/JPG).</li>
-          </ul>
-        </div>
-      </aside>
+    <!-- Before You Start -->
+    <aside class="card">
+      <div class="body">
+        <h2>Before you start</h2>
+        <ul>
+          <li>Have your <b>project title</b>, <b>department</b>, and <b>category</b> ready.</li>
+          <li>Be prepared to describe the <b>need/justification</b>.</li>
+          <li>If requesting funds in <b>FY 2027</b>, a <b>quote document</b> is required.</li>
+          <li>Optional: upload a <b>project photo</b> (PNG/JPG).</li>
+        </ul>
+      </div>
+    </aside>
 
-      <!-- Embedded form -->
-      <article class="card">
-        <div class="frameTop">
-          <b>Submit your project</b>
-          <a class="open-link" id="openInNew" href="#" target="_blank" rel="noopener">Open in a new tab ↗</a>
-        </div>
-        <iframe
-          id="cipFrame"
-          class="frame"
-          src="https://script.google.com/macros/s/AKfycbzjdNbId9-_jNbSzvp3ziJ9QZJzK9LE8_P_Jr4DYHh1SJuIhWnXCW96_LdwlQLhz_ULpg/exec"
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
-          title="Sutton CIP – Capital Project Submission"
-        ></iframe>
-      </article>
-
-    </div>
+    <!-- Form Embed -->
+    <article class="card">
+      <div class="frameTop">
+        <b>Submit your project</b>
+        <a id="openInNew" href="#" target="_blank" rel="noopener" style="font-size:14px;">Open in a new tab ↗</a>
+      </div>
+      <iframe
+        id="cipFrame"
+        class="frame"
+        src="https://script.google.com/macros/s/AKfycbzjdNbId9-_jNbSzvp3ziJ9QZJzK9LE8_P_Jr4DYHh1SJuIhWnXCW96_LdwlQLhz_ULpg/exec"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        title="Sutton CIP – Capital Project Submission"
+      ></iframe>
+    </article>
 
     <footer>
-      <p>© Town of Sutton — OpenBook</p>
+      <p>© Town of Sutton — OpenBook Sutton</p>
     </footer>
   </main>
 
   <script>
-    // “Open in new tab” mirrors iframe URL
+    // Make “Open in new tab” link dynamic
     const frame = document.getElementById('cipFrame');
     const openInNew = document.getElementById('openInNew');
     openInNew.href = frame.src;
 
-    // Basic responsive iframe height
+    // Basic iframe resize
     const BASE = 1500, MIN = 1200, MAX = 2200;
     function resizeIframe(){
       const h = Math.max(MIN, Math.min(MAX, Math.round(window.innerHeight * 1.15)));
