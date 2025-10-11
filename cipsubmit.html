@@ -6,142 +6,102 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Submit a capital project request to the Town of Sutton." />
   <link rel="icon" href="/favicon.ico" />
+  <!-- Inter (optional if your site already loads it) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <style>
-    /* ===== Global Variables (OpenBook Sutton palette) ===== */
-    :root {
-      --green: #3f6522;
-      --ink: #1e293b;
-      --muted: #6b7280;
-      --bg: #f3f4f6;
-      --card: #ffffff;
-      --border: #e5e7eb;
-      --shadow: 0 2px 4px rgba(0, 0, 0, .05);
-      --radius: 12px;
-      --pad: 24px;
-      --maxw: 1000px;
+    /* ===== Base layout and header colors (from your site) ===== */
+    :root{
+      --navbar-height: 104px;
+      --navbar-bg: #3f6522; /* Sutton green */
+      --header-text: #ffffff;
     }
 
-    body {
+    header{ background-color: var(--navbar-bg); color: var(--header-text); }
+    body{
+      font-family: 'Inter', sans-serif;
+      background-color: #f3f4f6; /* light gray page bg */
+      color: #1f2937;
       margin: 0;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--ink);
       line-height: 1.6;
     }
 
-    a {
-      color: var(--green);
-      text-decoration: underline;
-    }
-    a:hover { opacity: .85; }
-
-    /* ===== Header / Navbar ===== */
-    header.navbar {
-      background: var(--green);
-      color: #fff;
-      box-shadow: var(--shadow);
-    }
-    .nav-wrap {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    /* ===== Navbar structure (matches other pages) ===== */
+    .nav-wrap{
       max-width: 1200px;
       margin: 0 auto;
-      padding: 14px 24px;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .brand img {
-      height: 42px;
-      width: auto;
-    }
-    .brand span {
-      font-weight: 600;
-      font-size: 20px;
-      letter-spacing: .3px;
-    }
-    nav a {
-      color: #fff;
-      text-decoration: none;
-      margin-left: 24px;
-      font-weight: 500;
-      transition: opacity .2s;
-    }
-    nav a:hover { opacity: .8; }
-
-    /* ===== Page Layout ===== */
-    main {
-      max-width: var(--maxw);
-      margin: 40px auto 80px;
-      padding: 0 20px;
-    }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      margin-bottom: 22px;
-      overflow: hidden;
-    }
-    .card .body { padding: var(--pad); }
-    h1 {
-      font-size: 26px;
-      margin: 0 0 12px;
-    }
-    h2 {
-      font-size: 18px;
-      margin: 0 0 10px;
-    }
-
-    ul {
-      margin: 8px 0 0 20px;
-      padding: 0;
-    }
-    ul li { margin: 6px 0; }
-
-    /* ===== Iframe Form Section ===== */
-    .frameTop {
+      height: var(--navbar-height);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: #f9fafb;
-      border-bottom: 1px solid var(--border);
-      padding: 12px var(--pad);
+      padding: 0 24px;
     }
-    .frameTop b {
-      font-size: 14px;
-      color: var(--ink);
+    .brand{
+      display: flex; align-items: center; gap: 12px;
     }
-    .frame {
-      display: block;
-      width: 100%;
-      border: 0;
-      height: 1700px;
-      background: #fff;
-    }
+    .brand img{ height: 56px; width: auto; }
+    .brand span{ font-weight: 700; font-size: 22px; letter-spacing: .2px; }
 
-    footer {
-      text-align: center;
-      color: var(--muted);
-      font-size: 14px;
-      padding: 20px;
+    .nav-links{ display: flex; gap: 28px; }
+    .nav-links a{
+      color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px;
+      opacity: .95;
+    }
+    .nav-links a:hover{ opacity: .8; text-decoration: underline; }
+
+    /* ===== Page container / cards ===== */
+    .container{ max-width: 1000px; margin: 28px auto 64px; padding: 0 20px; }
+    .card{
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 2px 6px rgba(0,0,0,.05);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .card .body{ padding: 24px; }
+    h1{ font-size: 26px; margin: 0 0 10px; }
+    h2{ font-size: 18px; margin: 0 0 10px; color:#111827; }
+    p.muted{ color:#6b7280; margin-top: 4px; }
+
+    /* “Before you start” list */
+    ul{ margin: 8px 0 0 20px; padding:0; }
+    li{ margin: 6px 0; }
+
+    /* Embed header (subtle) */
+    .frameTop{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 24px; background:#f9fafb; border-bottom:1px solid #e5e7eb;
+    }
+    .frameTop b{ font-size:14px; color:#1f2937; }
+    .frameTop a{ color:#3f6522; text-decoration: underline; font-size:14px; }
+
+    /* Iframe */
+    .frame{ display:block; width:100%; border:0; background:#fff; height:1700px; }
+
+    /* Footer */
+    footer{ text-align:center; color:#6b7280; font-size:14px; margin-top: 20px; }
+
+    /* Responsive */
+    @media (max-width: 640px){
+      .nav-links{ gap: 16px; }
+      .brand img{ height: 48px; }
+      .frame{ height: 1900px; } /* a bit taller on mobile */
     }
   </style>
 </head>
 <body>
 
   <!-- Navbar -->
-  <header class="navbar">
+  <header>
     <div class="nav-wrap">
-       <div class="flex items-center space-x-3">
-        <img src="assets/logo.png" alt="Town Seal" class="h-14 w-auto object-contain" />
-        <h1 class="text-2xl font-bold text-white">OpenBook Sutton</h1>
+      <div class="brand">
+        <img src="https://openbook.suttonma.gov/assets/OpenBook%20Sutton%20logo.png" alt="OpenBook Sutton logo">
+        <span>OpenBook Sutton</span>
       </div>
-      <nav>
+      <nav class="nav-links">
         <a href="/index.html">Home</a>
         <a href="/expenses.html">Expenses</a>
         <a href="/revenues.html">Revenues</a>
@@ -151,13 +111,12 @@
     </div>
   </header>
 
-  <main>
+  <!-- Main -->
+  <main class="container">
     <h1>Capital Project Submission</h1>
-    <p style="color: var(--muted); margin-top: 4px;">
-      Submit requests using the Town’s Project Detail format. A PDF will be emailed to you and the Town Manager.
-    </p>
+    <p class="muted">Submit requests using the Town’s Project Detail format. A PDF will be emailed to you and the Town Manager.</p>
 
-    <!-- Before You Start -->
+    <!-- Before you start -->
     <aside class="card">
       <div class="body">
         <h2>Before you start</h2>
@@ -170,11 +129,11 @@
       </div>
     </aside>
 
-    <!-- Form Embed -->
+    <!-- Form embed -->
     <article class="card">
       <div class="frameTop">
         <b>Submit your project</b>
-        <a id="openInNew" href="#" target="_blank" rel="noopener" style="font-size:14px;">Open in a new tab ↗</a>
+        <a id="openInNew" href="#" target="_blank" rel="noopener">Open in a new tab ↗</a>
       </div>
       <iframe
         id="cipFrame"
@@ -186,18 +145,16 @@
       ></iframe>
     </article>
 
-    <footer>
-      <p>© Town of Sutton — OpenBook Sutton</p>
-    </footer>
+    <footer>© Town of Sutton — OpenBook Sutton</footer>
   </main>
 
   <script>
-    // Make “Open in new tab” link dynamic
+    // “Open in a new tab” mirrors iframe URL
     const frame = document.getElementById('cipFrame');
     const openInNew = document.getElementById('openInNew');
     openInNew.href = frame.src;
 
-    // Basic iframe resize
+    // Optional: adjust iframe height to viewport (fixed is most reliable cross-origin)
     const BASE = 1500, MIN = 1200, MAX = 2200;
     function resizeIframe(){
       const h = Math.max(MIN, Math.min(MAX, Math.round(window.innerHeight * 1.15)));
