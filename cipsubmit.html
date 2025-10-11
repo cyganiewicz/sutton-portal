@@ -6,102 +6,193 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Submit a capital project request to the Town of Sutton." />
   <link rel="icon" href="/favicon.ico" />
-  <!-- Inter (optional if your site already loads it) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <style>
-    /* ===== Base layout and header colors (from your site) ===== */
-    :root{
+    /* ========== GLOBAL SITE STYLES (copied from OpenBook portal) ========== */
+    :root {
       --navbar-height: 104px;
       --navbar-bg: #3f6522; /* Sutton green */
       --header-text: #ffffff;
     }
 
-    header{ background-color: var(--navbar-bg); color: var(--header-text); }
-    body{
+    body {
       font-family: 'Inter', sans-serif;
-      background-color: #f3f4f6; /* light gray page bg */
+      background-color: #f3f4f6; /* light gray background */
       color: #1f2937;
       margin: 0;
       line-height: 1.6;
     }
 
-    /* ===== Navbar structure (matches other pages) ===== */
-    .nav-wrap{
-      max-width: 1200px;
-      margin: 0 auto;
+    /* ========== NAVBAR ========== */
+    header {
+      background-color: var(--navbar-bg);
+      color: var(--header-text);
       height: var(--navbar-height);
       display: flex;
       align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .navbar-container {
+      display: flex;
+      align-items: center;
       justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
       padding: 0 24px;
+      width: 100%;
     }
-    .brand{
-      display: flex; align-items: center; gap: 12px;
-    }
-    .brand img{ height: 56px; width: auto; }
-    .brand span{ font-weight: 700; font-size: 22px; letter-spacing: .2px; }
 
-    .nav-links{ display: flex; gap: 28px; }
-    .nav-links a{
-      color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px;
-      opacity: .95;
+    .navbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    .nav-links a:hover{ opacity: .8; text-decoration: underline; }
 
-    /* ===== Page container / cards ===== */
-    .container{ max-width: 1000px; margin: 28px auto 64px; padding: 0 20px; }
-    .card{
+    .navbar-left img {
+      height: 64px;
+      width: auto;
+    }
+
+    .navbar-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #ffffff;
+      margin-top: 4px;
+    }
+
+    nav a {
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 500;
+      margin-left: 24px;
+      transition: opacity 0.2s ease;
+    }
+
+    nav a:hover {
+      opacity: 0.85;
+      text-decoration: underline;
+    }
+
+    /* ========== PAGE CONTENT ========== */
+    main {
+      max-width: 1000px;
+      margin: 40px auto 80px;
+      padding: 0 20px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #1f2937;
+    }
+
+    p.muted {
+      color: #6b7280;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+
+    .card {
       background: #ffffff;
-      border-radius: 12px;
+      border-radius: 0.75rem;
       border: 1px solid #e5e7eb;
-      box-shadow: 0 2px 6px rgba(0,0,0,.05);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
       overflow: hidden;
       margin-bottom: 20px;
     }
-    .card .body{ padding: 24px; }
-    h1{ font-size: 26px; margin: 0 0 10px; }
-    h2{ font-size: 18px; margin: 0 0 10px; color:#111827; }
-    p.muted{ color:#6b7280; margin-top: 4px; }
 
-    /* “Before you start” list */
-    ul{ margin: 8px 0 0 20px; padding:0; }
-    li{ margin: 6px 0; }
-
-    /* Embed header (subtle) */
-    .frameTop{
-      display:flex; align-items:center; justify-content:space-between;
-      padding:12px 24px; background:#f9fafb; border-bottom:1px solid #e5e7eb;
+    .card .body {
+      padding: 1.5rem;
     }
-    .frameTop b{ font-size:14px; color:#1f2937; }
-    .frameTop a{ color:#3f6522; text-decoration: underline; font-size:14px; }
 
-    /* Iframe */
-    .frame{ display:block; width:100%; border:0; background:#fff; height:1700px; }
+    h2 {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: #111827;
+    }
 
-    /* Footer */
-    footer{ text-align:center; color:#6b7280; font-size:14px; margin-top: 20px; }
+    ul {
+      margin: 8px 0 0 20px;
+      padding: 0;
+    }
 
-    /* Responsive */
-    @media (max-width: 640px){
-      .nav-links{ gap: 16px; }
-      .brand img{ height: 48px; }
-      .frame{ height: 1900px; } /* a bit taller on mobile */
+    li {
+      margin: 6px 0;
+    }
+
+    .frameTop {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .frameTop b {
+      font-size: 14px;
+      color: #1f2937;
+    }
+
+    .frameTop a {
+      color: #3f6522;
+      text-decoration: underline;
+      font-size: 14px;
+    }
+
+    iframe.frame {
+      display: block;
+      width: 100%;
+      height: 1700px;
+      border: none;
+      background: #ffffff;
+    }
+
+    footer {
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .navbar-container {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+      }
+
+      nav a {
+        margin: 0 8px;
+        font-size: 14px;
+      }
+
+      .navbar-left img {
+        height: 52px;
+      }
+
+      iframe.frame {
+        height: 1900px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- Navbar -->
+  <!-- Navbar identical to other pages -->
   <header>
-    <div class="nav-wrap">
-      <div class="brand">
-        <img src="https://openbook.suttonma.gov/assets/OpenBook%20Sutton%20logo.png" alt="OpenBook Sutton logo">
-        <span>OpenBook Sutton</span>
+    <div class="navbar-container">
+      <div class="navbar-left">
+        <img src="https://openbook.suttonma.gov/assets/OpenBook%20Sutton%20logo.png" alt="Town of Sutton Logo">
+        <div class="navbar-title">OpenBook Sutton</div>
       </div>
-      <nav class="nav-links">
+      <nav>
         <a href="/index.html">Home</a>
         <a href="/expenses.html">Expenses</a>
         <a href="/revenues.html">Revenues</a>
@@ -111,8 +202,7 @@
     </div>
   </header>
 
-  <!-- Main -->
-  <main class="container">
+  <main>
     <h1>Capital Project Submission</h1>
     <p class="muted">Submit requests using the Town’s Project Detail format. A PDF will be emailed to you and the Town Manager.</p>
 
@@ -129,7 +219,7 @@
       </div>
     </aside>
 
-    <!-- Form embed -->
+    <!-- Form Embed -->
     <article class="card">
       <div class="frameTop">
         <b>Submit your project</b>
@@ -149,12 +239,12 @@
   </main>
 
   <script>
-    // “Open in a new tab” mirrors iframe URL
+    // “Open in new tab” mirrors the iframe URL
     const frame = document.getElementById('cipFrame');
     const openInNew = document.getElementById('openInNew');
     openInNew.href = frame.src;
 
-    // Optional: adjust iframe height to viewport (fixed is most reliable cross-origin)
+    // Basic responsive height adjustment
     const BASE = 1500, MIN = 1200, MAX = 2200;
     function resizeIframe(){
       const h = Math.max(MIN, Math.min(MAX, Math.round(window.innerHeight * 1.15)));
