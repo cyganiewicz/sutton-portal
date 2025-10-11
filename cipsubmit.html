@@ -7,167 +7,120 @@
   <meta name="description" content="Submit a capital project request to the Town of Sutton." />
   <link rel="icon" href="/favicon.ico" />
   <style>
-    /* ====== Design Tokens ====== */
+    /* ====== Design Tokens (light, modern, minimal) ====== */
     :root{
-      --brand:#0B57D0;
-      --brand-ink:#0b3aa0;
-      --ink:#0f172a;
-      --muted:#5f6368;
-      --bg:#f7f9fc;
+      --accent:#0D9488;       /* subtle teal accent */
+      --ink:#0f172a;          /* slate-900 */
+      --muted:#6b7280;        /* gray-500 */
+      --bg:#f8fafc;           /* slate-50 */
       --card:#ffffff;
-      --border:#e5e7eb;
-      --ok:#0a7f33;
-      --warn:#b00020;
-      --shadow:0 1px 3px rgba(0,0,0,.08), 0 6px 24px rgba(0,0,0,.06);
+      --border:#e5e7eb;       /* gray-200 */
+      --shadow:0 1px 3px rgba(0,0,0,.06), 0 10px 30px rgba(0,0,0,.04);
       --radius:14px;
       --pad:24px;
-      --maxw:1100px;
+      --maxw:980px;           /* a little narrower for focus */
     }
     @media (prefers-color-scheme: dark){
       :root{
-        --bg:#0b1020; --card:#111827; --ink:#e5e7eb; --border:#1f2937; --muted:#a4b0be;
-        --shadow:0 1px 3px rgba(0,0,0,.6), 0 6px 24px rgba(0,0,0,.4);
+        --bg:#0b1020; --card:#111827; --ink:#e5e7eb; --border:#1f2937; --muted:#9ca3af;
+        --shadow:0 1px 3px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.3);
       }
     }
 
     /* ====== Base ====== */
     *{box-sizing:border-box}
-    html,body{height:100%}
     body{
-      margin:0; font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-      color:var(--ink); background:linear-gradient(180deg,var(--bg),#eef2f7 60%,var(--bg));
+      margin:0; font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+      color:var(--ink); background:var(--bg);
     }
-    a{color:var(--brand); text-decoration:underline}
-    a:hover{color:var(--brand-ink)}
-    .wrap{max-width:var(--maxw); margin:0 auto; padding:24px 16px 56px}
+    a{color:var(--accent); text-decoration:underline}
+    a:hover{opacity:.85}
+    .wrap{max-width:var(--maxw); margin:0 auto; padding:28px 16px 56px}
 
-    /* ====== Header/Hero ====== */
+    /* ====== Header (very light) ====== */
     .hero{
-      background: radial-gradient(1200px 400px at 10% -10%, rgba(11,87,208,.12), transparent 40%),
-                  radial-gradient(800px 300px at 90% -10%, rgba(11,87,208,.08), transparent 60%);
+      background: linear-gradient(180deg, rgba(13,148,136,.06), rgba(13,148,136,0) 60%);
       border-bottom:1px solid var(--border);
     }
-    .hero .wrap{padding-top:40px; padding-bottom:28px}
+    .hero .wrap{padding-top:34px; padding-bottom:22px}
     .title{margin:0; font-size:28px; letter-spacing:.2px}
     .subtitle{margin:6px 0 0; color:var(--muted)}
 
-    /* ====== Content Cards ====== */
-    .grid{display:grid; grid-template-columns: minmax(0,1fr); gap:20px; margin-top:22px}
-    @media(min-width:960px){ .grid{ grid-template-columns: 2fr 1fr; } }
+    /* ====== Cards ====== */
     .card{
       background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
       box-shadow:var(--shadow); overflow:hidden;
     }
     .card .body{padding:var(--pad)}
     .card h2{margin:0 0 10px; font-size:18px}
-    .meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:6px; color:var(--muted); font-size:14px}
-    .badge{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border:1px solid var(--border); border-radius:999px; background:rgba(11,87,208,.06)}
-    .list{padding-left:18px; margin:10px 0}
-    .list li{margin:6px 0}
+
+    /* ====== Simple vertical flow ====== */
+    .stack{display:flex; flex-direction:column; gap:18px; margin-top:22px}
 
     /* ====== Iframe Container ====== */
-    .frameWrap{
-      display:block; width:100%; background:var(--card); border-top:1px solid var(--border);
-    }
     .frameTop{
       display:flex; align-items:center; justify-content:space-between; gap:8px;
-      padding:14px var(--pad); border-bottom:1px solid var(--border); background:linear-gradient(0deg, rgba(11,87,208,.04), transparent);
+      padding:14px var(--pad); border-bottom:1px solid var(--border); background:linear-gradient(0deg, rgba(13,148,136,.05), transparent);
     }
     .frameTop b{font-size:14px}
-    .open-link{font-size:14px}
     .frame{
-      display:block; width:100%; border:0; height:1800px; /* adjust height if needed */
+      display:block; width:100%; border:0; height:1700px; /* adjust if needed */
       background:#fff;
     }
 
     /* ====== Footer ====== */
     footer{margin-top:28px; color:var(--muted); font-size:14px; text-align:center}
 
-    /* ====== Small Helpers ====== */
-    .kpis{display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:10px; margin-top:10px}
-    .kpi{padding:12px; border:1px solid var(--border); border-radius:10px; background:var(--card); text-align:center}
-    .kpi b{display:block; font-size:18px}
+    /* small niceties */
+    .meta{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; color:var(--muted); font-size:14px}
+    .badge{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border:1px solid var(--border); border-radius:999px; background:#fff}
   </style>
 </head>
 <body>
 
-  <!-- Hero -->
+  <!-- Header -->
   <header class="hero">
     <div class="wrap">
       <h1 class="title">Capital Project Submission</h1>
-      <p class="subtitle">This form mirrors the Town’s Project Detail Sheet and emails a PDF of your request to you and the Town Manager.</p>
-      <div class="meta">
-        <span class="badge" title="Estimated time">⏱️ 10–15 minutes</span>
-        <span class="badge" title="Required items">📎 Quote required if requesting FY27 funds</span>
-        <span class="badge" title="File types">🖼️ PNG/JPG image • 📄 PDF quote</span>
+      <p class="subtitle">Submit requests using the Town’s Project Detail format. A PDF will be emailed to you and the Town Manager.</p>
+      <div class="meta" aria-hidden="true">
+        <span class="badge">⏱️ 10–15 minutes</span>
+        <span class="badge">📎 Quote required if requesting FY27 funds</span>
+        <span class="badge">🖼️ PNG/JPG image • 📄 PDF quote</span>
       </div>
     </div>
   </header>
 
   <main class="wrap">
-    <div class="grid">
-      <!-- Left Column -->
-      <div>
-        <!-- “Before you start” moved ABOVE form -->
-        <aside class="card" style="margin-bottom:20px;">
-          <div class="body">
-            <h2>Before you start</h2>
-            <ul class="list">
-              <li>Have your <b>project title</b>, <b>department</b>, and <b>category</b> ready.</li>
-              <li>Be prepared to describe the <b>need/justification</b>.</li>
-              <li>If requesting funds in <b>FY 2027</b>, a <b>quote document</b> is required.</li>
-              <li>Optional: upload a <b>project photo</b> (PNG/JPG).</li>
-            </ul>
-
-            <h2 style="margin-top:18px;">What happens next?</h2>
-            <ul class="list">
-              <li>A PDF of your request is generated automatically.</li>
-              <li>The PDF is emailed to the Town Manager and CC’d to the email you enter.</li>
-              <li>Your submission is logged for tracking.</li>
-            </ul>
-
-            <div class="kpis" aria-hidden="true">
-              <div class="kpi"><b>6</b><span>FY columns</span></div>
-              <div class="kpi"><b>1</b><span>PDF output</span></div>
-              <div class="kpi"><b>0</b><span>editing conflicts</span></div>
-            </div>
-
-            <h2 style="margin-top:18px;">Questions?</h2>
-            <p>Email <a href="mailto:a.cyganiewicz@town.sutton.ma.us">a.cyganiewicz@town.sutton.ma.us</a>.</p>
-          </div>
-        </aside>
-
-        <!-- Embedded Form -->
-        <article class="card">
-          <div class="frameTop">
-            <b>Submit your project</b>
-            <a class="open-link" id="openInNew" href="#" target="_blank" rel="noopener">Open in a new tab ↗</a>
-          </div>
-          <iframe
-            id="cipFrame"
-            class="frame"
-            src="https://script.google.com/macros/s/AKfycbzjdNbId9-_jNbSzvp3ziJ9QZJzK9LE8_P_Jr4DYHh1SJuIhWnXCW96_LdwlQLhz_ULpg/exec"
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
-            title="Sutton CIP – Capital Project Submission"
-          ></iframe>
-        </article>
-      </div>
-
-      <!-- Right Column -->
+    <div class="stack">
+      <!-- Guidance first -->
       <aside class="card">
         <div class="body">
-          <h2>Need Help?</h2>
-          <p>If you encounter any issues with the form, you can:</p>
-          <ul class="list">
-            <li>Open the form directly in a new tab.</li>
-            <li>Contact the Town Manager’s office for assistance.</li>
+          <h2>Before you start</h2>
+          <ul style="margin:8px 0 0 18px;">
+            <li>Have your <b>project title</b>, <b>department</b>, and <b>category</b> ready.</li>
+            <li>Be prepared to describe the <b>need/justification</b>.</li>
+            <li>If requesting funds in <b>FY 2027</b>, a <b>quote document</b> is required.</li>
+            <li>Optional: upload a <b>project photo</b> (PNG/JPG).</li>
           </ul>
-          <p style="margin-top:12px;">
-            <a class="open-link" href="YOUR_WEB_APP_URL_HERE" target="_blank" rel="noopener">Open Form in New Tab ↗</a>
-          </p>
         </div>
       </aside>
+
+      <!-- Form embed -->
+      <article class="card">
+        <div class="frameTop">
+          <b>Submit your project</b>
+          <a class="open-link" id="openInNew" href="#" target="_blank" rel="noopener">Open in a new tab ↗</a>
+        </div>
+        <iframe
+          id="cipFrame"
+          class="frame"
+          src="https://script.google.com/macros/s/AKfycbzjdNbId9-_jNbSzvp3ziJ9QZJzK9LE8_P_Jr4DYHh1SJuIhWnXCW96_LdwlQLhz_ULpg/exec"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          title="Sutton CIP – Capital Project Submission"
+        ></iframe>
+      </article>
     </div>
 
     <footer>
@@ -176,15 +129,15 @@
   </main>
 
   <script>
-    // Dynamically link the “open in new tab” button
+    // “Open in new tab” mirrors the iframe source
     const frame = document.getElementById('cipFrame');
     const openInNew = document.getElementById('openInNew');
     openInNew.href = frame.src;
 
-    // Adjust iframe height responsively
-    const BASE = 1520; const MIN = 1200, MAX = 2200;
+    // Optional: responsive height (fixed is simplest cross-origin)
+    const BASE = 1500, MIN = 1200, MAX = 2200;
     function resizeIframe(){
-      const h = Math.max(MIN, Math.min(MAX, Math.round(window.innerHeight * 1.2)));
+      const h = Math.max(MIN, Math.min(MAX, Math.round(window.innerHeight * 1.15)));
       frame.style.height = (h < BASE ? BASE : h) + 'px';
     }
     resizeIframe();
