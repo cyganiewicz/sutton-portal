@@ -6,91 +6,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Submit a capital project request to the Town of Sutton." />
   <link rel="icon" href="/favicon.ico" />
-  <!-- Inter is usually loaded globally; include if needed -->
+  <link rel="stylesheet" href="/styles/openbook.css">
+  <!-- If your site doesn't already load Inter, you can uncomment the next 3 lines
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="/styles/openbook.css">
-  <style>
-    /* Do NOT style <header>; your site stylesheet already handles it */
-    :root{
-      /* these exist on your site; used here for layout spacing */
-      --navbar-height: 104px;
-    }
-
-    /* Page base (aligned to your site styles) */
-    body{
-      font-family: 'Inter', sans-serif;
-      background-color: #f3f4f6;
-      color: #1f2937;
-      margin: 0;
-      line-height: 1.6;
-    }
-
-    /* Content wrapper */
-    .container{
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: calc(var(--navbar-height) + 24px) 20px 64px; /* stays clear of header */
-    }
-
-    /* Title + intro */
-    h1{
-      font-size: 26px;
-      font-weight: 600;
-      margin: 0 0 6px;
-      color: #1f2937;
-    }
-    .muted{ color:#6b7280; margin:0 0 18px; }
-
-    /* Cards to match your other pages */
-    .card{
-      background:#fff;
-      border:1px solid #e5e7eb;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,.05);
-      overflow:hidden;
-      margin-bottom:20px;
-    }
-    .card .body{ padding: 1.5rem; }
-    h2{ font-size:18px; margin:0 0 10px; color:#111827; }
-
-    ul{ margin:8px 0 0 20px; padding:0; }
-    li{ margin:6px 0; }
-
-    /* Embed header bar */
-    .frameTop{
-      display:flex; align-items:center; justify-content:space-between;
-      padding:12px 24px; background:#f9fafb; border-bottom:1px solid #e5e7eb;
-    }
-    .frameTop b{ font-size:14px; color:#1f2937; }
-    .frameTop a{ font-size:14px; color:#3f6522; text-decoration:underline; }
-
-    /* Iframe */
-    .frame{
-      display:block; width:100%; border:0; background:#fff;
-      height:1700px; /* adjust if you want more/less space */
-    }
-
-    /* Mobile tweaks */
-    @media (max-width: 768px){
-      .container{ padding: calc(var(--navbar-height) + 16px) 16px 56px; }
-      .frame{ height: 1900px; }
-    }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  -->
 </head>
 <body>
 
-  <!-- ===== BEGIN: Site header (PASTE the exact header HTML from index.html here) ===== -->
-  <!-- Example:
-  <header>
-    ... your existing navbar markup from index.html ...
+  <!-- Header (remove this block if your layout includes a shared header already) -->
+  <header class="site-header">
+    <div class="nav-wrap">
+      <div class="brand">
+        <img src="https://openbook.suttonma.gov/assets/OpenBook%20Sutton%20logo.png" alt="OpenBook Sutton logo">
+        <span class="title">OpenBook Sutton</span>
+      </div>
+      <nav>
+        <a href="/index.html">Home</a>
+        <a href="/expenses.html">Expenses</a>
+        <a href="/revenues.html">Revenues</a>
+        <a class="active" href="/capital.html">Capital</a>
+        <a href="/reserves.html">Reserves</a>
+      </nav>
+    </div>
   </header>
-  -->
-  <!-- ===== END: Site header ===== -->
 
   <main class="container">
-    <h1>Capital Project Submission</h1>
-    <p class="muted">Submit requests using the Town’s Project Detail format. A PDF will be emailed to you and the Town Manager.</p>
+    <h1 class="section-title">Capital Project Submission</h1>
+    <p class="subtle">Submit requests using the Town’s Project Detail format. A PDF will be emailed to you and the Town Manager.</p>
 
     <!-- Before you start -->
     <section class="card">
@@ -107,13 +51,13 @@
 
     <!-- Embedded form -->
     <section class="card">
-      <div class="frameTop">
+      <div class="embed-header">
         <b>Submit your project</b>
         <a id="openInNew" href="#" target="_blank" rel="noopener">Open in a new tab ↗</a>
       </div>
       <iframe
         id="cipFrame"
-        class="frame"
+        class="iframe-frame"
         src="https://script.google.com/macros/s/AKfycbzjdNbId9-_jNbSzvp3ziJ9QZJzK9LE8_P_Jr4DYHh1SJuIhWnXCW96_LdwlQLhz_ULpg/exec"
         loading="lazy"
         referrerpolicy="no-referrer-when-downgrade"
@@ -121,7 +65,7 @@
       ></iframe>
     </section>
 
-    <footer class="muted" style="text-align:center;">© Town of Sutton — OpenBook Sutton</footer>
+    <footer class="subtle" style="text-align:center;">© Town of Sutton — OpenBook Sutton</footer>
   </main>
 
   <script>
@@ -130,17 +74,8 @@
     const openInNew = document.getElementById('openInNew');
     openInNew.href = frame.src;
 
-    // If your header is position: fixed; this keeps anchors from scrolling underneath
-    // (No-op if header isn’t fixed.)
-    function adjustForFixedHeader(){
-      const hash = window.location.hash;
-      if (!hash) return;
-      const el = document.querySelector(hash);
-      if (!el) return;
-      const y = el.getBoundingClientRect().top + window.pageYOffset - (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--navbar-height')) || 0);
-      window.scrollTo({ top: y, behavior: 'instant' });
-    }
-    window.addEventListener('hashchange', adjustForFixedHeader);
+    // Optional: if your site uses a fixed header but not global offset handling,
+    // you can adjust anchor scroll behavior here when needed.
   </script>
 </body>
 </html>
