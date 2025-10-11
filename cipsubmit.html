@@ -6,16 +6,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Submit a capital project request to the Town of Sutton." />
   <link rel="icon" href="/favicon.ico" />
+
+  <!-- Site stylesheet (matches index_styles.css look) -->
   <link rel="stylesheet" href="/styles/openbook.css">
+
+  <!-- Safety override: if any old CSS injects a blue background, neutralize it -->
+  <style>
+    /* Ensure header uses the expected colors and the page is light gray */
+    :root { --navbar-height: 104px; --navbar-bg: #3f6522; --header-text: #ffffff; }
+    body { background-color: #f9fafb !important; }  /* kill any lingering blue */
+  </style>
 </head>
 <body>
 
-  <!-- Use the exact same header markup you use on other pages -->
-  <!-- Example (replace with your real header if included elsewhere):
-  <header>
-    ... your existing navbar from index.html ...
+  <!-- INLINE NAVBAR (same structure/classes used by openbook.css) -->
+  <header class="site-header">
+    <div class="nav-wrap">
+      <div class="brand">
+        <img src="https://openbook.suttonma.gov/assets/OpenBook%20Sutton%20logo.png" alt="OpenBook Sutton logo" />
+        <span class="title">OpenBook Sutton</span>
+      </div>
+      <nav>
+        <a href="/index.html">Home</a>
+        <a href="/expenses.html">Expenses</a>
+        <a href="/revenues.html">Revenues</a>
+        <a class="active" href="/capital.html">Capital</a>
+        <a href="/reserves.html">Reserves</a>
+      </nav>
+    </div>
   </header>
-  -->
 
   <main class="container">
     <h1 class="section-title">Capital Project Submission</h1>
