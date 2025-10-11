@@ -7,18 +7,18 @@
   <meta name="description" content="Submit a capital project request to the Town of Sutton." />
   <link rel="icon" href="/favicon.ico" />
   <style>
-    /* ====== Design Tokens (light, modern, minimal) ====== */
+    /* ====== Light Modern Theme (Soft Gray) ====== */
     :root{
-      --accent:#0D9488;       /* subtle teal accent */
-      --ink:#0f172a;          /* slate-900 */
+      --accent:#4b5563;       /* neutral gray accent */
+      --ink:#1e293b;          /* slate-800 */
       --muted:#6b7280;        /* gray-500 */
-      --bg:#f8fafc;           /* slate-50 */
+      --bg:#fafafa;           /* near white */
       --card:#ffffff;
       --border:#e5e7eb;       /* gray-200 */
-      --shadow:0 1px 3px rgba(0,0,0,.06), 0 10px 30px rgba(0,0,0,.04);
+      --shadow:0 1px 3px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.05);
       --radius:14px;
       --pad:24px;
-      --maxw:980px;           /* a little narrower for focus */
+      --maxw:980px;
     }
     @media (prefers-color-scheme: dark){
       :root{
@@ -27,53 +27,81 @@
       }
     }
 
-    /* ====== Base ====== */
-    *{box-sizing:border-box}
+    *{box-sizing:border-box;}
     body{
-      margin:0; font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-      color:var(--ink); background:var(--bg);
+      margin:0;
+      font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+      color:var(--ink);
+      background:var(--bg);
     }
-    a{color:var(--accent); text-decoration:underline}
-    a:hover{opacity:.85}
-    .wrap{max-width:var(--maxw); margin:0 auto; padding:28px 16px 56px}
+    a{color:var(--accent); text-decoration:underline;}
+    a:hover{opacity:.75;}
 
-    /* ====== Header (very light) ====== */
+    .wrap{max-width:var(--maxw); margin:0 auto; padding:28px 16px 56px;}
+
+    /* ===== Header ===== */
     .hero{
-      background: linear-gradient(180deg, rgba(13,148,136,.06), rgba(13,148,136,0) 60%);
+      background:linear-gradient(180deg,#f9fafb,#f3f4f6 70%);
       border-bottom:1px solid var(--border);
     }
-    .hero .wrap{padding-top:34px; padding-bottom:22px}
-    .title{margin:0; font-size:28px; letter-spacing:.2px}
-    .subtitle{margin:6px 0 0; color:var(--muted)}
+    .hero .wrap{
+      padding-top:36px;
+      padding-bottom:26px;
+      display:flex;
+      align-items:center;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+    .hero img{
+      height:48px;
+      width:auto;
+    }
+    .title{
+      margin:0;
+      font-size:28px;
+      letter-spacing:.2px;
+    }
+    .subtitle{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size:15px;
+    }
 
-    /* ====== Cards ====== */
+    /* ===== Cards ===== */
     .card{
-      background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-      box-shadow:var(--shadow); overflow:hidden;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
     }
-    .card .body{padding:var(--pad)}
-    .card h2{margin:0 0 10px; font-size:18px}
+    .card .body{padding:var(--pad);}
+    .card h2{margin:0 0 10px; font-size:18px;}
+    ul{margin:8px 0 0 18px; padding:0;}
+    ul li{margin:6px 0;}
 
-    /* ====== Simple vertical flow ====== */
-    .stack{display:flex; flex-direction:column; gap:18px; margin-top:22px}
-
-    /* ====== Iframe Container ====== */
+    /* ===== Iframe Section ===== */
     .frameTop{
-      display:flex; align-items:center; justify-content:space-between; gap:8px;
-      padding:14px var(--pad); border-bottom:1px solid var(--border); background:linear-gradient(0deg, rgba(13,148,136,.05), transparent);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      padding:14px var(--pad);
+      border-bottom:1px solid var(--border);
+      background:linear-gradient(0deg,#f3f4f6,transparent);
     }
-    .frameTop b{font-size:14px}
+    .frameTop b{font-size:14px;}
     .frame{
-      display:block; width:100%; border:0; height:1700px; /* adjust if needed */
+      display:block;
+      width:100%;
+      border:0;
+      height:1700px;
       background:#fff;
     }
 
-    /* ====== Footer ====== */
-    footer{margin-top:28px; color:var(--muted); font-size:14px; text-align:center}
-
-    /* small niceties */
-    .meta{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; color:var(--muted); font-size:14px}
-    .badge{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border:1px solid var(--border); border-radius:999px; background:#fff}
+    /* ===== Layout ===== */
+    .stack{display:flex; flex-direction:column; gap:18px; margin-top:22px;}
+    footer{margin-top:28px; color:var(--muted); font-size:14px; text-align:center;}
   </style>
 </head>
 <body>
@@ -81,23 +109,23 @@
   <!-- Header -->
   <header class="hero">
     <div class="wrap">
-      <h1 class="title">Capital Project Submission</h1>
-      <p class="subtitle">Submit requests using the Town’s Project Detail format. A PDF will be emailed to you and the Town Manager.</p>
-      <div class="meta" aria-hidden="true">
-        <span class="badge">⏱️ 10–15 minutes</span>
-        <span class="badge">📎 Quote required if requesting FY27 funds</span>
-        <span class="badge">🖼️ PNG/JPG image • 📄 PDF quote</span>
+      <img src="https://openbook.suttonma.gov/assets/OpenBook%20Sutton%20logo.png" alt="OpenBook Sutton logo">
+      <div>
+        <h1 class="title">Capital Project Submission</h1>
+        <p class="subtitle">Submit requests using the Town’s Project Detail format. A PDF will be emailed to you and the Town Manager.</p>
       </div>
     </div>
   </header>
 
+  <!-- Main Content -->
   <main class="wrap">
     <div class="stack">
-      <!-- Guidance first -->
+
+      <!-- Before you start -->
       <aside class="card">
         <div class="body">
           <h2>Before you start</h2>
-          <ul style="margin:8px 0 0 18px;">
+          <ul>
             <li>Have your <b>project title</b>, <b>department</b>, and <b>category</b> ready.</li>
             <li>Be prepared to describe the <b>need/justification</b>.</li>
             <li>If requesting funds in <b>FY 2027</b>, a <b>quote document</b> is required.</li>
@@ -106,7 +134,7 @@
         </div>
       </aside>
 
-      <!-- Form embed -->
+      <!-- Embedded form -->
       <article class="card">
         <div class="frameTop">
           <b>Submit your project</b>
@@ -121,6 +149,7 @@
           title="Sutton CIP – Capital Project Submission"
         ></iframe>
       </article>
+
     </div>
 
     <footer>
@@ -129,12 +158,12 @@
   </main>
 
   <script>
-    // “Open in new tab” mirrors the iframe source
+    // “Open in new tab” mirrors iframe URL
     const frame = document.getElementById('cipFrame');
     const openInNew = document.getElementById('openInNew');
     openInNew.href = frame.src;
 
-    // Optional: responsive height (fixed is simplest cross-origin)
+    // Basic responsive iframe height
     const BASE = 1500, MIN = 1200, MAX = 2200;
     function resizeIframe(){
       const h = Math.max(MIN, Math.min(MAX, Math.round(window.innerHeight * 1.15)));
