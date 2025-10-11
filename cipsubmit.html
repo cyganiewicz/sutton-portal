@@ -76,7 +76,7 @@
     .frameTop b{font-size:14px}
     .open-link{font-size:14px}
     .frame{
-      display:block; width:100%; border:0; height:1800px; /* tweak if you want more/less */
+      display:block; width:100%; border:0; height:1800px; /* adjust height if needed */
       background:#fff;
     }
 
@@ -106,48 +106,66 @@
 
   <main class="wrap">
     <div class="grid">
-      <!-- Left: Form embed -->
-      <article class="card">
-        <div class="frameTop">
-          <b>Submit your project</b>
-          <a class="open-link" id="openInNew" href="#" target="_blank" rel="noopener">Open in a new tab ↗</a>
-        </div>
-        <iframe
-          id="cipFrame"
-          class="frame"
-          src="https://script.google.com/macros/s/AKfycbzjdNbId9-_jNbSzvp3ziJ9QZJzK9LE8_P_Jr4DYHh1SJuIhWnXCW96_LdwlQLhz_ULpg/exec"
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
-          title="Sutton CIP – Capital Project Submission"
-        ></iframe>
-      </article>
+      <!-- Left Column -->
+      <div>
+        <!-- “Before you start” moved ABOVE form -->
+        <aside class="card" style="margin-bottom:20px;">
+          <div class="body">
+            <h2>Before you start</h2>
+            <ul class="list">
+              <li>Have your <b>project title</b>, <b>department</b>, and <b>category</b> ready.</li>
+              <li>Be prepared to describe the <b>need/justification</b>.</li>
+              <li>If requesting funds in <b>FY 2027</b>, a <b>quote document</b> is required.</li>
+              <li>Optional: upload a <b>project photo</b> (PNG/JPG).</li>
+            </ul>
 
-      <!-- Right: Guidance / Contact -->
+            <h2 style="margin-top:18px;">What happens next?</h2>
+            <ul class="list">
+              <li>A PDF of your request is generated automatically.</li>
+              <li>The PDF is emailed to the Town Manager and CC’d to the email you enter.</li>
+              <li>Your submission is logged for tracking.</li>
+            </ul>
+
+            <div class="kpis" aria-hidden="true">
+              <div class="kpi"><b>6</b><span>FY columns</span></div>
+              <div class="kpi"><b>1</b><span>PDF output</span></div>
+              <div class="kpi"><b>0</b><span>editing conflicts</span></div>
+            </div>
+
+            <h2 style="margin-top:18px;">Questions?</h2>
+            <p>Email <a href="mailto:a.cyganiewicz@town.sutton.ma.us">a.cyganiewicz@town.sutton.ma.us</a>.</p>
+          </div>
+        </aside>
+
+        <!-- Embedded Form -->
+        <article class="card">
+          <div class="frameTop">
+            <b>Submit your project</b>
+            <a class="open-link" id="openInNew" href="#" target="_blank" rel="noopener">Open in a new tab ↗</a>
+          </div>
+          <iframe
+            id="cipFrame"
+            class="frame"
+            src="https://script.google.com/macros/s/AKfycbzjdNbId9-_jNbSzvp3ziJ9QZJzK9LE8_P_Jr4DYHh1SJuIhWnXCW96_LdwlQLhz_ULpg/exec"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            title="Sutton CIP – Capital Project Submission"
+          ></iframe>
+        </article>
+      </div>
+
+      <!-- Right Column -->
       <aside class="card">
         <div class="body">
-          <h2>Before you start</h2>
+          <h2>Need Help?</h2>
+          <p>If you encounter any issues with the form, you can:</p>
           <ul class="list">
-            <li>Have your <b>project title</b>, <b>department</b>, and <b>category</b> ready.</li>
-            <li>Be prepared to describe the <b>need/justification</b>.</li>
-            <li>If requesting funds in <b>FY 2027</b>, a <b>quote document</b> is required.</li>
-            <li>Optional: upload a <b>project photo</b> (PNG/JPG).</li>
+            <li>Open the form directly in a new tab.</li>
+            <li>Contact the Town Manager’s office for assistance.</li>
           </ul>
-
-          <h2 style="margin-top:18px;">What happens next?</h2>
-          <ul class="list">
-            <li>A PDF of your request is generated automatically.</li>
-            <li>The PDF is emailed to the Town Manager and CC’d to the email you enter.</li>
-            <li>Your submission is logged for tracking.</li>
-          </ul>
-
-          <div class="kpis" aria-hidden="true">
-            <div class="kpi"><b>6</b><span>FY columns</span></div>
-            <div class="kpi"><b>1</b><span>PDF output</span></div>
-            <div class="kpi"><b>0</b><span>editing conflicts</span></div>
-          </div>
-
-          <h2 style="margin-top:18px;">Questions?</h2>
-          <p>Email <a href="mailto:a.cyganiewicz@town.sutton.ma.us">a.cyganiewicz@town.sutton.ma.us</a>.</p>
+          <p style="margin-top:12px;">
+            <a class="open-link" href="YOUR_WEB_APP_URL_HERE" target="_blank" rel="noopener">Open Form in New Tab ↗</a>
+          </p>
         </div>
       </aside>
     </div>
@@ -158,14 +176,13 @@
   </main>
 
   <script>
-    // Set “open in new tab” link to the same iframe URL
+    // Dynamically link the “open in new tab” button
     const frame = document.getElementById('cipFrame');
     const openInNew = document.getElementById('openInNew');
     openInNew.href = frame.src;
 
-    // Optional: adjust height for very small/large screens (still cross-origin safe)
-    const BASE = 1520; // base iframe height fallback
-    const MIN = 1200, MAX = 2200;
+    // Adjust iframe height responsively
+    const BASE = 1520; const MIN = 1200, MAX = 2200;
     function resizeIframe(){
       const h = Math.max(MIN, Math.min(MAX, Math.round(window.innerHeight * 1.2)));
       frame.style.height = (h < BASE ? BASE : h) + 'px';
