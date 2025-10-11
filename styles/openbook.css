@@ -1,85 +1,59 @@
-/* /styles/openbook.css
-   Shared look & feel for OpenBook pages (matches index_styles.css) */
-
-/* --- Color and layout variables --- */
-:root {
+/* === NAVBAR: force a fixed-height green bar, no hero background === */
+:root{
   --navbar-height: 104px;
-  --navbar-bg: #3f6522;  /* Sutton green */
+  --navbar-bg: #3f6522;
   --header-text: #ffffff;
 }
 
-/* --- Navbar override (keep identical across pages) --- */
-header {
-  background-color: var(--navbar-bg);
+header.site-header {
+  background-color: var(--navbar-bg) !important;
   color: var(--header-text);
-}
-
-/* --- General layout --- */
-html, body { height: 100%; }
-body {
-  font-family: system-ui, sans-serif;
-  background-color: #f9fafb; /* same light gray as other pages */
-  color: #1f2937;
+  height: var(--navbar-height) !important;
+  min-height: var(--navbar-height) !important;
+  padding: 0 !important;
   margin: 0;
-  line-height: 1.6;
+  background-image: none !important;     /* kill hero bg */
+  background-size: auto !important;
+  background-repeat: no-repeat !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,.05);
+  display: flex;
+  align-items: center;
 }
 
-/* Page container (content spacing below header) */
-.container {
-  max-width: 1000px;
+.site-header .nav-wrap{
+  max-width: 1200px;
   margin: 0 auto;
-  padding: calc(var(--navbar-height) + 24px) 20px 64px;
+  height: var(--navbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
 }
 
-/* Titles / text */
-.section-title { font-size: 26px; font-weight: 600; margin: 0 0 6px; color: #1f2937; }
-.subtle        { color: #6b7280; margin: 0 0 18px; }
-
-/* Cards (uniform white tiles used across OpenBook) */
-.card {
-  background-color: #ffffff;
-  border-radius: 0.75rem;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  overflow: hidden;
-  margin-bottom: 20px;
-}
-.card .body { padding: 1.5rem; }
-.card h2     { font-size: 18px; margin: 0 0 10px; color: #111827; }
-
-/* Lists inside cards */
-ul { margin: 8px 0 0 20px; padding: 0; }
-li { margin: 6px 0; }
-
-/* Embed header bar (subtle gray like other tables’ headers) */
-.embed-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 24px;
-  background-color: #f3f4f6;      /* same gray as table headers */
-  border-bottom: 1px solid #e5e7eb;
-}
-.embed-header b  { font-size: 14px; color: #1f2937; }
-.embed-header a  { font-size: 14px; color: var(--navbar-bg); text-decoration: underline; }
-
-/* Iframe (form embed) */
-.iframe-frame {
-  display: block;
-  width: 100%;
-  height: 1700px; /* adjust if needed */
-  border: 0;
-  background: #ffffff;
+.site-header .brand{
+  display: flex; align-items: center; gap: 12px;
 }
 
-/* Table baseline (kept same as example page) */
-table { width: 100%; border-collapse: collapse; background-color: white; }
-th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
-th { background-color: #f3f4f6; font-weight: 600; font-size: 0.875rem; }
-td { font-size: 0.875rem; }
-tbody tr:hover { background-color: #f9fafb; }
-
-/* Responsive tweaks (match example) */
-@media (max-width: 768px) {
-  .container { padding: calc(var(--navbar-height) + 16px) 16px 56px; }
-  .iframe-frame { height: 1900px; }
-  th, td { font-size: 0.8rem; }
+.site-header .brand img{
+  height: 56px;         /* tame the logo */
+  width: auto;
 }
+
+.site-header .title{
+  font-size: 20px;      /* match other pages */
+  font-weight: 600;
+  color: #fff;
+  margin-top: 2px;
+}
+
+.site-header nav a{
+  color: #fff;
+  text-decoration: none;
+  font-size: 15px;      /* match other pages */
+  font-weight: 500;
+  margin-left: 24px;
+}
+.site-header nav a:hover{ opacity:.85; text-decoration: underline; }
+
+/* Page background (kill any leftover blue) */
+body{ background-color:#f9fafb !important; color:#1f2937; font-family: system-ui, sans-serif; }
